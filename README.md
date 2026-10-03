@@ -15,7 +15,7 @@ Your GitHub contribution graph, live on your Android homescreen.
 ## Features
 
 - Live contribution graph on your homescreen
-- 5 graph colors — Matrix, Nebula, Abyss, Ember, Neon
+- 5 graph colors — Matrix, Nebula, Abyss, Ember, Neon — plus a custom color picker
 - Card transparency slider — let your wallpaper shine through
 - Resizable widget — long-press it and drag the handles
 - Track any GitHub username
@@ -34,6 +34,6 @@ Your GitHub contribution graph, live on your Android homescreen.
 
 1. Open the **GH-widgets** app
 2. Enter your GitHub username and tap **Save** — your graph appears instantly
-3. Pick a graph color and drag the transparency slider — preview updates live
+3. Pick a graph color, or tap + to mix any custom color — preview updates live
 4. Long-press your homescreen → **Widgets** → **GH-widgets** → drag it out
 5. Long-press the widget anytime to resize it
