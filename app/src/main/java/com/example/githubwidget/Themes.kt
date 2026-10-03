@@ -77,7 +77,41 @@ object Themes {
 
     val ALL = listOf(GREEN, PURPLE, BLUE, ORANGE, ROSE)
 
+    const val CUSTOM_ID = "custom"
+
     fun get(id: String?): GraphTheme = ALL.find { it.id == id } ?: GREEN
+
+    /** Resolve the active theme, building a ramp for a user-picked custom color. */
+    fun resolve(themeId: String?, customColor: Int): GraphTheme =
+        if (themeId == CUSTOM_ID) fromBaseColor(customColor) else get(themeId)
+
+    /**
+     * Builds a 4-step intensity ramp from any base color by sweeping
+     * brightness (V in HSV), keeping hue/saturation. Accent = base color.
+     */
+    fun fromBaseColor(base: Int): GraphTheme {
+        val hsv = FloatArray(3)
+        Color.colorToHSV(base, hsv)
+        fun level(v: Float): Int {
+            val c = hsv.clone()
+            c[1] = (hsv[1] * 0.95f).coerceIn(0f, 1f)
+            c[2] = v.coerceIn(0f, 1f)
+            return Color.HSVToColor(c)
+        }
+        return GraphTheme(
+            CUSTOM_ID, "Custom", base,
+            intArrayOf(
+                Color.parseColor("#161B22"),
+                level(0.30f),
+                level(0.50f),
+                level(0.70f),
+                level(0.92f)
+            )
+        )
+    }
+
+    fun toHex(color: Int): String =
+        String.format("#%06X", 0xFFFFFF and color)
 
     /** Base card color #0D1117 with the given opacity (0..100). */
     fun cardColor(opacity: Int): Int {

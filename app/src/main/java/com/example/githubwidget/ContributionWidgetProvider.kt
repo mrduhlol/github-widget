@@ -63,8 +63,11 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         return openPi to refreshPi
     }
 
+    private fun currentTheme(context: Context): GraphTheme =
+        Themes.resolve(Prefs.getThemeId(context), Prefs.getCustomColor(context))
+
     private fun applyChrome(views: RemoteViews, context: Context) {
-        val theme = Themes.get(Prefs.getThemeId(context))
+        val theme = currentTheme(context)
         val bg = WidgetBg.render(bgColor = Themes.cardColor(Prefs.getOpacity(context)))
         views.setImageViewBitmap(R.id.widget_bg, bg)
         views.setTextColor(R.id.widget_total, theme.accent)
@@ -100,7 +103,7 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         val pending = goAsync()
         Thread {
             try {
-                val theme = Themes.get(Prefs.getThemeId(context))
+                val theme = currentTheme(context)
                 val result = GithubApi.fetch(username)
                 val bitmap: Bitmap = GraphRenderer.render(result.days, colors = theme.levels)
                 val fresh = RemoteViews(context.packageName, R.layout.widget_contribution)

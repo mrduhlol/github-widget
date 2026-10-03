@@ -153,6 +153,7 @@
             android:id="@+id/swatch_rose"
             android:layout_width="52dp"
             android:layout_height="52dp"
+            android:layout_marginEnd="10dp"
             android:contentDescription="Neon rose"
             android:insetTop="0dp"
             android:insetBottom="0dp"
@@ -160,6 +161,20 @@
             android:insetRight="0dp"
             android:text=""
             app:backgroundTint="#F778BA"
+            app:cornerRadius="26dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/swatch_custom"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:contentDescription="Pick any color"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:insetLeft="0dp"
+            android:insetRight="0dp"
+            android:text="+"
+            android:textSize="22sp"
+            app:backgroundTint="#39D353"
             app:cornerRadius="26dp" />
     </LinearLayout>
 

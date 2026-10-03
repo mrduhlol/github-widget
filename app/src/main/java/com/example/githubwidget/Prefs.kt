@@ -4,12 +4,14 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 
 object Prefs {
     private const val NAME = "github_widget_prefs"
     private const val KEY_USERNAME = "username"
     private const val KEY_THEME = "theme"
     private const val KEY_OPACITY = "opacity"
+    private const val KEY_CUSTOM_COLOR = "custom_color"
 
     fun getUsername(context: Context): String =
         context.getSharedPreferences(NAME, Context.MODE_PRIVATE)
@@ -37,6 +39,16 @@ object Prefs {
     fun setOpacity(context: Context, opacity: Int) {
         context.getSharedPreferences(NAME, Context.MODE_PRIVATE)
             .edit().putInt(KEY_OPACITY, opacity.coerceIn(20, 100)).apply()
+    }
+
+    /** User-picked custom graph color (used when theme == "custom"). */
+    fun getCustomColor(context: Context): Int =
+        context.getSharedPreferences(NAME, Context.MODE_PRIVATE)
+            .getInt(KEY_CUSTOM_COLOR, Color.parseColor("#39D353"))
+
+    fun setCustomColor(context: Context, color: Int) {
+        context.getSharedPreferences(NAME, Context.MODE_PRIVATE)
+            .edit().putInt(KEY_CUSTOM_COLOR, color).apply()
     }
 
     fun requestRefresh(context: Context) {
