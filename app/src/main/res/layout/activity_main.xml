@@ -53,7 +53,6 @@
         android:layout_marginTop="8dp"
         android:hint="e.g. torvalds"
         app:boxBackgroundColor="#0D1117"
-        app:boxCornerFamily="rounded"
         app:boxStrokeColor="#30363D"
         app:hintTextColor="#8B949E">
 
@@ -206,9 +205,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:value="100"
-        app:valueFrom="20"
-        app:valueTo="100"
-        app:stepSize="5" />
+        android:valueFrom="20"
+        android:valueTo="100"
+        android:stepSize="5" />
 
     <TextView
         android:layout_width="wrap_content"
