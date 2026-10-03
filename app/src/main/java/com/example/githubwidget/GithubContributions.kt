@@ -162,3 +162,42 @@ object WidgetBg {
         return bmp
     }
 }
+
+data class Stats(
+    val currentStreak: Int,
+    val longestStreak: Int,
+    val bestCount: Int,
+    val activeDays: Int
+)
+
+/** Streaks, best day and active days — computed offline from the day list. */
+object Stats {
+
+    fun compute(days: List<Day>): Stats {
+        val sorted = days.sortedBy { it.date }
+        var longest = 0
+        var run = 0
+        var active = 0
+        var best = 0
+        for (d in sorted) {
+            if (d.count > 0) {
+                run++
+                active++
+                if (d.count > best) best = d.count
+            } else {
+                run = 0
+            }
+            if (run > longest) longest = run
+        }
+        // Current streak from the newest day; a blank today doesn't kill
+        // yesterday's streak (you just haven't committed yet today).
+        var cur = 0
+        var i = sorted.size - 1
+        if (i >= 0 && sorted[i].count == 0) i--
+        while (i >= 0 && sorted[i].count > 0) {
+            cur++
+            i--
+        }
+        return Stats(cur, longest, best, active)
+    }
+}

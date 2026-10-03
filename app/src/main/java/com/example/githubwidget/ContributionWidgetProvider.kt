@@ -112,9 +112,10 @@ class ContributionWidgetProvider : AppWidgetProvider() {
                 fresh.setOnClickPendingIntent(R.id.widget_refresh, refreshPi)
                 fresh.setTextViewText(R.id.widget_title, "@${result.username}")
                 val today = result.days.lastOrNull()
+                val stats = Stats.compute(result.days)
                 fresh.setTextViewText(
                     R.id.widget_subtitle,
-                    "Today: ${today?.count ?: 0} • ${result.totalLastYear} in last year"
+                    "Today: ${today?.count ?: 0} • ${stats.currentStreak}d streak • ${result.totalLastYear}/yr"
                 )
                 fresh.setTextViewText(R.id.widget_total, "${result.totalLastYear}")
                 fresh.setImageViewBitmap(R.id.widget_graph, bitmap)

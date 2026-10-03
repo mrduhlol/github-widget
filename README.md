@@ -3,7 +3,7 @@
 Your GitHub contribution graph, live on your Android homescreen.
 
 <p align="center">
-  <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widgets.apk">
+  <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.v1.4.apk">
     <img src="https://img.shields.io/badge/DOWNLOAD_APK-39D353?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" height="60" />
   </a>
 </p>
@@ -20,6 +20,7 @@ Your GitHub contribution graph, live on your Android homescreen.
 - Resizable widget — long-press it and drag the handles
 - Track any GitHub username
 - Today count + last-year total at a glance
+- Streak tracking — current streak, longest streak, best day, active days
 - Auto-refresh every 6 hours, or tap the refresh icon for an instant refresh
 - No sign-in, no token — just your username
 

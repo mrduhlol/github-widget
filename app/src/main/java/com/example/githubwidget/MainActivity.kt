@@ -37,6 +37,9 @@ class MainActivity : AppCompatActivity() {
         val previewTitle = findViewById<TextView>(R.id.preview_title)
         val previewSubtitle = findViewById<TextView>(R.id.preview_subtitle)
         val previewTotal = findViewById<TextView>(R.id.preview_total)
+        val statStreak = findViewById<TextView>(R.id.stat_streak)
+        val statBest = findViewById<TextView>(R.id.stat_best)
+        val statActive = findViewById<TextView>(R.id.stat_active)
         val previewGraph = findViewById<ImageView>(R.id.preview_graph)
         val previewStatus = findViewById<TextView>(R.id.preview_status)
         val themeName = findViewById<TextView>(R.id.text_theme_name)
@@ -67,6 +70,7 @@ class MainActivity : AppCompatActivity() {
                 GraphRenderer.render(cached.days, scale = 2.5f, colors = theme.levels)
             )
             previewTotal.setTextColor(theme.accent)
+            statStreak.setTextColor(theme.accent)
             paintPreviewCard()
         }
 
@@ -105,6 +109,9 @@ class MainActivity : AppCompatActivity() {
             previewGraph.setImageDrawable(null)
             previewTotal.text = "–"
             previewTotal.setTextColor(currentTheme().accent)
+            statStreak.text = "–"
+            statBest.text = "–"
+            statActive.text = "–"
             Thread {
                 try {
                     val result = GithubApi.fetch(username)
@@ -120,7 +127,13 @@ class MainActivity : AppCompatActivity() {
                         previewTotal.text = "${result.totalLastYear}"
                         previewTotal.setTextColor(currentTheme().accent)
                         previewGraph.setImageBitmap(bmp)
-                        previewStatus.text = "This is exactly what the widget shows."
+                        val stats = Stats.compute(result.days)
+                        statStreak.text = "${stats.currentStreak}"
+                        statStreak.setTextColor(currentTheme().accent)
+                        statBest.text = "${stats.bestCount}"
+                        statActive.text = "${stats.activeDays}"
+                        previewStatus.text =
+                            "Longest streak ${stats.longestStreak} days • same stats live on the widget."
                     }
                 } catch (e: Exception) {
                     runOnUiThread {

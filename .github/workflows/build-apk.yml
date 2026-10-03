@@ -39,19 +39,22 @@ jobs:
       - name: Build debug APK
         run: gradle assembleDebug --stacktrace
 
-      - name: Rename APK to GH-widgets
-        run: mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/GH-widgets.apk
+      - name: Rename APK with version
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          mv app/build/outputs/apk/debug/app-debug.apk "app/build/outputs/apk/debug/GH-widget.v${VERSION}.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: GH-widgets
-          path: app/build/outputs/apk/debug/GH-widgets.apk
+          path: app/build/outputs/apk/debug/GH-widget.v*.apk
 
       # On tags like v1.0, attach the APK to a GitHub Release so README can link it.
       - name: Release APK
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/debug/GH-widgets.apk
+          files: app/build/outputs/apk/debug/GH-widget.v*.apk
           generate_release_notes: true
