@@ -163,7 +163,7 @@ object WidgetBg {
     }
 }
 
-data class Stats(
+data class ContributionStats(
     val currentStreak: Int,
     val longestStreak: Int,
     val bestCount: Int,
@@ -173,7 +173,7 @@ data class Stats(
 /** Streaks, best day and active days — computed offline from the day list. */
 object Stats {
 
-    fun compute(days: List<Day>): Stats {
+    fun compute(days: List<Day>): ContributionStats {
         val sorted = days.sortedBy { it.date }
         var longest = 0
         var run = 0
@@ -198,6 +198,6 @@ object Stats {
             cur++
             i--
         }
-        return Stats(cur, longest, best, active)
+        return ContributionStats(cur, longest, best, active)
     }
 }
