@@ -4,7 +4,7 @@ Your GitHub contribution graph, live on your Android homescreen.
 
 <p align="center">
   <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/app-debug.apk">
-    <img src="https://img.shields.io/badge/⬇_DOWNLOAD_APK-39D353?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" height="60" />
+    <img src="https://img.shields.io/badge/DOWNLOAD_APK-39D353?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" height="60" />
   </a>
 </p>
 
@@ -14,14 +14,14 @@ Your GitHub contribution graph, live on your Android homescreen.
 
 ## Features
 
-- 🟩 Live contribution graph on your homescreen
-- 🎨 5 graph colors — Matrix, Nebula, Abyss, Ember, Neon
-- 🔳 Card transparency slider — let your wallpaper shine through
-- ↔️ Resizable widget — long-press it and drag the handles
-- 👤 Track any GitHub username
-- 📊 Today count + last-year total at a glance
-- 🔄 Auto-refresh every 6 hours, or tap ⟳ for instant refresh
-- 🔒 No sign-in, no token — just your username
+- Live contribution graph on your homescreen
+- 5 graph colors — Matrix, Nebula, Abyss, Ember, Neon
+- Card transparency slider — let your wallpaper shine through
+- Resizable widget — long-press it and drag the handles
+- Track any GitHub username
+- Today count + last-year total at a glance
+- Auto-refresh every 6 hours, or tap the refresh icon for an instant refresh
+- No sign-in, no token — just your username
 
 ## Install
 
