@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">GitHub Contributions</string>
+    <string name="widget_desc">Shows your GitHub green contribution graph on the homescreen.</string>
+</resources>

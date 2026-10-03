@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.GitHubWidget" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#26A641</item>
+    </style>
+</resources>
