@@ -3,10 +3,11 @@ package com.example.githubwidget
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.os.Build
+import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
 import java.text.SimpleDateFormat
@@ -25,39 +26,59 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    /** Re-render when the user resizes the widget on the homescreen. */
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        mgr: AppWidgetManager,
+        widgetId: Int,
+        newOptions: Bundle
+    ) {
+        updateOne(context, mgr, widgetId)
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (intent.action == ACTION_REFRESH) {
             val mgr = AppWidgetManager.getInstance(context)
             val ids = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
-                ?: mgr.getAppWidgetIds(
-                    android.content.ComponentName(context, ContributionWidgetProvider::class.java)
-                )
+                ?: mgr.getAppWidgetIds(ComponentName(context, ContributionWidgetProvider::class.java))
             onUpdate(context, mgr, ids)
         }
     }
 
-    private fun updateOne(context: Context, mgr: AppWidgetManager, widgetId: Int) {
-        val views = RemoteViews(context.packageName, R.layout.widget_contribution)
-        val username = Prefs.getUsername(context)
-
-        // Click on header opens the app to change username.
+    private fun pendingIntents(context: Context, widgetId: Int): Pair<PendingIntent, PendingIntent> {
         val openApp = Intent(context, MainActivity::class.java)
         val openPi = PendingIntent.getActivity(
             context, widgetId, openApp,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        views.setOnClickPendingIntent(R.id.widget_header, openPi)
-
-        // Refresh button.
         val refresh = Intent(context, ContributionWidgetProvider::class.java).apply {
             action = ACTION_REFRESH
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(widgetId))
         }
         val refreshPi = PendingIntent.getBroadcast(
-            context, widgetId, refresh,
+            context, 10_000 + widgetId, refresh,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        return openPi to refreshPi
+    }
+
+    private fun applyChrome(views: RemoteViews, context: Context) {
+        val theme = Themes.get(Prefs.getThemeId(context))
+        val bg = WidgetBg.render(bgColor = Themes.cardColor(Prefs.getOpacity(context)))
+        views.setImageViewBitmap(R.id.widget_bg, bg)
+        views.setTextColor(R.id.widget_total, theme.accent)
+    }
+
+    private fun updateOne(context: Context, mgr: AppWidgetManager, widgetId: Int) {
+        val (openPi, refreshPi) = pendingIntents(context, widgetId)
+        val views = RemoteViews(context.packageName, R.layout.widget_contribution)
+        val username = Prefs.getUsername(context)
+        applyChrome(views, context)
+
+        // Click on header opens the app to change username.
+        views.setOnClickPendingIntent(R.id.widget_header, openPi)
+        // Refresh button.
         views.setOnClickPendingIntent(R.id.widget_refresh, refreshPi)
 
         if (username.isBlank()) {
@@ -79,9 +100,11 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         val pending = goAsync()
         Thread {
             try {
+                val theme = Themes.get(Prefs.getThemeId(context))
                 val result = GithubApi.fetch(username)
-                val bitmap: Bitmap = GraphRenderer.render(result.days)
+                val bitmap: Bitmap = GraphRenderer.render(result.days, colors = theme.levels)
                 val fresh = RemoteViews(context.packageName, R.layout.widget_contribution)
+                applyChrome(fresh, context)
                 fresh.setOnClickPendingIntent(R.id.widget_header, openPi)
                 fresh.setOnClickPendingIntent(R.id.widget_refresh, refreshPi)
                 fresh.setTextViewText(R.id.widget_title, "@${result.username}")
@@ -94,10 +117,10 @@ class ContributionWidgetProvider : AppWidgetProvider() {
                 fresh.setImageViewBitmap(R.id.widget_graph, bitmap)
                 val ts = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(Date())
                 fresh.setTextViewText(R.id.widget_updated, "Updated $ts • tap ⟳ to refresh")
-                // Cache for offline: store total + updated label only (bitmap is redrawn next time).
                 mgr.updateAppWidget(widgetId, fresh)
             } catch (e: Exception) {
                 val err = RemoteViews(context.packageName, R.layout.widget_contribution)
+                applyChrome(err, context)
                 err.setOnClickPendingIntent(R.id.widget_header, openPi)
                 err.setOnClickPendingIntent(R.id.widget_refresh, refreshPi)
                 err.setTextViewText(R.id.widget_title, "@$username")

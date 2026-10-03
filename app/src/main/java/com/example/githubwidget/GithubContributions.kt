@@ -61,22 +61,14 @@ object GithubApi {
 
 object GraphRenderer {
 
-    // GitHub dark-mode-ish greens, works on light + dark homescreens.
-    private val COLORS = intArrayOf(
-        Color.parseColor("#161B22"), // 0 - empty (with border drawn separately)
-        Color.parseColor("#0E4429"),
-        Color.parseColor("#006D32"),
-        Color.parseColor("#26A641"),
-        Color.parseColor("#39D353")
-    )
-
     /**
      * Draws a 7-row x N-col contribution grid into a bitmap.
      * Width scales with weeks (~53). Caller should put it in an ImageView
      * with adjustViewBounds + fixed height.
      */
-    fun render(days: List<Day>, scale: Float = 3f): Bitmap {
+    fun render(days: List<Day>, scale: Float = 3f, colors: IntArray? = null): Bitmap {
         if (days.isEmpty()) throw IllegalArgumentException("No days to render")
+        val palette = colors ?: Themes.GREEN.levels
 
         // Group days into week columns starting Sunday, like GitHub.
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
@@ -139,11 +131,34 @@ object GraphRenderer {
                 val top = pad + row * (cell + gap)
                 val rect = RectF(left, top, left + cell, top + cell)
                 val level = week[row]?.day?.level?.coerceIn(0, 4) ?: 0
-                paint.color = COLORS[level]
+                paint.color = palette[level]
                 canvas.drawRoundRect(rect, radius, radius, paint)
                 if (level == 0) canvas.drawRoundRect(rect, radius, radius, stroke)
             }
         }
+        return bmp
+    }
+}
+
+/**
+ * Draws the widget card background (rounded rect + hairline border) as a
+ * bitmap, so card opacity can change without fading the text on top.
+ * Set it on an ImageView behind the content with scaleType="fitXY".
+ */
+object WidgetBg {
+
+    fun render(width: Int = 1024, height: Int = 512, bgColor: Int, cornerDp: Float = 48f): Bitmap {
+        val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bmp)
+        val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
+        val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = bgColor }
+        canvas.drawRoundRect(rect, cornerDp, cornerDp, fill)
+        val border = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 3f
+            color = Color.parseColor("#30363D")
+        }
+        canvas.drawRoundRect(rect, cornerDp, cornerDp, border)
         return bmp
     }
 }

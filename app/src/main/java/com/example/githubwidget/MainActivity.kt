@@ -2,6 +2,8 @@ package com.example.githubwidget
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -11,9 +13,13 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.slider.Slider
 
 class MainActivity : AppCompatActivity() {
+
+    private var lastResult: ContributionsResult? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,11 +33,55 @@ class MainActivity : AppCompatActivity() {
         val card = findViewById<MaterialCardView>(R.id.card_preview)
         val previewTitle = findViewById<TextView>(R.id.preview_title)
         val previewSubtitle = findViewById<TextView>(R.id.preview_subtitle)
+        val previewTotal = findViewById<TextView>(R.id.preview_total)
         val previewGraph = findViewById<ImageView>(R.id.preview_graph)
         val previewStatus = findViewById<TextView>(R.id.preview_status)
+        val themeName = findViewById<TextView>(R.id.text_theme_name)
+        val opacityText = findViewById<TextView>(R.id.text_opacity)
+        val slider = findViewById<Slider>(R.id.slider_opacity)
 
-        input.setText(Prefs.getUsername(this))
-        updateStatus(status)
+        val swatches: Map<String, MaterialButton> = mapOf(
+            "green" to findViewById(R.id.swatch_green),
+            "purple" to findViewById(R.id.swatch_purple),
+            "blue" to findViewById(R.id.swatch_blue),
+            "orange" to findViewById(R.id.swatch_orange),
+            "rose" to findViewById(R.id.swatch_rose)
+        )
+
+        fun currentTheme() = Themes.get(Prefs.getThemeId(this))
+        fun currentOpacity() = Prefs.getOpacity(this)
+
+        fun paintPreviewCard() {
+            card.setCardBackgroundColor(Themes.cardColor(currentOpacity()))
+        }
+
+        fun redrawGraphFromCache() {
+            val cached = lastResult ?: return
+            val theme = currentTheme()
+            previewGraph.setImageBitmap(
+                GraphRenderer.render(cached.days, scale = 2.5f, colors = theme.levels)
+            )
+            previewTotal.setTextColor(theme.accent)
+            paintPreviewCard()
+        }
+
+        fun selectTheme(id: String, refreshWidget: Boolean = true) {
+            Prefs.setThemeId(this, id)
+            val theme = Themes.get(id)
+            themeName.text = theme.name
+            for ((key, btn) in swatches) {
+                if (key == id) {
+                    btn.strokeWidth = 4
+                    btn.strokeColor = ColorStateList.valueOf(Color.WHITE)
+                } else {
+                    btn.strokeWidth = 0
+                }
+            }
+            previewTotal.setTextColor(theme.accent)
+            paintPreviewCard()
+            redrawGraphFromCache()
+            if (refreshWidget) Prefs.requestRefresh(this)
+        }
 
         fun loadPreview(username: String) {
             if (username.isBlank()) {
@@ -39,19 +89,27 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             card.visibility = View.VISIBLE
+            paintPreviewCard()
             previewTitle.text = "@$username"
             previewSubtitle.text = "Loading contributions…"
             previewStatus.text = ""
             previewGraph.setImageDrawable(null)
+            previewTotal.text = "–"
+            previewTotal.setTextColor(currentTheme().accent)
             Thread {
                 try {
                     val result = GithubApi.fetch(username)
-                    val bmp = GraphRenderer.render(result.days, scale = 2.5f)
+                    lastResult = result
+                    val bmp = GraphRenderer.render(
+                        result.days, scale = 2.5f, colors = currentTheme().levels
+                    )
                     runOnUiThread {
                         previewTitle.text = "@${result.username}"
                         val today = result.days.lastOrNull()
                         previewSubtitle.text =
                             "Today: ${today?.count ?: 0} • ${result.totalLastYear} in last year"
+                        previewTotal.text = "${result.totalLastYear}"
+                        previewTotal.setTextColor(currentTheme().accent)
                         previewGraph.setImageBitmap(bmp)
                         previewStatus.text = "This is exactly what the widget shows."
                     }
@@ -64,9 +122,35 @@ class MainActivity : AppCompatActivity() {
             }.start()
         }
 
-        // On open: if a username was saved before, show its contributions immediately.
-        // If first install (blank), the input is focused and preview stays hidden
-        // until the user enters a name.
+        // Init from saved prefs.
+        input.setText(Prefs.getUsername(this))
+        slider.value = currentOpacity().toFloat()
+        opacityText.text = "${currentOpacity()}%"
+        selectTheme(Prefs.getThemeId(this), refreshWidget = false)
+        paintPreviewCard()
+        updateStatus(status)
+
+        for ((id, btn) in swatches) {
+            btn.setOnClickListener { selectTheme(id) }
+        }
+
+        slider.addOnChangeListener { _, value, fromUser ->
+            val opacity = value.toInt()
+            opacityText.text = "$opacity%"
+            if (fromUser) {
+                Prefs.setOpacity(this, opacity)
+                paintPreviewCard()
+            }
+        }
+        slider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(s: Slider) = Unit
+            override fun onStopTrackingTouch(s: Slider) {
+                Prefs.setOpacity(this@MainActivity, s.value.toInt())
+                paintPreviewCard()
+                Prefs.requestRefresh(this@MainActivity)
+            }
+        })
+
         val saved = Prefs.getUsername(this)
         if (saved.isNotBlank()) loadPreview(saved)
 
@@ -115,9 +199,9 @@ class MainActivity : AppCompatActivity() {
     private fun updateStatus(status: TextView) {
         val u = Prefs.getUsername(this)
         status.text = if (u.isBlank()) {
-            "No username set.\n\n1. Enter your GitHub username above\n2. Tap Save\n3. Long-press homescreen → Widgets → GitHub Contributions"
+            "No username set.\n\n1. Enter your GitHub username above\n2. Tap Save\n3. Long-press homescreen → Widgets → GitHub Contributions (drag to resize)"
         } else {
-            "Tracking: @$u\n\nTo put it on your homescreen:\nLong-press homescreen → Widgets → GitHub Contributions"
+            "Tracking: @$u\n\nLong-press homescreen → Widgets → GitHub Contributions.\nLong-press the widget to resize it."
         }
     }
 }

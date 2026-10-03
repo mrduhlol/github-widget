@@ -1,5 +1,8 @@
 <resources>
-    <style name="Theme.GitHubWidget" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">#26A641</item>
+    <style name="Theme.GitHubWidget" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#39D353</item>
+        <item name="colorOnPrimary">#010409</item>
+        <item name="android:windowBackground">#010409</item>
+        <item name="colorSurface">#0D1117</item>
     </style>
 </resources>
