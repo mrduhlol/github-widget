@@ -25,10 +25,16 @@ import kotlin.math.sin
 object CardRenderer {
 
     /** Background composite WITHOUT border — also feeds image-through-graph. */
-    fun background(context: android.content.Context, w: Int, h: Int): Bitmap {
+    fun background(
+        context: android.content.Context,
+        w: Int,
+        h: Int,
+        opacityOverride: Int? = null
+    ): Bitmap {
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         val type = Studio.getBgType(context)
+        val opacity = (opacityOverride ?: Studio.getBgOpacity(context)).coerceIn(0, 100)
 
         if (type == Studio.BG_TRANSPARENT) {
             return bmp // fully transparent; overlay would defeat the point
