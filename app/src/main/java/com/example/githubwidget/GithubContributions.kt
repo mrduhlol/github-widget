@@ -76,9 +76,13 @@ object GraphRenderer {
      *
      * @param maxWeeks newest N weeks to draw (older weeks are dropped)
      * @param showMonthLabels month names above the first column of each month
-     * @param cornerRadius cell corner radius as a fraction of cell size (0..0.5)
+     * @param cornerRadius cell corner radius as a fraction of cell size (0..0.5,
+     *   0.5+ draws perfect circles)
      * @param gapScale multiplier for the gap between cells (1 = classic)
      * @param emptyBorder border drawn around empty cells (defaults to dark #30363D)
+     * @param cellScale scales cell size (graph size control)
+     * @param tint optional background image sampled per cell for
+     *   image-through-graph mode (tintAmount 0..0.6)
      */
     fun render(
         days: List<Day>,
@@ -88,7 +92,10 @@ object GraphRenderer {
         showMonthLabels: Boolean = false,
         cornerRadius: Float = 0.3f,
         gapScale: Float = 1f,
-        emptyBorder: Int = Color.parseColor("#30363D")
+        emptyBorder: Int = Color.parseColor("#30363D"),
+        cellScale: Float = 1f,
+        tint: Bitmap? = null,
+        tintAmount: Float = 0f
     ): Bitmap {
         if (days.isEmpty()) throw IllegalArgumentException("No days to render")
         val palette = colors ?: Themes.GREEN.levels
