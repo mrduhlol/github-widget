@@ -355,8 +355,8 @@ class MainActivity : AppCompatActivity() {
                 rowRanges.addView(b)
             }
         }
-        val shapeIds = listOf(WidgetPrefs.SHAPE_SQUARE, WidgetPrefs.SHAPE_ROUNDED, WidgetPrefs.SHAPE_SOFT)
-        val shapeNames = listOf("Square", "Rounded", "Soft")
+        val shapeIds = listOf(WidgetPrefs.SHAPE_SQUARE, WidgetPrefs.SHAPE_ROUNDED, WidgetPrefs.SHAPE_SOFT, WidgetPrefs.SHAPE_CIRCLE)
+        val shapeNames = listOf("Square", "Rounded", "Soft", "Circle")
         shapeButtons = shapeIds.mapIndexed { i, id ->
             optionButton(shapeNames[i]).also { b ->
                 b.setOnClickListener {
