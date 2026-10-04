@@ -122,8 +122,6 @@ class MainActivity : AppCompatActivity() {
             colStreak.visibility = if (WidgetPrefs.showStreak(this)) View.VISIBLE else View.GONE
             colBest.visibility = View.VISIBLE
             colActive.visibility = View.VISIBLE
-            rowStats.visibility =
-                if (WidgetPrefs.showStreak(this)) View.VISIBLE else View.GONE
 
             if (WidgetPrefs.showUpdated(this)) {
                 previewStatus.visibility = View.VISIBLE
