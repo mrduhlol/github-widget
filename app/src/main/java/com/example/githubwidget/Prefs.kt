@@ -52,10 +52,22 @@ object Prefs {
     }
 
     fun requestRefresh(context: Context) {
+        broadcast(context, ContributionWidgetProvider.ACTION_REFRESH)
+    }
+
+    /**
+     * Repaints widgets from cache only — no network. Use for look-only
+     * changes (theme, style, transparency) so they apply instantly offline.
+     */
+    fun requestRepaint(context: Context) {
+        broadcast(context, ContributionWidgetProvider.ACTION_REPAINT)
+    }
+
+    private fun broadcast(context: Context, action: String) {
         val mgr = AppWidgetManager.getInstance(context)
         val ids = mgr.getAppWidgetIds(ComponentName(context, ContributionWidgetProvider::class.java))
         val intent = Intent(context, ContributionWidgetProvider::class.java).apply {
-            action = ContributionWidgetProvider.ACTION_REFRESH
+            this.action = action
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
         }
         context.sendBroadcast(intent)
