@@ -78,6 +78,7 @@ object GraphRenderer {
      * @param showMonthLabels month names above the first column of each month
      * @param cornerRadius cell corner radius as a fraction of cell size (0..0.5)
      * @param gapScale multiplier for the gap between cells (1 = classic)
+     * @param emptyBorder border drawn around empty cells (defaults to dark #30363D)
      */
     fun render(
         days: List<Day>,
@@ -86,7 +87,8 @@ object GraphRenderer {
         maxWeeks: Int = 26,
         showMonthLabels: Boolean = false,
         cornerRadius: Float = 0.3f,
-        gapScale: Float = 1f
+        gapScale: Float = 1f,
+        emptyBorder: Int = Color.parseColor("#30363D")
     ): Bitmap {
         if (days.isEmpty()) throw IllegalArgumentException("No days to render")
         val palette = colors ?: Themes.GREEN.levels
