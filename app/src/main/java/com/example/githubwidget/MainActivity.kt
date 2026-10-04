@@ -4,22 +4,30 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.slider.Slider
+import java.text.NumberFormat
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
     private var lastResult: ContributionsResult? = null
+
+    private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,65 +45,214 @@ class MainActivity : AppCompatActivity() {
         val statStreak = findViewById<TextView>(R.id.stat_streak)
         val statBest = findViewById<TextView>(R.id.stat_best)
         val statActive = findViewById<TextView>(R.id.stat_active)
+        val colStreak = findViewById<LinearLayout>(R.id.col_streak)
+        val colBest = findViewById<LinearLayout>(R.id.col_best)
+        val colActive = findViewById<LinearLayout>(R.id.col_active)
         val previewGraph = findViewById<ImageView>(R.id.preview_graph)
         val previewStatus = findViewById<TextView>(R.id.preview_status)
         val themeName = findViewById<TextView>(R.id.text_theme_name)
+        val rowThemes = findViewById<LinearLayout>(R.id.row_themes)
+        val rowStyles = findViewById<LinearLayout>(R.id.row_styles)
+        val rowRanges = findViewById<LinearLayout>(R.id.row_ranges)
+        val rowShapes = findViewById<LinearLayout>(R.id.row_shapes)
+        val rowPresets = findViewById<LinearLayout>(R.id.row_presets)
         val opacityText = findViewById<TextView>(R.id.text_opacity)
-        val slider = findViewById<Slider>(R.id.slider_opacity)
-
-        val swatches: Map<String, MaterialButton> = mapOf(
-            "green" to findViewById(R.id.swatch_green),
-            "purple" to findViewById(R.id.swatch_purple),
-            "blue" to findViewById(R.id.swatch_blue),
-            "orange" to findViewById(R.id.swatch_orange),
-            "rose" to findViewById(R.id.swatch_rose),
-            Themes.CUSTOM_ID to findViewById(R.id.swatch_custom)
-        )
+        val sliderOpacity = findViewById<Slider>(R.id.slider_opacity)
+        val spacingText = findViewById<TextView>(R.id.text_spacing)
+        val sliderSpacing = findViewById<Slider>(R.id.slider_spacing)
+        val cornersText = findViewById<TextView>(R.id.text_corners)
+        val sliderCorners = findViewById<Slider>(R.id.slider_corners)
+        val chkTotal = findViewById<MaterialCheckBox>(R.id.chk_total)
+        val chkStreak = findViewById<MaterialCheckBox>(R.id.chk_streak)
+        val chkLongest = findViewById<MaterialCheckBox>(R.id.chk_longest)
+        val chkUpdated = findViewById<MaterialCheckBox>(R.id.chk_updated)
+        val btnReset = findViewById<Button>(R.id.btn_reset)
 
         fun currentTheme() =
             Themes.resolve(Prefs.getThemeId(this), Prefs.getCustomColor(this))
-        fun currentOpacity() = Prefs.getOpacity(this)
+
+        fun formatTotal(total: Int): String =
+            NumberFormat.getInstance(Locale.US).format(total)
 
         fun paintPreviewCard() {
-            card.setCardBackgroundColor(Themes.cardColor(currentOpacity()))
+            card.setCardBackgroundColor(Themes.cardColor(Prefs.getOpacity(this)))
+            card.radius = dp(WidgetPrefs.getCorners(this)).toFloat()
         }
 
-        /** Paints a dataset (fresh or cached) into the preview card. */
+        /** Paints a dataset into the preview, honoring every look setting. */
         fun showResult(result: ContributionsResult, updatedAgo: String) {
             lastResult = result
             val theme = currentTheme()
+            val weeks = WidgetPrefs.rangeWeeks(WidgetPrefs.getRange(this))
             previewGraph.setImageBitmap(
                 GraphRenderer.render(
                     result.days,
                     scale = 2.5f,
                     colors = theme.levels,
-                    showMonthLabels = true
+                    maxWeeks = weeks,
+                    showMonthLabels = true,
+                    cornerRadius = WidgetPrefs.shapeRadiusFactor(WidgetPrefs.getShape(this)),
+                    gapScale = WidgetPrefs.getSpacing(this)
                 )
             )
             previewGraph.contentDescription =
-                "@${result.username}: ${result.totalLastYear} contributions in the last year."
+                "@${result.username}: ${formatTotal(result.totalLastYear)} contributions in the last year."
             previewTitle.text = "@${result.username}"
-            val today = result.days.lastOrNull()
-            previewSubtitle.text =
-                "Today: ${today?.count ?: 0} • ${result.totalLastYear} in last year"
-            previewTotal.text = "${result.totalLastYear}"
-            previewTotal.setTextColor(theme.accent)
+            val today = result.days.lastOrNull()?.count ?: 0
             val stats = Stats.compute(result.days)
+            val total = formatTotal(result.totalLastYear)
+
+            val parts = ArrayList<String>()
+            parts.add("Today: $today")
+            if (WidgetPrefs.showStreak(this)) parts.add("${stats.currentStreak}d streak")
+            if (WidgetPrefs.showTotal(this)) parts.add("$total/yr")
+            previewSubtitle.text = parts.joinToString(" • ")
+
+            if (WidgetPrefs.showTotal(this)) {
+                previewTotal.visibility = View.VISIBLE
+                previewTotal.text = total
+                previewTotal.setTextColor(theme.accent)
+            } else {
+                previewTotal.visibility = View.GONE
+            }
             statStreak.text = "${stats.currentStreak}"
             statStreak.setTextColor(theme.accent)
             statBest.text = "${stats.bestCount}"
             statActive.text = "${stats.activeDays}"
-            previewStatus.text =
-                "Longest streak ${stats.longestStreak} days • updated $updatedAgo."
-        }
+            colStreak.visibility = if (WidgetPrefs.showStreak(this)) View.VISIBLE else View.GONE
+            colBest.visibility = View.VISIBLE
+            colActive.visibility = View.VISIBLE
+            rowStats.visibility =
+                if (WidgetPrefs.showStreak(this)) View.VISIBLE else View.GONE
 
-        fun redrawGraphFromCache() {
-            val cached = lastResult ?: return
-            showResult(cached, TimeAgo.format(Cache.load(this)?.second ?: 0L))
+            if (WidgetPrefs.showUpdated(this)) {
+                previewStatus.visibility = View.VISIBLE
+                var tail = "updated $updatedAgo"
+                if (WidgetPrefs.showLongest(this)) {
+                    tail += " • longest streak ${stats.longestStreak} days"
+                }
+                previewStatus.text = "Longest streak ${stats.longestStreak} days • $tail."
+            } else {
+                previewStatus.visibility = View.GONE
+            }
             paintPreviewCard()
         }
 
-        fun selectTheme(id: String, refreshWidget: Boolean = true) {
+        fun repaintFromCache() {
+            val cached = lastResult ?: return
+            val ts = Cache.load(this)?.second ?: 0L
+            showResult(cached, TimeAgo.format(ts))
+        }
+
+        // ---------- option button helpers ----------
+
+        fun optionButton(label: String): MaterialButton =
+            MaterialButton(this).apply {
+                text = label
+                textSize = 12f
+                cornerRadius = dp(10)
+                minimumWidth = 0
+                minWidth = 0
+                setPadding(dp(4), 0, dp(4), 0)
+                insetTop = 0
+                insetBottom = 0
+                val lp = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                lp.marginEnd = dp(8)
+                layoutParams = lp
+            }
+
+        fun paintOptions(buttons: List<MaterialButton>, selected: Int) {
+            val accent = currentTheme().accent
+            buttons.forEachIndexed { i, b ->
+                if (i == selected) {
+                    b.backgroundTintList = ColorStateList.valueOf(accent)
+                    b.setTextColor(Color.parseColor("#010409"))
+                    b.strokeWidth = 0
+                } else {
+                    b.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#21262D"))
+                    b.setTextColor(Color.parseColor("#F0F6FC"))
+                    b.strokeWidth = 0
+                }
+            }
+        }
+
+        // ---------- theme preview tiles ----------
+
+        fun themeTile(name: String, colors: IntArray, selected: Boolean, onTap: () -> Unit): MaterialCardView {
+            val tile = MaterialCardView(this).apply {
+                radius = dp(12).toFloat()
+                setCardBackgroundColor(Color.parseColor("#0D1117"))
+                strokeWidth = if (selected) dp(2) else 0
+                strokeColor = Color.WHITE
+                val lp = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                lp.marginEnd = dp(10)
+                layoutParams = lp
+                isClickable = true
+                isFocusable = true
+            }
+            val inner = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(10), dp(10), dp(10), dp(10))
+                gravity = Gravity.CENTER_HORIZONTAL
+            }
+            val squares = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            for (c in colors) {
+                val s = View(this).apply {
+                    setBackgroundColor(c)
+                    val slp = LinearLayout.LayoutParams(dp(18), dp(18))
+                    slp.marginEnd = dp(3)
+                    layoutParams = slp
+                }
+                squares.addView(s)
+            }
+            inner.addView(squares)
+            inner.addView(TextView(this).apply {
+                text = name
+                textSize = 10f
+                typeface = Typeface.MONOSPACE
+                setTextColor(if (selected) Color.WHITE else Color.parseColor("#8B949E"))
+                setPadding(0, dp(6), 0, 0)
+            })
+            tile.addView(inner)
+            tile.setOnClickListener { onTap() }
+            return tile
+        }
+
+        fun buildThemeRow() {
+            rowThemes.removeAllViews()
+            val currentId = Prefs.getThemeId(this)
+            for (theme in Themes.ALL) {
+                rowThemes.addView(
+                    themeTile(theme.name, theme.levels, currentId == theme.id) {
+                        selectTheme(theme.id)
+                    }
+                )
+            }
+            val customColors = Themes.resolve(
+                Themes.CUSTOM_ID, Prefs.getCustomColor(this)
+            ).levels
+            rowThemes.addView(
+                themeTile(
+                    "Custom ${Themes.toHex(Prefs.getCustomColor(this))}",
+                    customColors,
+                    currentId == Themes.CUSTOM_ID
+                ) { openColorPicker() }
+            )
+        }
+
+        // ---------- selection actions (defined before use in builders below) ----------
+
+        lateinit var styleButtons: List<MaterialButton>
+        lateinit var rangeButtons: List<MaterialButton>
+        lateinit var shapeButtons: List<MaterialButton>
+        lateinit var presetButtons: List<MaterialButton>
+
+        fun repaintWidget() = Prefs.requestRepaint(this)
+
+        fun selectTheme(id: String) {
             Prefs.setThemeId(this, id)
             val theme = Themes.resolve(id, Prefs.getCustomColor(this))
             themeName.text = if (id == Themes.CUSTOM_ID) {
@@ -103,23 +260,192 @@ class MainActivity : AppCompatActivity() {
             } else {
                 theme.name
             }
-            for ((key, btn) in swatches) {
-                if (key == id) {
-                    btn.strokeWidth = 4
-                    btn.strokeColor = ColorStateList.valueOf(Color.WHITE)
-                } else {
-                    btn.strokeWidth = 0
-                }
+            buildThemeRow()
+            if (::styleButtons.isInitialized) {
+                paintOptions(styleButtons, WidgetPrefs.STYLES.indexOf(WidgetPrefs.getStyle(this)))
             }
-            paintPreviewCard()
-            redrawGraphFromCache()
-            if (refreshWidget) Prefs.requestRefresh(this)
+            repaintFromCache()
+            repaintWidget()
         }
 
-        /**
-         * Cache-first: paints saved data instantly (works offline), then
-         * refreshes in the background. Failures keep the cached graph.
-         */
+        fun selectStyle(id: String) {
+            WidgetPrefs.setStyle(this, id)
+            val c = Presets.styleContent(id)
+            WidgetPrefs.setContent(this, c[0], c[1], c[2], c[3])
+            syncContentChecks()
+            paintOptions(styleButtons, WidgetPrefs.STYLES.indexOf(id))
+            repaintFromCache()
+            repaintWidget()
+        }
+
+        fun syncContentChecks() {
+            chkTotal.isChecked = WidgetPrefs.showTotal(this)
+            chkStreak.isChecked = WidgetPrefs.showStreak(this)
+            chkLongest.isChecked = WidgetPrefs.showLongest(this)
+            chkUpdated.isChecked = WidgetPrefs.showUpdated(this)
+        }
+
+        fun syncAllControls() {
+            buildThemeRow()
+            val theme = currentTheme()
+            themeName.text = if (Prefs.getThemeId(this) == Themes.CUSTOM_ID) {
+                "Custom ${Themes.toHex(Prefs.getCustomColor(this))}"
+            } else {
+                theme.name
+            }
+            paintOptions(styleButtons, WidgetPrefs.STYLES.indexOf(WidgetPrefs.getStyle(this)))
+            val ranges = listOf(WidgetPrefs.RANGE_3M, WidgetPrefs.RANGE_6M, WidgetPrefs.RANGE_12M)
+            paintOptions(rangeButtons, ranges.indexOf(WidgetPrefs.getRange(this)))
+            val shapes = listOf(WidgetPrefs.SHAPE_SQUARE, WidgetPrefs.SHAPE_ROUNDED, WidgetPrefs.SHAPE_SOFT)
+            paintOptions(shapeButtons, shapes.indexOf(WidgetPrefs.getShape(this)))
+            paintOptions(presetButtons, -1)
+            sliderOpacity.value = Prefs.getOpacity(this).toFloat()
+            opacityText.text = "${Prefs.getOpacity(this)}%"
+            sliderSpacing.value = WidgetPrefs.getSpacing(this)
+            spacingText.text = spacingLabel(WidgetPrefs.getSpacing(this))
+            sliderCorners.value = WidgetPrefs.getCorners(this).toFloat()
+            cornersText.text = "${WidgetPrefs.getCorners(this)}dp"
+            syncContentChecks()
+            repaintFromCache()
+            paintPreviewCard()
+        }
+
+        fun spacingLabel(s: Float): String = when {
+            s < 1f -> "Tight"
+            s > 1f -> "Airy"
+            else -> "Normal"
+        }
+
+        // ---------- build option rows ----------
+
+        styleButtons = WidgetPrefs.STYLES.map { id ->
+            optionButton(WidgetPrefs.STYLE_NAMES[id] ?: id).also { b ->
+                b.contentDescription = "Style ${WidgetPrefs.STYLE_NAMES[id]}"
+                b.setOnClickListener { selectStyle(id) }
+                rowStyles.addView(b)
+            }
+        }
+        val rangeIds = listOf(WidgetPrefs.RANGE_3M, WidgetPrefs.RANGE_6M, WidgetPrefs.RANGE_12M)
+        val rangeNames = listOf("3 months", "6 months", "1 year")
+        rangeButtons = rangeIds.mapIndexed { i, id ->
+            optionButton(rangeNames[i]).also { b ->
+                b.setOnClickListener {
+                    WidgetPrefs.setRange(this, id)
+                    paintOptions(rangeButtons, i)
+                    repaintFromCache()
+                    repaintWidget()
+                }
+                rowRanges.addView(b)
+            }
+        }
+        val shapeIds = listOf(WidgetPrefs.SHAPE_SQUARE, WidgetPrefs.SHAPE_ROUNDED, WidgetPrefs.SHAPE_SOFT)
+        val shapeNames = listOf("Square", "Rounded", "Soft")
+        shapeButtons = shapeIds.mapIndexed { i, id ->
+            optionButton(shapeNames[i]).also { b ->
+                b.setOnClickListener {
+                    WidgetPrefs.setShape(this, id)
+                    paintOptions(shapeButtons, i)
+                    repaintFromCache()
+                    repaintWidget()
+                }
+                rowShapes.addView(b)
+            }
+        }
+        presetButtons = Presets.ALL.map { id ->
+            optionButton(Presets.NAMES[id] ?: id).also { b ->
+                b.setOnClickListener {
+                    Presets.apply(this, id)
+                    syncAllControls()
+                    repaintWidget()
+                    Toast.makeText(this, "${Presets.NAMES[id]} look applied", Toast.LENGTH_SHORT).show()
+                }
+                rowPresets.addView(b)
+            }
+        }
+
+        // ---------- sliders / checks / reset ----------
+
+        sliderOpacity.addOnChangeListener { _, value, fromUser ->
+            val opacity = value.toInt()
+            opacityText.text = "$opacity%"
+            if (fromUser) {
+                Prefs.setOpacity(this, opacity)
+                paintPreviewCard()
+            }
+        }
+        sliderOpacity.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(s: Slider) = Unit
+            override fun onStopTrackingTouch(s: Slider) {
+                Prefs.setOpacity(this@MainActivity, s.value.toInt())
+                paintPreviewCard()
+                repaintWidget()
+            }
+        })
+
+        sliderSpacing.addOnChangeListener { _, value, fromUser ->
+            spacingText.text = spacingLabel(value)
+            if (fromUser) WidgetPrefs.setSpacing(this, value)
+        }
+        sliderSpacing.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(s: Slider) = Unit
+            override fun onStopTrackingTouch(s: Slider) {
+                WidgetPrefs.setSpacing(this@MainActivity, s.value)
+                spacingText.text = spacingLabel(s.value)
+                repaintFromCache()
+                repaintWidget()
+            }
+        })
+
+        sliderCorners.addOnChangeListener { _, value, fromUser ->
+            cornersText.text = "${value.toInt()}dp"
+            if (fromUser) {
+                WidgetPrefs.setCorners(this, value.toInt())
+                paintPreviewCard()
+            }
+        }
+        sliderCorners.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(s: Slider) = Unit
+            override fun onStopTrackingTouch(s: Slider) {
+                WidgetPrefs.setCorners(this@MainActivity, s.value.toInt())
+                paintPreviewCard()
+                repaintWidget()
+            }
+        })
+
+        val onContentChanged = { _: View ->
+            WidgetPrefs.setContent(
+                this,
+                chkTotal.isChecked, chkStreak.isChecked,
+                chkLongest.isChecked, chkUpdated.isChecked
+            )
+            repaintFromCache()
+            repaintWidget()
+        }
+        chkTotal.setOnClickListener(onContentChanged)
+        chkStreak.setOnClickListener(onContentChanged)
+        chkLongest.setOnClickListener(onContentChanged)
+        chkUpdated.setOnClickListener(onContentChanged)
+
+        btnReset.setOnClickListener {
+            WidgetPrefs.resetToDefaults(this)
+            syncAllControls()
+            repaintWidget()
+            Toast.makeText(this, "Look reset — username and data kept", Toast.LENGTH_SHORT).show()
+        }
+
+        fun openColorPicker() {
+            ColorPickerDialog.show(this, Prefs.getCustomColor(this)) { c ->
+                Prefs.setCustomColor(this, c)
+                Prefs.setThemeId(this, Themes.CUSTOM_ID)
+                themeName.text = "Custom ${Themes.toHex(c)}"
+                buildThemeRow()
+                repaintFromCache()
+                repaintWidget()
+            }
+        }
+
+        // ---------- data loading (cache-first) ----------
+
         fun loadPreview(username: String) {
             if (username.isBlank()) {
                 card.visibility = View.GONE
@@ -179,50 +505,11 @@ class MainActivity : AppCompatActivity() {
             }.start()
         }
 
-        fun openColorPicker() {
-            ColorPickerDialog.show(this, Prefs.getCustomColor(this)) { c ->
-                Prefs.setCustomColor(this, c)
-                swatches[Themes.CUSTOM_ID]?.backgroundTintList =
-                    ColorStateList.valueOf(c)
-                selectTheme(Themes.CUSTOM_ID)
-            }
-        }
+        // ---------- init ----------
 
-        // Init from saved prefs.
         input.setText(Prefs.getUsername(this))
-        slider.value = currentOpacity().toFloat()
-        opacityText.text = "${currentOpacity()}%"
-        swatches[Themes.CUSTOM_ID]?.backgroundTintList =
-            ColorStateList.valueOf(Prefs.getCustomColor(this))
-        selectTheme(Prefs.getThemeId(this), refreshWidget = false)
-        paintPreviewCard()
+        syncAllControls()
         updateStatus(status)
-
-        for ((id, btn) in swatches) {
-            btn.setOnClickListener {
-                if (id == Themes.CUSTOM_ID) openColorPicker() else selectTheme(id)
-            }
-        }
-
-        slider.addOnChangeListener { _, value, fromUser ->
-            val opacity = value.toInt()
-            opacityText.text = "$opacity%"
-            if (fromUser) {
-                Prefs.setOpacity(this, opacity)
-                paintPreviewCard()
-            }
-        }
-        slider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(s: Slider) = Unit
-            override fun onStopTrackingTouch(s: Slider) {
-                Prefs.setOpacity(this@MainActivity, s.value.toInt())
-                paintPreviewCard()
-                Prefs.requestRefresh(this@MainActivity)
-            }
-        })
-
-        val saved = Prefs.getUsername(this)
-        if (saved.isNotBlank()) loadPreview(saved)
 
         save.setOnClickListener {
             val u = input.text.toString().trim().trimStart('@')
@@ -248,7 +535,6 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Refreshing…", Toast.LENGTH_SHORT).show()
         }
 
-        // Android 8+: offer one-tap pin if the launcher supports it.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val mgr = getSystemService(AppWidgetManager::class.java)
             val provider = ComponentName(this, ContributionWidgetProvider::class.java)
@@ -264,6 +550,9 @@ class MainActivity : AppCompatActivity() {
             pin.isEnabled = false
             pin.text = "Add widget via homescreen (long-press)"
         }
+
+        val saved = Prefs.getUsername(this)
+        if (saved.isNotBlank()) loadPreview(saved)
     }
 
     private fun updateStatus(status: TextView) {
