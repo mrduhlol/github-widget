@@ -24,24 +24,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="Your graph, on your homescreen."
+        android:text="Your graph, your style."
         android:textColor="#F0F6FC"
         android:textSize="24sp"
         android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text="Pick a color, tune the glass, drop the widget."
-        android:textColor="#8B949E"
-        android:textSize="13sp" />
 
     <!-- Username -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="20dp"
         android:text="GitHub username"
         android:textColor="#F0F6FC"
         android:textSize="13sp"
@@ -75,171 +67,22 @@
         app:backgroundTint="#238636"
         app:cornerRadius="12dp" />
 
-    <!-- Graph color -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Graph color"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <LinearLayout
-        android:id="@+id/row_swatches"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/swatch_green"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:layout_marginEnd="10dp"
-            android:contentDescription="Matrix green"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:insetLeft="0dp"
-            android:insetRight="0dp"
-            android:text=""
-            app:backgroundTint="#39D353"
-            app:cornerRadius="26dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/swatch_purple"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:layout_marginEnd="10dp"
-            android:contentDescription="Nebula purple"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:insetLeft="0dp"
-            android:insetRight="0dp"
-            android:text=""
-            app:backgroundTint="#A371F7"
-            app:cornerRadius="26dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/swatch_blue"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:layout_marginEnd="10dp"
-            android:contentDescription="Abyss blue"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:insetLeft="0dp"
-            android:insetRight="0dp"
-            android:text=""
-            app:backgroundTint="#58A6FF"
-            app:cornerRadius="26dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/swatch_orange"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:layout_marginEnd="10dp"
-            android:contentDescription="Ember orange"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:insetLeft="0dp"
-            android:insetRight="0dp"
-            android:text=""
-            app:backgroundTint="#F0883E"
-            app:cornerRadius="26dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/swatch_rose"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:layout_marginEnd="10dp"
-            android:contentDescription="Neon rose"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:insetLeft="0dp"
-            android:insetRight="0dp"
-            android:text=""
-            app:backgroundTint="#F778BA"
-            app:cornerRadius="26dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/swatch_custom"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:contentDescription="Pick any color"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:insetLeft="0dp"
-            android:insetRight="0dp"
-            android:text="+"
-            android:textSize="22sp"
-            app:backgroundTint="#39D353"
-            app:cornerRadius="26dp" />
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/text_theme_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:text="Matrix"
-        android:textColor="#8B949E"
-        android:textSize="12sp"
-        android:typeface="monospace" />
-
-    <!-- Transparency -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Card transparency"
-            android:textColor="#F0F6FC"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/text_opacity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="100%"
-            android:textColor="#8B949E"
-            android:textSize="12sp"
-            android:typeface="monospace" />
-    </LinearLayout>
-
-    <com.google.android.material.slider.Slider
-        android:id="@+id/slider_opacity"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:value="100"
-        android:valueFrom="20"
-        android:valueTo="100"
-        android:stepSize="5" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Lower it to let your wallpaper shine through."
-        android:textColor="#8B949E"
-        android:textSize="11sp" />
-
     <!-- Live preview -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Live preview"
+        android:text="Widget preview"
         android:textColor="#F0F6FC"
         android:textSize="13sp"
         android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Exactly what your homescreen shows."
+        android:textColor="#8B949E"
+        android:textSize="11sp" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_preview"
@@ -395,6 +238,270 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- Appearance -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Appearance"
+        android:textColor="#F0F6FC"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="Theme"
+        android:textColor="#8B949E"
+        android:textSize="12sp" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/row_themes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="Widget style"
+        android:textColor="#8B949E"
+        android:textSize="12sp" />
+
+    <LinearLayout
+        android:id="@+id/row_styles"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal" />
+
+    <!-- Graph -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Graph"
+        android:textColor="#F0F6FC"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="Range"
+        android:textColor="#8B949E"
+        android:textSize="12sp" />
+
+    <LinearLayout
+        android:id="@+id/row_ranges"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="Cell shape"
+        android:textColor="#8B949E"
+        android:textSize="12sp" />
+
+    <LinearLayout
+        android:id="@+id/row_shapes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Cell spacing"
+            android:textColor="#8B949E"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/text_spacing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Normal"
+            android:textColor="#8B949E"
+            android:textSize="12sp"
+            android:typeface="monospace" />
+    </LinearLayout>
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/slider_spacing"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:value="1"
+        android:valueFrom="0.5"
+        android:valueTo="1.5"
+        android:stepSize="0.5" />
+
+    <!-- Card -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Card"
+        android:textColor="#F0F6FC"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Transparency"
+            android:textColor="#8B949E"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/text_opacity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="100%"
+            android:textColor="#8B949E"
+            android:textSize="12sp"
+            android:typeface="monospace" />
+    </LinearLayout>
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/slider_opacity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:value="100"
+        android:valueFrom="20"
+        android:valueTo="100"
+        android:stepSize="5" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Corner roundness"
+            android:textColor="#8B949E"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/text_corners"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="16dp"
+            android:textColor="#8B949E"
+            android:textSize="12sp"
+            android:typeface="monospace" />
+    </LinearLayout>
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/slider_corners"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:value="16"
+        android:valueFrom="0"
+        android:valueTo="28"
+        android:stepSize="2" />
+
+    <!-- Content -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Widget information"
+        android:textColor="#F0F6FC"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/chk_total"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="Contribution count"
+        android:textColor="#F0F6FC" />
+
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/chk_streak"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Current streak"
+        android:textColor="#F0F6FC" />
+
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/chk_longest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Longest streak"
+        android:textColor="#F0F6FC" />
+
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/chk_updated"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Last updated"
+        android:textColor="#F0F6FC" />
+
+    <!-- Presets -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Presets"
+        android:textColor="#F0F6FC"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/row_presets"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_reset"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Reset to default look"
+        app:backgroundTint="#21262D"
+        app:cornerRadius="12dp" />
+
+    <!-- Actions -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_refresh"
         android:layout_width="match_parent"
