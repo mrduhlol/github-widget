@@ -123,9 +123,9 @@ object GraphRenderer {
         val shown = if (weeks.size > keep) weeks.takeLast(keep) else weeks
         val shownMonths = if (weeks.size > keep) weekMonth.takeLast(keep) else weekMonth
 
-        val gap = (2f * scale)
+        val gap = (2f * scale * gapScale)
         val cell = (10f * scale)
-        val radius = (3f * scale)
+        val radius = (cornerRadius.coerceIn(0f, 0.5f) * cell)
         val pad = (8f * scale)
         val labelStrip = if (showMonthLabels) (13f * scale) else 0f
 
