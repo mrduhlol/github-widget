@@ -36,6 +36,7 @@ object WidgetPrefs {
     const val SHAPE_SQUARE = "square"
     const val SHAPE_ROUNDED = "rounded"
     const val SHAPE_SOFT = "soft"
+    const val SHAPE_CIRCLE = "circle"
 
     private const val KEY_STYLE = "style"
     private const val KEY_RANGE = "range"
