@@ -79,10 +79,11 @@ object WidgetPrefs {
         prefs(context).edit().putString(KEY_SHAPE, shape).apply()
     }
 
-    /** Cell corner radius as a fraction of the cell size. */
+    /** Cell corner radius as a fraction of the cell size. 0.55+ = circles. */
     fun shapeRadiusFactor(shape: String): Float = when (shape) {
         SHAPE_SQUARE -> 0.08f
-        SHAPE_SOFT -> 0.5f
+        SHAPE_SOFT -> 0.45f
+        SHAPE_CIRCLE -> 0.55f
         else -> 0.3f
     }
 
