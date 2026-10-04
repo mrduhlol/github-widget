@@ -54,7 +54,7 @@ object CardRenderer {
                 null
             }
             if (img != null) {
-                val alpha = (Studio.getBgOpacity(context).coerceIn(0, 100) * 255 / 100)
+                val alpha = (opacity * 255 / 100)
                 val paint = Paint(Paint.FILTER_BITMAP_FLAG).apply { this.alpha = alpha }
                 canvas.drawBitmap(img, 0f, 0f, paint)
                 if (!img.isRecycled) img.recycle()
