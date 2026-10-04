@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         val save = findViewById<Button>(R.id.btn_save)
         val refresh = findViewById<Button>(R.id.btn_refresh)
         val pin = findViewById<Button>(R.id.btn_add_widget)
+        val activityBtn = findViewById<Button>(R.id.btn_activity)
         val card = findViewById<MaterialCardView>(R.id.card_preview)
         val previewTitle = findViewById<TextView>(R.id.preview_title)
         val previewSubtitle = findViewById<TextView>(R.id.preview_subtitle)
