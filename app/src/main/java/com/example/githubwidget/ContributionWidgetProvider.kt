@@ -203,7 +203,7 @@ class ContributionWidgetProvider : AppWidgetProvider() {
                 Cache.save(context, result)
                 val views = baseViews(context, widgetId)
                 val size = sizeClass(mgr, widgetId)
-                paintResult(views, result, size, "Updated ${TimeAgo.format(System.currentTimeMillis())} • tap refresh icon to refresh")
+                paintResult(context, views, result, size, "Updated ${TimeAgo.format(System.currentTimeMillis())} • tap refresh icon to refresh")
                 mgr.updateAppWidget(widgetId, views)
             } catch (e: UserNotFoundException) {
                 val views = baseViews(context, widgetId)
