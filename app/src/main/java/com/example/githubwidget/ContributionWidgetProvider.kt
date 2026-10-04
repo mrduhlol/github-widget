@@ -10,19 +10,54 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class ContributionWidgetProvider : AppWidgetProvider() {
 
     companion object {
         const val ACTION_REFRESH = "com.example.githubwidget.ACTION_REFRESH"
+
+        /** Guards against overlapping refreshes of the same widget. */
+        private val inFlight = mutableSetOf<Int>()
+
+        @Synchronized
+        private fun beginRefresh(widgetId: Int): Boolean {
+            if (inFlight.contains(widgetId)) return false
+            inFlight.add(widgetId)
+            return true
+        }
+
+        @Synchronized
+        private fun endRefresh(widgetId: Int) {
+            inFlight.remove(widgetId)
+        }
+    }
+
+    /** How much to show, based on the widget's current minimum width. */
+    private data class SizeClass(
+        val weeks: Int,
+        val monthLabels: Boolean,
+        val showFooter: Boolean,
+        val shortSubtitle: Boolean
+    )
+
+    private fun sizeClass(mgr: AppWidgetManager, widgetId: Int): SizeClass {
+        return try {
+            val opts = mgr.getAppWidgetOptions(widgetId)
+            val minW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 250)
+            when {
+                minW < 180 -> SizeClass(weeks = 12, monthLabels = false, showFooter = false, shortSubtitle = true)
+                minW < 320 -> SizeClass(weeks = 26, monthLabels = false, showFooter = true, shortSubtitle = false)
+                else -> SizeClass(weeks = 40, monthLabels = true, showFooter = true, shortSubtitle = false)
+            }
+        } catch (_: Exception) {
+            SizeClass(weeks = 26, monthLabels = false, showFooter = true, shortSubtitle = false)
+        }
     }
 
     override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) {
         for (id in ids) {
-            updateOne(context, mgr, id)
+            paintCached(context, mgr, id)
+            refreshInBackground(context, mgr, id)
         }
     }
 
@@ -33,7 +68,8 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         widgetId: Int,
         newOptions: Bundle
     ) {
-        updateOne(context, mgr, widgetId)
+        paintCached(context, mgr, widgetId)
+        refreshInBackground(context, mgr, widgetId)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -66,74 +102,149 @@ class ContributionWidgetProvider : AppWidgetProvider() {
     private fun currentTheme(context: Context): GraphTheme =
         Themes.resolve(Prefs.getThemeId(context), Prefs.getCustomColor(context))
 
-    private fun applyChrome(views: RemoteViews, context: Context) {
-        val theme = currentTheme(context)
-        val bg = WidgetBg.render(bgColor = Themes.cardColor(Prefs.getOpacity(context)))
-        views.setImageViewBitmap(R.id.widget_bg, bg)
-        views.setTextColor(R.id.widget_total, theme.accent)
-    }
-
-    private fun updateOne(context: Context, mgr: AppWidgetManager, widgetId: Int) {
+    private fun baseViews(context: Context, widgetId: Int): RemoteViews {
         val (openPi, refreshPi) = pendingIntents(context, widgetId)
         val views = RemoteViews(context.packageName, R.layout.widget_contribution)
-        val username = Prefs.getUsername(context)
-        applyChrome(views, context)
-
-        // Click on header opens the app to change username.
+        val bg = WidgetBg.render(bgColor = Themes.cardColor(Prefs.getOpacity(context)))
+        views.setImageViewBitmap(R.id.widget_bg, bg)
+        views.setTextColor(R.id.widget_total, currentTheme(context).accent)
         views.setOnClickPendingIntent(R.id.widget_header, openPi)
-        // Refresh button.
         views.setOnClickPendingIntent(R.id.widget_refresh, refreshPi)
+        return views
+    }
+
+    private fun paintResult(
+        context: Context,
+        views: RemoteViews,
+        result: ContributionsResult,
+        size: SizeClass,
+        footer: String
+    ) {
+        val theme = currentTheme(context)
+        val bitmap: Bitmap = GraphRenderer.render(
+            result.days,
+            colors = theme.levels,
+            maxWeeks = size.weeks,
+            showMonthLabels = size.monthLabels
+        )
+        val stats = Stats.compute(result.days)
+        val today = result.days.lastOrNull()
+        views.setTextViewText(R.id.widget_title, "@${result.username}")
+        views.setTextViewText(
+            R.id.widget_subtitle,
+            if (size.shortSubtitle) {
+                "Today: ${today?.count ?: 0} • ${stats.currentStreak}d streak"
+            } else {
+                "Today: ${today?.count ?: 0} • ${stats.currentStreak}d streak • ${result.totalLastYear}/yr"
+            }
+        )
+        views.setTextViewText(R.id.widget_total, "${result.totalLastYear}")
+        views.setImageViewBitmap(R.id.widget_graph, bitmap)
+        views.setContentDescription(
+            R.id.widget_graph,
+            "@${result.username}: ${result.totalLastYear} contributions in the last year, " +
+                "${stats.currentStreak} day streak."
+        )
+        views.setViewVisibility(R.id.widget_graph, View.VISIBLE)
+        views.setViewVisibility(R.id.widget_total, View.VISIBLE)
+        if (size.showFooter) {
+            views.setViewVisibility(R.id.widget_updated, View.VISIBLE)
+            views.setTextViewText(R.id.widget_updated, footer)
+        } else {
+            views.setViewVisibility(R.id.widget_updated, View.GONE)
+        }
+    }
+
+    /**
+     * Paint instantly from cache (or a clean placeholder). Never touches network,
+     * so the widget is never blank and works fully offline.
+     */
+    private fun paintCached(context: Context, mgr: AppWidgetManager, widgetId: Int) {
+        val views = baseViews(context, widgetId)
+        val username = Prefs.getUsername(context)
+        val size = sizeClass(mgr, widgetId)
 
         if (username.isBlank()) {
-            views.setTextViewText(R.id.widget_title, "Tap to set GitHub username")
-            views.setTextViewText(R.id.widget_subtitle, "Open app → enter username")
+            views.setTextViewText(R.id.widget_title, "Tap to open GH-widgets")
+            views.setTextViewText(R.id.widget_subtitle, "Enter your GitHub username")
             views.setViewVisibility(R.id.widget_graph, View.GONE)
             views.setViewVisibility(R.id.widget_total, View.GONE)
+            views.setViewVisibility(R.id.widget_updated, View.GONE)
             mgr.updateAppWidget(widgetId, views)
             return
         }
 
-        views.setViewVisibility(R.id.widget_graph, View.VISIBLE)
-        views.setViewVisibility(R.id.widget_total, View.VISIBLE)
-        views.setTextViewText(R.id.widget_title, "@$username")
-        views.setTextViewText(R.id.widget_subtitle, "Loading…")
+        val cached = Cache.load(context)
+        if (cached != null && cached.first.username.equals(username, ignoreCase = true)) {
+            val (result, ts) = cached
+            paintResult(views, result, size, "Last updated ${TimeAgo.format(ts)}")
+        } else {
+            views.setTextViewText(R.id.widget_title, "@$username")
+            views.setTextViewText(R.id.widget_subtitle, "Loading contributions…")
+            views.setViewVisibility(R.id.widget_graph, View.GONE)
+            views.setViewVisibility(R.id.widget_total, View.GONE)
+            views.setViewVisibility(R.id.widget_updated, View.GONE)
+        }
         mgr.updateAppWidget(widgetId, views)
+    }
 
-        // Network off the main thread. goAsync() keeps the broadcast alive.
+    /**
+     * One background fetch per widget; concurrent refreshes of the same widget
+     * are skipped. Failures keep the cached graph on screen.
+     */
+    private fun refreshInBackground(context: Context, mgr: AppWidgetManager, widgetId: Int) {
+        val username = Prefs.getUsername(context)
+        if (username.isBlank() || !beginRefresh(widgetId)) return
+
         val pending = goAsync()
         Thread {
             try {
-                val theme = currentTheme(context)
                 val result = GithubApi.fetch(username)
-                val bitmap: Bitmap = GraphRenderer.render(result.days, colors = theme.levels)
-                val fresh = RemoteViews(context.packageName, R.layout.widget_contribution)
-                applyChrome(fresh, context)
-                fresh.setOnClickPendingIntent(R.id.widget_header, openPi)
-                fresh.setOnClickPendingIntent(R.id.widget_refresh, refreshPi)
-                fresh.setTextViewText(R.id.widget_title, "@${result.username}")
-                val today = result.days.lastOrNull()
-                val stats = Stats.compute(result.days)
-                fresh.setTextViewText(
-                    R.id.widget_subtitle,
-                    "Today: ${today?.count ?: 0} • ${stats.currentStreak}d streak • ${result.totalLastYear}/yr"
-                )
-                fresh.setTextViewText(R.id.widget_total, "${result.totalLastYear}")
-                fresh.setImageViewBitmap(R.id.widget_graph, bitmap)
-                val ts = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(Date())
-                fresh.setTextViewText(R.id.widget_updated, "Updated $ts • tap ⟳ to refresh")
-                mgr.updateAppWidget(widgetId, fresh)
-            } catch (e: Exception) {
-                val err = RemoteViews(context.packageName, R.layout.widget_contribution)
-                applyChrome(err, context)
-                err.setOnClickPendingIntent(R.id.widget_header, openPi)
-                err.setOnClickPendingIntent(R.id.widget_refresh, refreshPi)
-                err.setTextViewText(R.id.widget_title, "@$username")
-                err.setTextViewText(R.id.widget_subtitle, "Couldn't load. Tap ⟳ to retry.")
-                err.setTextViewText(R.id.widget_updated, (e.message ?: "Network error").take(80))
-                mgr.updateAppWidget(widgetId, err)
+                Cache.save(context, result)
+                val views = baseViews(context, widgetId)
+                val size = sizeClass(mgr, widgetId)
+                paintResult(views, result, size, "Updated ${TimeAgo.format(System.currentTimeMillis())} • tap refresh icon to refresh")
+                mgr.updateAppWidget(widgetId, views)
+            } catch (e: UserNotFoundException) {
+                val views = baseViews(context, widgetId)
+                views.setTextViewText(R.id.widget_title, "@$username")
+                views.setTextViewText(R.id.widget_subtitle, "User not found — tap to fix")
+                mgr.updateAppWidget(widgetId, views)
+            } catch (_: Exception) {
+                // Offline or server trouble: keep whatever is on screen (cache
+                // if we have it) and note the data's age instead of an error dump.
+                val cached = Cache.load(context)
+                if (cached != null && cached.first.username.equals(username, ignoreCase = true)) {
+                    val views = baseViews(context, widgetId)
+                    val size = sizeClass(mgr, widgetId)
+                    paintResult(
+                        views, cached.first, size,
+                        "Last updated ${TimeAgo.format(cached.second)} • tap refresh icon to retry"
+                    )
+                    mgr.updateAppWidget(widgetId, views)
+                } else {
+                    val views = baseViews(context, widgetId)
+                    views.setTextViewText(R.id.widget_title, "@$username")
+                    views.setTextViewText(R.id.widget_subtitle, "No connection — tap refresh icon to retry")
+                    mgr.updateAppWidget(widgetId, views)
+                }
             } finally {
+                endRefresh(widgetId)
                 pending.finish()
             }
         }.start()
     }
+}
+
+/**
+ * RemoteViews has no Context reference, but theme resolution only needs one
+ * for prefs — the provider always passes Views built with its own Context,
+ * so we recover it from the pending-intent creator package is unnecessary:
+ * instead the provider pre-tints everything in baseViews() and paintResult()
+ * reuses the same accent via this helper bound at call time.
+ *
+ * NOTE: kept for readability — actual theme comes from the caller.
+ */
+private fun RemoteViews.applicationContextForTheme(): Context {
+    throw UnsupportedOperationException("unreachable")
 }
