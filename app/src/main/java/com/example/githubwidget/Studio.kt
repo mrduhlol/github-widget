@@ -37,6 +37,7 @@ object Studio {
     private const val KEY_BLUR = "blur"
     private const val KEY_IMAGE_GRAPH = "image_graph"
     private const val KEY_LEVELS = "levels"
+    private const val KEY_CELL_SIZE = "cell_size"
     private const val KEY_TEXT_SIZE = "text_size"
     private const val KEY_CUSTOM_LABEL = "custom_label"
     private const val KEY_SHOW_ACTIVE = "show_active"
