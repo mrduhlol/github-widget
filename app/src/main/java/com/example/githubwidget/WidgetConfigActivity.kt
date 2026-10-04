@@ -98,13 +98,11 @@ class WidgetConfigActivity : AppCompatActivity() {
         fun themeAccent(): Int =
             Themes.resolve(themeId, WidgetInstance.getCustomColor(this, widgetId)).accent
 
-        val themeButtons = Themes.ALL.map { t ->
-            optionButton(t.name).also { b ->
-                b.setOnClickListener {
-                    themeId = t.id
-                    paintOptions(themeButtons, Themes.ALL.indexOf(t), themeAccent())
-                }
-                rowThemes.addView(b)
+        val themeButtons = Themes.ALL.map { t -> optionButton(t.name).also { rowThemes.addView(it) } }
+        themeButtons.forEachIndexed { i, b ->
+            b.setOnClickListener {
+                themeId = Themes.ALL[i].id
+                paintOptions(themeButtons, i, themeAccent())
             }
         }
         // Custom colors stay editable in the main app; here we keep the preset set.
