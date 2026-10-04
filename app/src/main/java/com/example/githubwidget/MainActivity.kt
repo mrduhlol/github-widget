@@ -497,6 +497,7 @@ class MainActivity : AppCompatActivity() {
                 try {
                     val result = GithubApi.fetch(username)
                     Cache.save(this, result)
+                    sampleTint(WidgetPrefs.rangeWeeks(WidgetPrefs.getRange(this)))
                     runOnUiThread {
                         if (isFinishing || isDestroyed) return@runOnUiThread
                         showResult(result, TimeAgo.format(System.currentTimeMillis()))
