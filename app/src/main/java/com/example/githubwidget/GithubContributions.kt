@@ -76,13 +76,17 @@ object GraphRenderer {
      *
      * @param maxWeeks newest N weeks to draw (older weeks are dropped)
      * @param showMonthLabels month names above the first column of each month
+     * @param cornerRadius cell corner radius as a fraction of cell size (0..0.5)
+     * @param gapScale multiplier for the gap between cells (1 = classic)
      */
     fun render(
         days: List<Day>,
         scale: Float = 3f,
         colors: IntArray? = null,
         maxWeeks: Int = 26,
-        showMonthLabels: Boolean = false
+        showMonthLabels: Boolean = false,
+        cornerRadius: Float = 0.3f,
+        gapScale: Float = 1f
     ): Bitmap {
         if (days.isEmpty()) throw IllegalArgumentException("No days to render")
         val palette = colors ?: Themes.GREEN.levels
