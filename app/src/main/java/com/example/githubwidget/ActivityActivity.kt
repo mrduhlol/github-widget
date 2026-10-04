@@ -168,7 +168,7 @@ class ActivityActivity : AppCompatActivity() {
         }
     }
 
-    private fun showAchievements(container: LinearLayout, total: Int, a: Analytics) {
+    private fun showAchievements(container: LinearLayout, total: Int, a: AnalyticsData) {
         container.removeAllViews()
         for (ach in Achievements.evaluate(total, a)) {
             val row = LinearLayout(this).apply {
