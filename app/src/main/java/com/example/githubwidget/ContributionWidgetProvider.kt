@@ -235,14 +235,28 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         val theme = currentTheme(context, widgetId)
         val style = WidgetInstance.getStyle(context, widgetId)
         val weeks = minOf(WidgetPrefs.rangeWeeks(WidgetInstance.getRange(context, widgetId)), size.maxWeeks)
+        // Optional image-through-graph: sample the background image once at
+        // graph resolution so cells inherit its hues without hiding intensity.
+        val tint = if (Studio.imageThroughGraph(context) &&
+            Studio.getBgType(context) == Studio.BG_IMAGE &&
+            Studio.getImageUri(context).isNotEmpty()
+        ) {
+            CardRenderer.sampleImage(context, Studio.getImageUri(context), weeks, 7, Studio.SCALE_FILL)
+        } else {
+            null
+        }
         val bitmap: Bitmap = GraphRenderer.render(
             result.days,
-            colors = theme.levels,
+            colors = Studio.effectiveLevels(context, theme),
             maxWeeks = weeks,
             showMonthLabels = size.monthLabels,
             cornerRadius = WidgetPrefs.shapeRadiusFactor(WidgetInstance.getShape(context, widgetId)),
-            gapScale = WidgetInstance.getSpacing(context, widgetId)
+            gapScale = WidgetPrefs.getSpacing(context, widgetId),
+            cellScale = Studio.getCellSize(context),
+            tint = tint,
+            tintAmount = 0.35f
         )
+        if (tint != null && !tint.isRecycled) tint.recycle()
         val stats = Stats.compute(result.days)
         val today = result.days.lastOrNull()?.count ?: 0
         val total = formatTotal(result.totalLastYear)
