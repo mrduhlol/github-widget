@@ -110,13 +110,13 @@ class WidgetConfigActivity : AppCompatActivity() {
 
         val styleIds = WidgetPrefs.STYLES
         val styleButtons = styleIds.map { id ->
-            optionButton(WidgetPrefs.STYLE_NAMES[id] ?: id).also { b ->
-                b.contentDescription = "Style ${WidgetPrefs.STYLE_NAMES[id]}"
-                b.setOnClickListener {
-                    styleId = id
-                    paintOptions(styleButtons, styleIds.indexOf(id), themeAccent())
-                }
-                rowStyles.addView(b)
+            optionButton(WidgetPrefs.STYLE_NAMES[id] ?: id).also { rowStyles.addView(it) }
+        }
+        styleButtons.forEachIndexed { i, b ->
+            b.contentDescription = "Style ${WidgetPrefs.STYLE_NAMES[styleIds[i]]}"
+            b.setOnClickListener {
+                styleId = styleIds[i]
+                paintOptions(styleButtons, i, themeAccent())
             }
         }
         paintOptions(styleButtons, styleIds.indexOf(styleId).coerceAtLeast(0), themeAccent())
