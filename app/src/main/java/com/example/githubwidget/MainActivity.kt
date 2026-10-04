@@ -27,6 +27,19 @@ import java.util.Locale
 class MainActivity : AppCompatActivity() {
 
     private var lastResult: ContributionsResult? = null
+    private var tintBmp: android.graphics.Bitmap? = null
+
+    /** Tiny background sample for image-through-graph preview (off-thread only). */
+    private fun sampleTint(weeks: Int): android.graphics.Bitmap? {
+        tintBmp?.let { if (!it.isRecycled) it.recycle() }
+        tintBmp = null
+        if (!Studio.imageThroughGraph(this)) return null
+        if (Studio.getBgType(this) != Studio.BG_IMAGE) return null
+        val uri = Studio.getImageUri(this)
+        if (uri.isEmpty()) return null
+        tintBmp = CardRenderer.sampleImage(this, uri, weeks, 7, Studio.SCALE_FILL)
+        return tintBmp
+    }
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
 
