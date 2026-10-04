@@ -62,7 +62,7 @@ object CardRenderer {
         } else {
             // Solid + gradient fills: fold the opacity in with DST_OUT so the
             // exact hue survives and text drawn above stays crisp.
-            val alpha = (Studio.getBgOpacity(context).coerceIn(0, 100) * 255 / 100)
+            val alpha = (opacity * 255 / 100)
             if (alpha < 255) {
                 val dim = Paint().apply {
                     color = Color.argb(255 - alpha, 0, 0, 0)
