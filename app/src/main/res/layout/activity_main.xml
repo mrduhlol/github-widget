@@ -250,6 +250,7 @@
                 android:textColor="#8B949E"
                 android:textSize="11sp" />
         </LinearLayout>
+        </FrameLayout>
     </com.google.android.material.card.MaterialCardView>
 
     <!-- Appearance -->
