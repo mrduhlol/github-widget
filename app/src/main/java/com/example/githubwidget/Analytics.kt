@@ -202,7 +202,7 @@ object Achievements {
     fun nextMilestone(longestStreak: Int): Int =
         MILESTONES.firstOrNull { longestStreak < it } ?: -1
 
-    fun evaluate(total: Int, a: Analytics): List<Achievement> {
+    fun evaluate(total: Int, a: AnalyticsData): List<Achievement> {
         val hasAny = a.activeDays > 0
         return listOf(
             Achievement(
