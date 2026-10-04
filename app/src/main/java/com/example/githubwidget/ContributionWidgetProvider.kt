@@ -177,7 +177,7 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         val cached = Cache.load(context)
         if (cached != null && cached.first.username.equals(username, ignoreCase = true)) {
             val (result, ts) = cached
-            paintResult(views, result, size, "Last updated ${TimeAgo.format(ts)}")
+            paintResult(context, views, result, size, "Last updated ${TimeAgo.format(ts)}")
         } else {
             views.setTextViewText(R.id.widget_title, "@$username")
             views.setTextViewText(R.id.widget_subtitle, "Loading contributions…")
