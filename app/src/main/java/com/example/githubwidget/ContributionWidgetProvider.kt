@@ -177,7 +177,13 @@ class ContributionWidgetProvider : AppWidgetProvider() {
     private fun baseViews(context: Context, widgetId: Int): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_contribution)
         val style = WidgetInstance.getStyle(context, widgetId)
-        val opacity = WidgetInstance.getOpacity(context, widgetId)
+        // Configured widgets keep their own opacity; otherwise the Studio
+        // background opacity rules (it migrates the old card opacity).
+        val opacity = if (WidgetInstance.hasCustom(context, widgetId)) {
+            WidgetInstance.getOpacity(context, widgetId)
+        } else {
+            Studio.getBgOpacity(context)
+        }
         // Glass style floats at reduced opacity with a lighter rim.
         val alpha = if (style == WidgetPrefs.STYLE_GLASS) minOf(opacity, 45) else opacity
         val border = if (style == WidgetPrefs.STYLE_GLASS) {
@@ -186,15 +192,22 @@ class ContributionWidgetProvider : AppWidgetProvider() {
             Color.parseColor("#30363D")
         }
         val cornerPx = WidgetInstance.getCorners(context, widgetId) * 3f
-        val bg = WidgetBg.render(
-            bgColor = Themes.cardColor(alpha),
-            cornerDp = cornerPx,
-            borderColor = border
-        )
+        val bg = CardRenderer.card(context, 1024, 512, cornerPx, border, alpha)
         views.setImageViewBitmap(R.id.widget_bg, bg)
         views.setTextColor(R.id.widget_total, currentTheme(context, widgetId).accent)
+        applyTextSize(context, widgetId, views)
         bindTaps(context, views, widgetId, Prefs.getUsername(context))
         return views
+    }
+
+    /** Widget text scales with the Studio text-size setting. */
+    private fun applyTextSize(context: Context, widgetId: Int, views: RemoteViews) {
+        // Studio text size is global; per-widget looks predate it.
+        val s = Studio.textScale(Studio.getTextSize(context))
+        views.setTextViewTextSize(R.id.widget_title, android.util.TypedValue.COMPLEX_UNIT_SP, 14f * s)
+        views.setTextViewTextSize(R.id.widget_subtitle, android.util.TypedValue.COMPLEX_UNIT_SP, 11f * s)
+        views.setTextViewTextSize(R.id.widget_total, android.util.TypedValue.COMPLEX_UNIT_SP, 20f * s)
+        views.setTextViewTextSize(R.id.widget_updated, android.util.TypedValue.COMPLEX_UNIT_SP, 10f * s)
     }
 
     private fun formatTotal(total: Int): String =
