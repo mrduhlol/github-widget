@@ -8,9 +8,13 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
+import android.widget.Toast
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -76,6 +80,13 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         refreshInBackground(context, mgr, widgetId)
     }
 
+    /** Per-widget files are removed with the widget — never touch another one. */
+    override fun onDeleted(context: Context, ids: IntArray) {
+        for (id in ids) {
+            WidgetInstance.clear(context, id)
+        }
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         val mgr = AppWidgetManager.getInstance(context)
@@ -83,6 +94,7 @@ class ContributionWidgetProvider : AppWidgetProvider() {
             ACTION_REFRESH -> {
                 val ids = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
                     ?: mgr.getAppWidgetIds(ComponentName(context, ContributionWidgetProvider::class.java))
+                Toast.makeText(context, "Refreshing…", Toast.LENGTH_SHORT).show()
                 onUpdate(context, mgr, ids)
             }
             ACTION_REPAINT -> {
@@ -103,31 +115,69 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    private fun pendingIntents(context: Context, widgetId: Int): Pair<PendingIntent, PendingIntent> {
-        val openApp = Intent(context, MainActivity::class.java)
-        val openPi = PendingIntent.getActivity(
-            context, widgetId, openApp,
+    private fun activityPi(context: Context, widgetId: Int, code: Int, intent: Intent): PendingIntent =
+        PendingIntent.getActivity(
+            context, widgetId * 10 + code, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+    /**
+     * Tap map (predictable everywhere):
+     * header -> GitHub profile (or app when no username yet)
+     * graph  -> activity/analytics screen
+     * total  -> this widget's own configuration
+     * footer -> app home (customize defaults)
+     * refresh icon -> manual refresh
+     */
+    private fun bindTaps(context: Context, views: RemoteViews, widgetId: Int, username: String) {
+        val profileIntent = if (username.isBlank()) {
+            Intent(context, MainActivity::class.java)
+        } else {
+            Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/$username"))
+        }
+        views.setOnClickPendingIntent(
+            R.id.widget_header, activityPi(context, widgetId, 1, profileIntent)
+        )
+        views.setOnClickPendingIntent(
+            R.id.widget_graph,
+            activityPi(context, widgetId, 2, Intent(context, ActivityActivity::class.java))
+        )
+        views.setOnClickPendingIntent(
+            R.id.widget_total,
+            activityPi(
+                context, widgetId, 3,
+                Intent(context, WidgetConfigActivity::class.java).putExtra(
+                    AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId
+                )
+            )
+        )
+        views.setOnClickPendingIntent(
+            R.id.widget_updated,
+            activityPi(context, widgetId, 4, Intent(context, MainActivity::class.java))
         )
         val refresh = Intent(context, ContributionWidgetProvider::class.java).apply {
             action = ACTION_REFRESH
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(widgetId))
         }
-        val refreshPi = PendingIntent.getBroadcast(
-            context, 10_000 + widgetId, refresh,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        views.setOnClickPendingIntent(
+            R.id.widget_refresh,
+            PendingIntent.getBroadcast(
+                context, widgetId * 10 + 5, refresh,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
         )
-        return openPi to refreshPi
     }
 
-    private fun currentTheme(context: Context): GraphTheme =
-        Themes.resolve(Prefs.getThemeId(context), Prefs.getCustomColor(context))
+    private fun currentTheme(context: Context, widgetId: Int): GraphTheme =
+        Themes.resolve(
+            WidgetInstance.getThemeId(context, widgetId),
+            WidgetInstance.getCustomColor(context, widgetId)
+        )
 
     private fun baseViews(context: Context, widgetId: Int): RemoteViews {
-        val (openPi, refreshPi) = pendingIntents(context, widgetId)
         val views = RemoteViews(context.packageName, R.layout.widget_contribution)
-        val style = WidgetPrefs.getStyle(context)
-        val opacity = Prefs.getOpacity(context)
+        val style = WidgetInstance.getStyle(context, widgetId)
+        val opacity = WidgetInstance.getOpacity(context, widgetId)
         // Glass style floats at reduced opacity with a lighter rim.
         val alpha = if (style == WidgetPrefs.STYLE_GLASS) minOf(opacity, 45) else opacity
         val border = if (style == WidgetPrefs.STYLE_GLASS) {
@@ -135,39 +185,50 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         } else {
             Color.parseColor("#30363D")
         }
-        val cornerPx = WidgetPrefs.getCorners(context) * 3f
+        val cornerPx = WidgetInstance.getCorners(context, widgetId) * 3f
         val bg = WidgetBg.render(
             bgColor = Themes.cardColor(alpha),
             cornerDp = cornerPx,
             borderColor = border
         )
         views.setImageViewBitmap(R.id.widget_bg, bg)
-        views.setTextColor(R.id.widget_total, currentTheme(context).accent)
-        views.setOnClickPendingIntent(R.id.widget_header, openPi)
-        views.setOnClickPendingIntent(R.id.widget_refresh, refreshPi)
+        views.setTextColor(R.id.widget_total, currentTheme(context, widgetId).accent)
+        bindTaps(context, views, widgetId, Prefs.getUsername(context))
         return views
     }
 
     private fun formatTotal(total: Int): String =
         NumberFormat.getInstance(Locale.US).format(total)
 
+    private fun isOnline(context: Context): Boolean {
+        return try {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val net = cm.activeNetwork ?: return false
+            val caps = cm.getNetworkCapabilities(net) ?: return false
+            caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        } catch (_: Exception) {
+            true // If we can't tell, try the fetch — failure paths keep the cache.
+        }
+    }
+
     private fun paintResult(
         context: Context,
+        widgetId: Int,
         views: RemoteViews,
         result: ContributionsResult,
         size: SizeClass,
         footer: String
     ) {
-        val theme = currentTheme(context)
-        val style = WidgetPrefs.getStyle(context)
-        val weeks = minOf(WidgetPrefs.rangeWeeks(WidgetPrefs.getRange(context)), size.maxWeeks)
+        val theme = currentTheme(context, widgetId)
+        val style = WidgetInstance.getStyle(context, widgetId)
+        val weeks = minOf(WidgetPrefs.rangeWeeks(WidgetInstance.getRange(context, widgetId)), size.maxWeeks)
         val bitmap: Bitmap = GraphRenderer.render(
             result.days,
             colors = theme.levels,
             maxWeeks = weeks,
             showMonthLabels = size.monthLabels,
-            cornerRadius = WidgetPrefs.shapeRadiusFactor(WidgetPrefs.getShape(context)),
-            gapScale = WidgetPrefs.getSpacing(context)
+            cornerRadius = WidgetPrefs.shapeRadiusFactor(WidgetInstance.getShape(context, widgetId)),
+            gapScale = WidgetInstance.getSpacing(context, widgetId)
         )
         val stats = Stats.compute(result.days)
         val today = result.days.lastOrNull()?.count ?: 0
@@ -178,7 +239,7 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         views.setContentDescription(
             R.id.widget_graph,
             "@${result.username}: $total contributions in the last year, " +
-                "${stats.currentStreak} day streak."
+                "${stats.currentStreak} day streak. Tap for activity details."
         )
         views.setViewVisibility(R.id.widget_graph, View.VISIBLE)
 
@@ -194,18 +255,18 @@ class ContributionWidgetProvider : AppWidgetProvider() {
                 val parts = ArrayList<String>()
                 parts.add("$total contributions")
                 parts.add("today $today")
-                if (WidgetPrefs.showStreak(context)) parts.add("${stats.currentStreak}d streak")
-                if (WidgetPrefs.showLongest(context)) parts.add("${stats.longestStreak}d longest")
+                if (WidgetInstance.showStreak(context, widgetId)) parts.add("${stats.currentStreak}d streak")
+                if (WidgetInstance.showLongest(context, widgetId)) parts.add("${stats.longestStreak}d longest")
                 views.setViewVisibility(R.id.widget_subtitle, View.VISIBLE)
                 views.setTextViewText(R.id.widget_subtitle, parts.joinToString(" • "))
                 views.setViewVisibility(R.id.widget_total, View.GONE)
-                setFooter(views, size, context, stats, footer)
+                setFooter(views, size, context, widgetId, stats, footer)
             }
             else -> {
                 val parts = ArrayList<String>()
                 parts.add("Today: $today")
-                if (WidgetPrefs.showStreak(context)) parts.add("${stats.currentStreak}d streak")
-                if (WidgetPrefs.showTotal(context)) parts.add("$total/yr")
+                if (WidgetInstance.showStreak(context, widgetId)) parts.add("${stats.currentStreak}d streak")
+                if (WidgetInstance.showTotal(context, widgetId)) parts.add("$total/yr")
                 views.setViewVisibility(R.id.widget_subtitle, View.VISIBLE)
                 views.setTextViewText(
                     R.id.widget_subtitle,
@@ -215,13 +276,13 @@ class ContributionWidgetProvider : AppWidgetProvider() {
                         parts.joinToString(" • ")
                     }
                 )
-                if (WidgetPrefs.showTotal(context)) {
+                if (WidgetInstance.showTotal(context, widgetId)) {
                     views.setViewVisibility(R.id.widget_total, View.VISIBLE)
                     views.setTextViewText(R.id.widget_total, total)
                 } else {
                     views.setViewVisibility(R.id.widget_total, View.GONE)
                 }
-                setFooter(views, size, context, stats, footer)
+                setFooter(views, size, context, widgetId, stats, footer)
             }
         }
     }
@@ -230,16 +291,17 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         views: RemoteViews,
         size: SizeClass,
         context: Context,
+        widgetId: Int,
         stats: ContributionStats,
         footer: String
     ) {
-        val show = WidgetPrefs.showUpdated(context) && size.showFooter
+        val show = WidgetInstance.showUpdated(context, widgetId) && size.showFooter
         if (!show) {
             views.setViewVisibility(R.id.widget_updated, View.GONE)
             return
         }
         var text = footer
-        if (WidgetPrefs.showLongest(context)) {
+        if (WidgetInstance.showLongest(context, widgetId)) {
             text = text.replace(" • tap refresh icon", " • ${stats.longestStreak}d longest • tap refresh icon")
                 .replace("Last updated", "Updated")
         }
@@ -270,7 +332,7 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         val cached = Cache.load(context)
         if (cached != null && cached.first.username.equals(username, ignoreCase = true)) {
             val (result, ts) = cached
-            paintResult(views = views, context = context, result = result, size = size, footer = "Last updated ${TimeAgo.format(ts)}")
+            paintResult(widgetId = widgetId, context = context, views = views, result = result, size = size, footer = "Last updated ${TimeAgo.format(ts)}")
         } else {
             views.setTextViewText(R.id.widget_title, "@$username")
             views.setTextViewText(R.id.widget_subtitle, "Loading contributions…")
@@ -284,11 +346,16 @@ class ContributionWidgetProvider : AppWidgetProvider() {
 
     /**
      * One background fetch per widget; concurrent refreshes of the same widget
-     * are skipped. Failures keep the cached graph on screen.
+     * are skipped. Offline means no request at all — the cache stays on screen.
+     * Failures keep the cached graph.
      */
     private fun refreshInBackground(context: Context, mgr: AppWidgetManager, widgetId: Int) {
         val username = Prefs.getUsername(context)
         if (username.isBlank() || !beginRefresh(widgetId)) return
+        if (!isOnline(context)) {
+            endRefresh(widgetId)
+            return
+        }
 
         val pending = goAsync()
         Thread {
@@ -297,7 +364,7 @@ class ContributionWidgetProvider : AppWidgetProvider() {
                 Cache.save(context, result)
                 val views = baseViews(context, widgetId)
                 val size = sizeClass(mgr, widgetId)
-                paintResult(context, views, result, size, "Updated ${TimeAgo.format(System.currentTimeMillis())} • tap refresh icon to refresh")
+                paintResult(widgetId, context, views, result, size, "Updated ${TimeAgo.format(System.currentTimeMillis())} • tap refresh icon to refresh")
                 mgr.updateAppWidget(widgetId, views)
             } catch (e: UserNotFoundException) {
                 val views = baseViews(context, widgetId)
@@ -312,7 +379,7 @@ class ContributionWidgetProvider : AppWidgetProvider() {
                     val views = baseViews(context, widgetId)
                     val size = sizeClass(mgr, widgetId)
                     paintResult(
-                        context, views, cached.first, size,
+                        widgetId, context, views, cached.first, size,
                         "Last updated ${TimeAgo.format(cached.second)} • tap refresh icon to retry"
                     )
                     mgr.updateAppWidget(widgetId, views)
