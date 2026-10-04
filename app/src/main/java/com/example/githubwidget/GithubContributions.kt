@@ -181,7 +181,13 @@ object GraphRenderer {
  */
 object WidgetBg {
 
-    fun render(width: Int = 1024, height: Int = 512, bgColor: Int, cornerDp: Float = 48f): Bitmap {
+    fun render(
+        width: Int = 1024,
+        height: Int = 512,
+        bgColor: Int,
+        cornerDp: Float = 48f,
+        borderColor: Int = Color.parseColor("#30363D")
+    ): Bitmap {
         val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
@@ -190,7 +196,7 @@ object WidgetBg {
         val border = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = 3f
-            color = Color.parseColor("#30363D")
+            color = borderColor
         }
         canvas.drawRoundRect(rect, cornerDp, cornerDp, border)
         return bmp
