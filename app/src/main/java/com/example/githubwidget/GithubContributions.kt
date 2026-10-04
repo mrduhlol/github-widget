@@ -175,9 +175,26 @@ object GraphRenderer {
                 val top = gridTop + row * (cell + gap)
                 val rect = RectF(left, top, left + cell, top + cell)
                 val level = week[row]?.level?.coerceIn(0, 4) ?: 0
-                paint.color = palette[level]
-                canvas.drawRoundRect(rect, radius, radius, paint)
-                if (level == 0) canvas.drawRoundRect(rect, radius, radius, stroke)
+                var fill = palette[level]
+                if (tint != null && tintAmount > 0f && !tint.isRecycled) {
+                    val px = tint.getPixel(
+                        (col * (tint.width - 1) / (shown.size - 1).coerceAtLeast(1)),
+                        (row * (tint.height - 1) / 6)
+                    )
+                    fill = androidx.core.graphics.ColorUtils.blendARGB(
+                        fill, px, tintAmount.coerceIn(0f, 0.6f)
+                    )
+                }
+                paint.color = fill
+                if (circles) {
+                    canvas.drawCircle(rect.centerX(), rect.centerY(), cell / 2f, paint)
+                    if (level == 0) {
+                        canvas.drawCircle(rect.centerX(), rect.centerY(), cell / 2f, stroke)
+                    }
+                } else {
+                    canvas.drawRoundRect(rect, radius, radius, paint)
+                    if (level == 0) canvas.drawRoundRect(rect, radius, radius, stroke)
+                }
             }
         }
         return bmp
