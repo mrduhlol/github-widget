@@ -123,13 +123,11 @@ class WidgetConfigActivity : AppCompatActivity() {
 
         val rangeIds = listOf(WidgetPrefs.RANGE_3M, WidgetPrefs.RANGE_6M, WidgetPrefs.RANGE_12M)
         val rangeNames = listOf("3m", "6m", "1y")
-        val rangeButtons = rangeIds.mapIndexed { i, id ->
-            optionButton(rangeNames[i]).also { b ->
-                b.setOnClickListener {
-                    rangeId = id
-                    paintOptions(rangeButtons, i, themeAccent())
-                }
-                rowRanges.addView(b)
+        val rangeButtons = rangeIds.mapIndexed { i, _ -> optionButton(rangeNames[i]).also { rowRanges.addView(it) } }
+        rangeButtons.forEachIndexed { i, b ->
+            b.setOnClickListener {
+                rangeId = rangeIds[i]
+                paintOptions(rangeButtons, i, themeAccent())
             }
         }
         paintOptions(rangeButtons, rangeIds.indexOf(rangeId).coerceAtLeast(0), themeAccent())
