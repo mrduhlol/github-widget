@@ -26,6 +26,12 @@
             android:exported="false"
             android:label="Activity" />
 
+        <activity
+            android:name=".WidgetConfigActivity"
+            android:exported="false"
+            android:label="Widget setup"
+            android:theme="@style/Theme.GitHubWidget" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
