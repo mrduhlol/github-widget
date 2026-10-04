@@ -1,6 +1,5 @@
 package com.example.githubwidget
 
-import android.app.AlertDialog
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.res.ColorStateList
@@ -11,8 +10,6 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -145,77 +142,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         fun openColorPicker() {
-            val current = Prefs.getCustomColor(this)
-            var r = Color.red(current)
-            var g = Color.green(current)
-            var b = Color.blue(current)
-            val density = resources.displayMetrics.density
-
-            val box = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                val pad = (20 * density).toInt()
-                setPadding(pad, pad, pad, pad)
+            ColorPickerDialog.show(this, Prefs.getCustomColor(this)) { c ->
+                Prefs.setCustomColor(this, c)
+                swatches[Themes.CUSTOM_ID]?.backgroundTintList =
+                    ColorStateList.valueOf(c)
+                selectTheme(Themes.CUSTOM_ID)
             }
-            val preview = View(this).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    (56 * density).toInt()
-                )
-            }
-            val hex = TextView(this).apply {
-                textSize = 13f
-                typeface = android.graphics.Typeface.MONOSPACE
-                setTextColor(Color.parseColor("#8B949E"))
-                setPadding(0, (8 * density).toInt(), 0, (8 * density).toInt())
-            }
-            box.addView(preview)
-            box.addView(hex)
-
-            fun refresh() {
-                val c = Color.rgb(r, g, b)
-                preview.setBackgroundColor(c)
-                hex.text = "RGB($r, $g, $b)  ${Themes.toHex(c)}"
-            }
-
-            val bars = mutableListOf<SeekBar>()
-            listOf("Red" to r, "Green" to g, "Blue" to b).forEach { (label, start) ->
-                val rowLabel = TextView(this).apply {
-                    text = label
-                    setTextColor(Color.WHITE)
-                    textSize = 12f
-                }
-                val bar = SeekBar(this).apply {
-                    max = 255
-                    progress = start
-                }
-                box.addView(rowLabel)
-                box.addView(bar)
-                bars.add(bar)
-            }
-            fun onChange(bar: SeekBar, fn: (Int) -> Unit) {
-                bar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                    override fun onProgressChanged(s: SeekBar, v: Int, fromUser: Boolean) = fn(v)
-                    override fun onStartTrackingTouch(s: SeekBar) = Unit
-                    override fun onStopTrackingTouch(s: SeekBar) = Unit
-                })
-            }
-            onChange(bars[0]) { r = it; refresh() }
-            onChange(bars[1]) { g = it; refresh() }
-            onChange(bars[2]) { b = it; refresh() }
-            refresh()
-
-            AlertDialog.Builder(this)
-                .setTitle("Pick a graph color")
-                .setView(box)
-                .setPositiveButton("Use this color") { _, _ ->
-                    val c = Color.rgb(r, g, b)
-                    Prefs.setCustomColor(this, c)
-                    swatches[Themes.CUSTOM_ID]?.backgroundTintList =
-                        ColorStateList.valueOf(c)
-                    selectTheme(Themes.CUSTOM_ID)
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
         }
 
         // Init from saved prefs.
