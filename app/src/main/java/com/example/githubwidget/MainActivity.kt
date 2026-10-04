@@ -152,8 +152,6 @@ class MainActivity : AppCompatActivity() {
                 minimumWidth = 0
                 minWidth = 0
                 setPadding(dp(4), 0, dp(4), 0)
-                insetTop = 0
-                insetBottom = 0
                 val lp = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 lp.marginEnd = dp(8)
                 layoutParams = lp
