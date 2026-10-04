@@ -9,7 +9,7 @@ import java.util.Locale
  * achievements and the share card comes from here. No UI code inside.
  * All calculations run on plain date/count data (fast, reusable).
  */
-data class Analytics(
+data class AnalyticsData(
     val total: Int,
     val thisWeek: Int,
     val thisMonth: Int,
