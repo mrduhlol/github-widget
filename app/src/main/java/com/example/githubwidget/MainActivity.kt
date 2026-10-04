@@ -113,11 +113,14 @@ class MainActivity : AppCompatActivity() {
                 GraphRenderer.render(
                     result.days,
                     scale = 2.5f,
-                    colors = theme.levels,
+                    colors = Studio.effectiveLevels(this, theme),
                     maxWeeks = weeks,
                     showMonthLabels = true,
                     cornerRadius = WidgetPrefs.shapeRadiusFactor(WidgetPrefs.getShape(this)),
-                    gapScale = WidgetPrefs.getSpacing(this)
+                    gapScale = WidgetPrefs.getSpacing(this),
+                    cellScale = Studio.getCellSize(this),
+                    tint = tintBmp,
+                    tintAmount = 0.35f
                 )
             )
             previewGraph.contentDescription =
