@@ -533,6 +533,15 @@
         app:backgroundTint="#1F6FEB"
         app:cornerRadius="12dp" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_activity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="View activity analytics"
+        app:backgroundTint="#21262D"
+        app:cornerRadius="12dp" />
+
     <TextView
         android:id="@+id/text_status"
         android:layout_width="match_parent"
