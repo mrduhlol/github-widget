@@ -235,16 +235,3 @@ class ContributionWidgetProvider : AppWidgetProvider() {
         }.start()
     }
 }
-
-/**
- * RemoteViews has no Context reference, but theme resolution only needs one
- * for prefs — the provider always passes Views built with its own Context,
- * so we recover it from the pending-intent creator package is unnecessary:
- * instead the provider pre-tints everything in baseViews() and paintResult()
- * reuses the same accent via this helper bound at call time.
- *
- * NOTE: kept for readability — actual theme comes from the caller.
- */
-private fun RemoteViews.applicationContextForTheme(): Context {
-    throw UnsupportedOperationException("unreachable")
-}
