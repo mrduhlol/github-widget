@@ -330,8 +330,12 @@ class ContributionWidgetProvider : AppWidgetProvider() {
             views.setViewVisibility(R.id.widget_updated, View.GONE)
             return
         }
+        // A custom label takes over the footer line when set.
+        val label = Studio.getCustomLabel(context)
         var text = footer
-        if (WidgetInstance.showLongest(context, widgetId)) {
+        if (label.isNotEmpty()) {
+            text = label
+        } else if (WidgetInstance.showLongest(context, widgetId)) {
             text = text.replace(" • tap refresh icon", " • ${stats.longestStreak}d longest • tap refresh icon")
                 .replace("Last updated", "Updated")
         }
