@@ -20,6 +20,10 @@ data class ContributionsResult(
     val days: List<Day>
 )
 
+/** Thrown when GitHub has no such user (HTTP 404) — shown as friendly text, never raw. */
+class UserNotFoundException(username: String) :
+    Exception("No GitHub user found for '@$username'. Check the spelling.")
+
 /**
  * Fetches from the free, no-token API:
  *   https://github-contributions-api.jogruber.de/v4/<user>?y=last
@@ -38,9 +42,10 @@ object GithubApi {
         }
         try {
             val code = conn.responseCode
+            if (code == 404) throw UserNotFoundException(clean)
             val stream = if (code in 200..299) conn.inputStream else conn.errorStream
             val body = stream.bufferedReader().use { it.readText() }
-            if (code !in 200..299) throw RuntimeException("HTTP $code: $body")
+            if (code !in 200..299) throw RuntimeException("Server returned HTTP $code.")
             return parse(clean, JSONObject(body))
         } finally {
             conn.disconnect()
@@ -61,62 +66,87 @@ object GithubApi {
 
 object GraphRenderer {
 
+    private val MONTHS = arrayOf(
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    )
+
     /**
      * Draws a 7-row x N-col contribution grid into a bitmap.
-     * Width scales with weeks (~53). Caller should put it in an ImageView
-     * with adjustViewBounds + fixed height.
+     *
+     * @param maxWeeks newest N weeks to draw (older weeks are dropped)
+     * @param showMonthLabels month names above the first column of each month
      */
-    fun render(days: List<Day>, scale: Float = 3f, colors: IntArray? = null): Bitmap {
+    fun render(
+        days: List<Day>,
+        scale: Float = 3f,
+        colors: IntArray? = null,
+        maxWeeks: Int = 26,
+        showMonthLabels: Boolean = false
+    ): Bitmap {
         if (days.isEmpty()) throw IllegalArgumentException("No days to render")
         val palette = colors ?: Themes.GREEN.levels
 
-        // Group days into week columns starting Sunday, like GitHub.
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        val cal = Calendar.getInstance()
 
-        // Bucket by week index.
-        data class Cell(val row: Int, val day: Day)
-        val weeks = ArrayList<MutableMap<Int, Cell>>()
-        var weekOffset = -1
-        var firstSundaySeen = false
+        data class Dated(val cal: Calendar, val day: Day)
 
-        // Sort by date just in case.
-        val sorted = days.sortedBy { it.date }
-        for (d in sorted) {
-            val date = try { sdf.parse(d.date) } catch (_: Exception) { null } ?: continue
-            cal.time = date
-            val dow = cal.get(Calendar.DAY_OF_WEEK) // 1=Sunday..7=Saturday
-            val row = dow - 1
-            if (!firstSundaySeen) {
-                // Start a new week at the first day; pad later during draw.
-                weeks.add(mutableMapOf())
-                weekOffset = weeks.size - 1
-                firstSundaySeen = true
-                weeks[weekOffset][row] = Cell(row, d)
-                if (row == 6) { /* week complete, next day starts new week */ }
-            } else {
-                val last = weeks.last()
-                if (row == 0 && last.isNotEmpty()) {
-                    weeks.add(mutableMapOf())
-                }
-                weeks.last()[row] = Cell(row, d)
+        // Parse + sort once, then bucket into Sunday-start week columns.
+        val dated = days.mapNotNull { d ->
+            try {
+                val parsed = sdf.parse(d.date) ?: return@mapNotNull null
+                val cal = Calendar.getInstance()
+                cal.time = parsed
+                Dated(cal, d)
+            } catch (_: Exception) {
+                null
             }
+        }.sortedBy { it.cal.timeInMillis }
+
+        val weeks = ArrayList<MutableMap<Int, Day>>()
+        val weekMonth = ArrayList<Int>()
+        for (e in dated) {
+            val row = e.cal.get(Calendar.DAY_OF_WEEK) - 1 // 0=Sunday..6=Saturday
+            val last = weeks.lastOrNull()
+            if (last == null || (row == 0 && last.isNotEmpty())) {
+                weeks.add(mutableMapOf())
+                weekMonth.add(e.cal.get(Calendar.MONTH))
+            }
+            weeks.last()[row] = e.day
         }
-        // Drop the partial leading week handling: just draw what we have, max last 26 weeks
-        // so the widget stays readable on a phone. 26 weeks x 7 = ~half year.
-        val shown = if (weeks.size > 26) weeks.takeLast(26) else weeks
+
+        val keep = maxWeeks.coerceAtLeast(4)
+        val shown = if (weeks.size > keep) weeks.takeLast(keep) else weeks
+        val shownMonths = if (weeks.size > keep) weekMonth.takeLast(keep) else weekMonth
 
         val gap = (2f * scale)
         val cell = (10f * scale)
         val radius = (3f * scale)
         val pad = (8f * scale)
+        val labelStrip = if (showMonthLabels) (13f * scale) else 0f
 
         val w = (pad * 2 + shown.size * cell + (shown.size - 1) * gap).toInt()
-        val h = (pad * 2 + 7 * cell + 6 * gap).toInt()
+        val h = (pad * 2 + labelStrip + 7 * cell + 6 * gap).toInt()
+        val gridTop = pad + labelStrip
 
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         canvas.drawColor(Color.TRANSPARENT)
+
+        if (showMonthLabels) {
+            val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.parseColor("#8B949E")
+                textSize = 9f * scale
+            }
+            var prevMonth = -1
+            shownMonths.forEachIndexed { col, month ->
+                if (month != prevMonth) {
+                    val x = pad + col * (cell + gap)
+                    canvas.drawText(MONTHS[month], x, pad + labelStrip - (3f * scale), labelPaint)
+                    prevMonth = month
+                }
+            }
+        }
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -128,9 +158,9 @@ object GraphRenderer {
         shown.forEachIndexed { col, week ->
             for (row in 0..6) {
                 val left = pad + col * (cell + gap)
-                val top = pad + row * (cell + gap)
+                val top = gridTop + row * (cell + gap)
                 val rect = RectF(left, top, left + cell, top + cell)
-                val level = week[row]?.day?.level?.coerceIn(0, 4) ?: 0
+                val level = week[row]?.level?.coerceIn(0, 4) ?: 0
                 paint.color = palette[level]
                 canvas.drawRoundRect(rect, radius, radius, paint)
                 if (level == 0) canvas.drawRoundRect(rect, radius, radius, stroke)
