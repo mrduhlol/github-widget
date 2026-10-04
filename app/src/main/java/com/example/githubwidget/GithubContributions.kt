@@ -158,7 +158,7 @@ object GraphRenderer {
         val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = 1f * scale
-            color = Color.parseColor("#30363D")
+            color = emptyBorder
         }
 
         shown.forEachIndexed { col, week ->
