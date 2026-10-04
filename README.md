@@ -21,6 +21,8 @@ Your GitHub contribution graph, live on your Android homescreen.
 - Track any GitHub username
 - Today count + last-year total at a glance
 - Streak tracking — current streak, longest streak, best day, active days
+- Works offline — last fetched graph stays on screen with its age
+- Adaptive widget — compact, regular and wide layouts with month labels on large sizes
 - Auto-refresh every 6 hours, or tap the refresh icon for an instant refresh
 - No sign-in, no token — just your username
 
