@@ -118,7 +118,7 @@ object Analytics {
         val avgDay = if (dated.isNotEmpty()) total.toDouble() / dated.size else 0.0
         val hasPrev = (latest - dated.first().time) >= 59 * DAY_MS && prevDays > 0
 
-        return Analytics(
+        return AnalyticsData(
             total = total,
             thisWeek = thisWeek,
             thisMonth = thisMonth,
