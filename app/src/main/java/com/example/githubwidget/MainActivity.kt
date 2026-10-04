@@ -304,7 +304,7 @@ class MainActivity : AppCompatActivity() {
             paintOptions(styleButtons, WidgetPrefs.STYLES.indexOf(WidgetPrefs.getStyle(this)))
             val ranges = listOf(WidgetPrefs.RANGE_3M, WidgetPrefs.RANGE_6M, WidgetPrefs.RANGE_12M)
             paintOptions(rangeButtons, ranges.indexOf(WidgetPrefs.getRange(this)))
-            val shapes = listOf(WidgetPrefs.SHAPE_SQUARE, WidgetPrefs.SHAPE_ROUNDED, WidgetPrefs.SHAPE_SOFT)
+            val shapes = listOf(WidgetPrefs.SHAPE_SQUARE, WidgetPrefs.SHAPE_ROUNDED, WidgetPrefs.SHAPE_SOFT, WidgetPrefs.SHAPE_CIRCLE)
             paintOptions(shapeButtons, shapes.indexOf(WidgetPrefs.getShape(this)))
             paintOptions(presetButtons, -1)
             sliderOpacity.value = Prefs.getOpacity(this).toFloat()
