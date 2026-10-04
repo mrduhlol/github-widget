@@ -53,14 +53,13 @@ object CardRenderer {
                 canvas.drawBitmap(img, 0f, 0f, paint)
                 if (!img.isRecycled) img.recycle()
             }
-        } else if (type == Studio.BG_SOLID) {
-            // Fold the opacity into solid fills so text stays crisp.
+        } else {
+            // Solid + gradient fills: fold the opacity in with DST_OUT so the
+            // exact hue survives and text drawn above stays crisp.
             val alpha = (Studio.getBgOpacity(context).coerceIn(0, 100) * 255 / 100)
             if (alpha < 255) {
                 val dim = Paint().apply {
                     color = Color.argb(255 - alpha, 0, 0, 0)
-                    // Cheaper than re-tinting: overlay black with inverse alpha
-                    // using DST_OUT keeps the exact hue.
                     xfermode = android.graphics.PorterDuffXfermode(
                         android.graphics.PorterDuff.Mode.DST_OUT
                     )
