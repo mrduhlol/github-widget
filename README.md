@@ -37,6 +37,6 @@ Your GitHub contribution graph, live on your Android homescreen.
 
 1. Open the **GH-widgets** app
 2. Enter your GitHub username and tap **Save** — your graph appears instantly
-3. Pick a graph color, or tap + to mix any custom color — preview updates live
+3. Style it — theme previews, widget style, range, shape, transparency, info toggles or a preset — preview updates live
 4. Long-press your homescreen → **Widgets** → **GH-widgets** → drag it out
 5. Long-press the widget anytime to resize it
