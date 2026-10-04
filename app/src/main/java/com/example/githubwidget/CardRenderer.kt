@@ -102,9 +102,10 @@ object CardRenderer {
         w: Int,
         h: Int,
         cornerPx: Float,
-        borderColor: Int
+        borderColor: Int,
+        opacityOverride: Int? = null
     ): Bitmap {
-        val bg = background(context, w, h)
+        val bg = background(context, w, h, opacityOverride)
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         val rect = RectF(0f, 0f, w.toFloat(), h.toFloat())
