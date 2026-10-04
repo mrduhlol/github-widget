@@ -68,11 +68,21 @@ class MainActivity : AppCompatActivity() {
         val chkUpdated = findViewById<MaterialCheckBox>(R.id.chk_updated)
         val btnReset = findViewById<Button>(R.id.btn_reset)
 
+        // ---- state readers ----
+
         fun currentTheme() =
             Themes.resolve(Prefs.getThemeId(this), Prefs.getCustomColor(this))
 
         fun formatTotal(total: Int): String =
             NumberFormat.getInstance(Locale.US).format(total)
+
+        fun spacingLabel(s: Float): String = when {
+            s < 1f -> "Tight"
+            s > 1f -> "Airy"
+            else -> "Normal"
+        }
+
+        // ---- preview ----
 
         fun paintPreviewCard() {
             card.setCardBackgroundColor(Themes.cardColor(Prefs.getOpacity(this)))
@@ -142,7 +152,16 @@ class MainActivity : AppCompatActivity() {
             showResult(cached, TimeAgo.format(ts))
         }
 
-        // ---------- option button helpers ----------
+        fun repaintWidget() = Prefs.requestRepaint(this)
+
+        fun syncContentChecks() {
+            chkTotal.isChecked = WidgetPrefs.showTotal(this)
+            chkStreak.isChecked = WidgetPrefs.showStreak(this)
+            chkLongest.isChecked = WidgetPrefs.showLongest(this)
+            chkUpdated.isChecked = WidgetPrefs.showUpdated(this)
+        }
+
+        // ---- option button helpers ----
 
         fun optionButton(label: String): MaterialButton =
             MaterialButton(this).apply {
@@ -163,16 +182,18 @@ class MainActivity : AppCompatActivity() {
                 if (i == selected) {
                     b.backgroundTintList = ColorStateList.valueOf(accent)
                     b.setTextColor(Color.parseColor("#010409"))
-                    b.strokeWidth = 0
                 } else {
                     b.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#21262D"))
                     b.setTextColor(Color.parseColor("#F0F6FC"))
-                    b.strokeWidth = 0
                 }
             }
         }
 
-        // ---------- theme preview tiles ----------
+        // ---- theme preview tiles ----
+        // Taps are assigned late (see init) so no function is called before it exists.
+
+        var onThemeTap: (String) -> Unit = {}
+        var onCustomTap: () -> Unit = {}
 
         fun themeTile(name: String, colors: IntArray, selected: Boolean, onTap: () -> Unit): MaterialCardView {
             val tile = MaterialCardView(this).apply {
@@ -223,7 +244,7 @@ class MainActivity : AppCompatActivity() {
             for (theme in Themes.ALL) {
                 rowThemes.addView(
                     themeTile(theme.name, theme.levels, currentId == theme.id) {
-                        selectTheme(theme.id)
+                        onThemeTap(theme.id)
                     }
                 )
             }
@@ -235,18 +256,16 @@ class MainActivity : AppCompatActivity() {
                     "Custom ${Themes.toHex(Prefs.getCustomColor(this))}",
                     customColors,
                     currentId == Themes.CUSTOM_ID
-                ) { openColorPicker() }
+                ) { onCustomTap() }
             )
         }
 
-        // ---------- selection actions (defined before use in builders below) ----------
+        // ---- selection actions ----
 
         lateinit var styleButtons: List<MaterialButton>
         lateinit var rangeButtons: List<MaterialButton>
         lateinit var shapeButtons: List<MaterialButton>
         lateinit var presetButtons: List<MaterialButton>
-
-        fun repaintWidget() = Prefs.requestRepaint(this)
 
         fun selectTheme(id: String) {
             Prefs.setThemeId(this, id)
@@ -257,9 +276,7 @@ class MainActivity : AppCompatActivity() {
                 theme.name
             }
             buildThemeRow()
-            if (::styleButtons.isInitialized) {
-                paintOptions(styleButtons, WidgetPrefs.STYLES.indexOf(WidgetPrefs.getStyle(this)))
-            }
+            paintOptions(styleButtons, WidgetPrefs.STYLES.indexOf(WidgetPrefs.getStyle(this)))
             repaintFromCache()
             repaintWidget()
         }
@@ -272,13 +289,6 @@ class MainActivity : AppCompatActivity() {
             paintOptions(styleButtons, WidgetPrefs.STYLES.indexOf(id))
             repaintFromCache()
             repaintWidget()
-        }
-
-        fun syncContentChecks() {
-            chkTotal.isChecked = WidgetPrefs.showTotal(this)
-            chkStreak.isChecked = WidgetPrefs.showStreak(this)
-            chkLongest.isChecked = WidgetPrefs.showLongest(this)
-            chkUpdated.isChecked = WidgetPrefs.showUpdated(this)
         }
 
         fun syncAllControls() {
@@ -306,13 +316,22 @@ class MainActivity : AppCompatActivity() {
             paintPreviewCard()
         }
 
-        fun spacingLabel(s: Float): String = when {
-            s < 1f -> "Tight"
-            s > 1f -> "Airy"
-            else -> "Normal"
+        fun openColorPicker() {
+            ColorPickerDialog.show(this, Prefs.getCustomColor(this)) { c ->
+                Prefs.setCustomColor(this, c)
+                Prefs.setThemeId(this, Themes.CUSTOM_ID)
+                themeName.text = "Custom ${Themes.toHex(c)}"
+                buildThemeRow()
+                repaintFromCache()
+                repaintWidget()
+            }
         }
 
-        // ---------- build option rows ----------
+        // Wire theme taps now that every action above exists.
+        onThemeTap = { id -> selectTheme(id) }
+        onCustomTap = { openColorPicker() }
+
+        // ---- build option rows ----
 
         styleButtons = WidgetPrefs.STYLES.map { id ->
             optionButton(WidgetPrefs.STYLE_NAMES[id] ?: id).also { b ->
@@ -359,7 +378,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // ---------- sliders / checks / reset ----------
+        // ---- sliders / checks / reset ----
 
         sliderOpacity.addOnChangeListener { _, value, fromUser ->
             val opacity = value.toInt()
@@ -408,7 +427,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        val onContentChanged = { _: View ->
+        val onContentChanged = View.OnClickListener {
             WidgetPrefs.setContent(
                 this,
                 chkTotal.isChecked, chkStreak.isChecked,
@@ -429,18 +448,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Look reset — username and data kept", Toast.LENGTH_SHORT).show()
         }
 
-        fun openColorPicker() {
-            ColorPickerDialog.show(this, Prefs.getCustomColor(this)) { c ->
-                Prefs.setCustomColor(this, c)
-                Prefs.setThemeId(this, Themes.CUSTOM_ID)
-                themeName.text = "Custom ${Themes.toHex(c)}"
-                buildThemeRow()
-                repaintFromCache()
-                repaintWidget()
-            }
-        }
-
-        // ---------- data loading (cache-first) ----------
+        // ---- data loading (cache-first) ----
 
         fun loadPreview(username: String) {
             if (username.isBlank()) {
@@ -501,7 +509,7 @@ class MainActivity : AppCompatActivity() {
             }.start()
         }
 
-        // ---------- init ----------
+        // ---- init ----
 
         input.setText(Prefs.getUsername(this))
         syncAllControls()
