@@ -294,6 +294,9 @@ class ContributionWidgetProvider : AppWidgetProvider() {
                 parts.add("Today: $today")
                 if (WidgetInstance.showStreak(context, widgetId)) parts.add("${stats.currentStreak}d streak")
                 if (WidgetInstance.showTotal(context, widgetId)) parts.add("$total/yr")
+                if (Studio.showActiveDays(context) && !size.shortSubtitle) {
+                    parts.add("${stats.activeDays} active")
+                }
                 views.setViewVisibility(R.id.widget_subtitle, View.VISIBLE)
                 views.setTextViewText(
                     R.id.widget_subtitle,
