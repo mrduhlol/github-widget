@@ -2,6 +2,7 @@ package com.example.githubwidget
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
@@ -538,6 +539,10 @@ class MainActivity : AppCompatActivity() {
             loadPreview(u)
             Prefs.requestRefresh(this)
             Toast.makeText(this, "Refreshing…", Toast.LENGTH_SHORT).show()
+        }
+
+        activityBtn.setOnClickListener {
+            startActivity(Intent(this, ActivityActivity::class.java))
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
