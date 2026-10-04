@@ -182,6 +182,14 @@ object Studio {
     fun effectiveLevels(context: android.content.Context, theme: GraphTheme): IntArray =
         getLevels(context) ?: theme.levels
 
+    /** Graph cell size multiplier, 0.8 (dense) .. 1.3 (chunky). */
+    fun getCellSize(context: android.content.Context): Float =
+        prefs(context).getFloat(KEY_CELL_SIZE, 1f).coerceIn(0.8f, 1.3f)
+
+    fun setCellSize(context: android.content.Context, size: Float) {
+        prefs(context).edit().putFloat(KEY_CELL_SIZE, size.coerceIn(0.8f, 1.3f)).apply()
+    }
+
     // ---------- text & content ----------
 
     /** 0 = compact, 1 = normal, 2 = large. */
