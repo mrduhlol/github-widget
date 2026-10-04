@@ -16,11 +16,11 @@ Your GitHub contribution graph, live on your Android homescreen.
 
 - Live contribution graph on your homescreen
 - 5 graph colors — Matrix, Nebula, Abyss, Ember, Neon — plus a custom color picker
-- Card transparency slider — let your wallpaper shine through
-- Resizable widget — long-press it and drag the handles
-- Track any GitHub username
-- Today count + last-year total at a glance
-- Streak tracking — current streak, longest streak, best day, active days
+- 5 widget styles — Classic, Minimal, Compact, Terminal, Glass
+- 4 one-tap presets — Default, Minimal, Developer, Neon — plus reset to default look
+- Graph range (3 months, 6 months, 1 year), cell shape and cell spacing
+- Card corner roundness and transparency sliders with live preview
+- Content toggles — contribution count, streaks, last updated
 - Works offline — last fetched graph stays on screen with its age
 - Adaptive widget — compact, regular and wide layouts with month labels on large sizes
 - Auto-refresh every 6 hours, or tap the refresh icon for an instant refresh
