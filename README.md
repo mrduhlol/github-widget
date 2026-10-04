@@ -21,6 +21,9 @@ Your GitHub contribution graph, live on your Android homescreen.
 - Graph range (3 months, 6 months, 1 year), cell shape and cell spacing
 - Card corner roundness and transparency sliders with live preview
 - Content toggles — contribution count, streaks, last updated
+- Activity analytics — weekly and monthly stats, averages, weekday breakdown, insights
+- Streak milestones and 8 data-based achievements
+- Shareable contribution cards via the native Android share sheet
 - Works offline — last fetched graph stays on screen with its age
 - Adaptive widget — compact, regular and wide layouts with month labels on large sizes
 - Auto-refresh every 6 hours, or tap the refresh icon for an instant refresh
