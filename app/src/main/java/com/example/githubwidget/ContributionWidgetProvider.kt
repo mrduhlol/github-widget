@@ -379,7 +379,7 @@ class ContributionWidgetProvider : AppWidgetProvider() {
                     val views = baseViews(context, widgetId)
                     val size = sizeClass(mgr, widgetId)
                     paintResult(
-                        widgetId, context, views, cached.first, size,
+                        context, widgetId, views, cached.first, size,
                         "Last updated ${TimeAgo.format(cached.second)} • tap refresh icon to retry"
                     )
                     mgr.updateAppWidget(widgetId, views)
