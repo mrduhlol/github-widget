@@ -150,7 +150,7 @@ object Analytics {
      * Short, data-backed insight lines. Empty when there is too little
      * history — never invents claims.
      */
-    fun insights(a: Analytics): List<String> {
+    fun insights(a: AnalyticsData): List<String> {
         val out = ArrayList<String>()
         if (a.activeDays < 5) {
             out.add("Not enough activity yet for detailed insights.")
