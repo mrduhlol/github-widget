@@ -60,14 +60,38 @@ class MainActivity : AppCompatActivity() {
             card.setCardBackgroundColor(Themes.cardColor(currentOpacity()))
         }
 
-        fun redrawGraphFromCache() {
-            val cached = lastResult ?: return
+        /** Paints a dataset (fresh or cached) into the preview card. */
+        fun showResult(result: ContributionsResult, updatedAgo: String) {
+            lastResult = result
             val theme = currentTheme()
             previewGraph.setImageBitmap(
-                GraphRenderer.render(cached.days, scale = 2.5f, colors = theme.levels)
+                GraphRenderer.render(
+                    result.days,
+                    scale = 2.5f,
+                    colors = theme.levels,
+                    showMonthLabels = true
+                )
             )
+            previewGraph.contentDescription =
+                "@${result.username}: ${result.totalLastYear} contributions in the last year."
+            previewTitle.text = "@${result.username}"
+            val today = result.days.lastOrNull()
+            previewSubtitle.text =
+                "Today: ${today?.count ?: 0} • ${result.totalLastYear} in last year"
+            previewTotal.text = "${result.totalLastYear}"
             previewTotal.setTextColor(theme.accent)
+            val stats = Stats.compute(result.days)
+            statStreak.text = "${stats.currentStreak}"
             statStreak.setTextColor(theme.accent)
+            statBest.text = "${stats.bestCount}"
+            statActive.text = "${stats.activeDays}"
+            previewStatus.text =
+                "Longest streak ${stats.longestStreak} days • updated $updatedAgo."
+        }
+
+        fun redrawGraphFromCache() {
+            val cached = lastResult ?: return
+            showResult(cached, TimeAgo.format(Cache.load(this)?.second ?: 0L))
             paintPreviewCard()
         }
 
@@ -87,12 +111,15 @@ class MainActivity : AppCompatActivity() {
                     btn.strokeWidth = 0
                 }
             }
-            previewTotal.setTextColor(theme.accent)
             paintPreviewCard()
             redrawGraphFromCache()
             if (refreshWidget) Prefs.requestRefresh(this)
         }
 
+        /**
+         * Cache-first: paints saved data instantly (works offline), then
+         * refreshes in the background. Failures keep the cached graph.
+         */
         fun loadPreview(username: String) {
             if (username.isBlank()) {
                 card.visibility = View.GONE
@@ -100,42 +127,53 @@ class MainActivity : AppCompatActivity() {
             }
             card.visibility = View.VISIBLE
             paintPreviewCard()
-            previewTitle.text = "@$username"
-            previewSubtitle.text = "Loading contributions…"
-            previewStatus.text = ""
-            previewGraph.setImageDrawable(null)
-            previewTotal.text = "–"
-            previewTotal.setTextColor(currentTheme().accent)
-            statStreak.text = "–"
-            statBest.text = "–"
-            statActive.text = "–"
+
+            val cached = Cache.load(this)
+            val hasCache = cached != null && cached.first.username.equals(username, ignoreCase = true)
+            if (hasCache) {
+                showResult(cached!!.first, TimeAgo.format(cached.second))
+                previewSubtitle.text = "${previewSubtitle.text} • refreshing…"
+            } else {
+                previewTitle.text = "@$username"
+                previewSubtitle.text = "Loading contributions…"
+                previewStatus.text = ""
+                previewGraph.setImageDrawable(null)
+                previewTotal.text = "–"
+                previewTotal.setTextColor(currentTheme().accent)
+                statStreak.text = "–"
+                statBest.text = "–"
+                statActive.text = "–"
+            }
+
             Thread {
                 try {
                     val result = GithubApi.fetch(username)
-                    lastResult = result
-                    val bmp = GraphRenderer.render(
-                        result.days, scale = 2.5f, colors = currentTheme().levels
-                    )
+                    Cache.save(this, result)
                     runOnUiThread {
-                        previewTitle.text = "@${result.username}"
-                        val today = result.days.lastOrNull()
-                        previewSubtitle.text =
-                            "Today: ${today?.count ?: 0} • ${result.totalLastYear} in last year"
-                        previewTotal.text = "${result.totalLastYear}"
-                        previewTotal.setTextColor(currentTheme().accent)
-                        previewGraph.setImageBitmap(bmp)
-                        val stats = Stats.compute(result.days)
-                        statStreak.text = "${stats.currentStreak}"
-                        statStreak.setTextColor(currentTheme().accent)
-                        statBest.text = "${stats.bestCount}"
-                        statActive.text = "${stats.activeDays}"
-                        previewStatus.text =
-                            "Longest streak ${stats.longestStreak} days • same stats live on the widget."
+                        if (isFinishing || isDestroyed) return@runOnUiThread
+                        showResult(result, TimeAgo.format(System.currentTimeMillis()))
                     }
-                } catch (e: Exception) {
+                } catch (e: UserNotFoundException) {
                     runOnUiThread {
-                        previewSubtitle.text = "Couldn't load contributions"
-                        previewStatus.text = (e.message ?: "Network error").take(120)
+                        if (isFinishing || isDestroyed) return@runOnUiThread
+                        if (!hasCache) {
+                            previewSubtitle.text = "User not found"
+                            previewStatus.text = e.message
+                        } else {
+                            previewStatus.text = "${e.message} Showing saved data."
+                        }
+                    }
+                } catch (_: Exception) {
+                    runOnUiThread {
+                        if (isFinishing || isDestroyed) return@runOnUiThread
+                        if (!hasCache) {
+                            previewSubtitle.text = "No connection"
+                            previewStatus.text = "Connect to the internet and tap Refresh."
+                        } else {
+                            val ts = Cache.load(this)?.second ?: 0L
+                            previewStatus.text =
+                                "Couldn't refresh — showing data from ${TimeAgo.format(ts)}."
+                        }
                     }
                 }
             }.start()
@@ -231,9 +269,9 @@ class MainActivity : AppCompatActivity() {
     private fun updateStatus(status: TextView) {
         val u = Prefs.getUsername(this)
         status.text = if (u.isBlank()) {
-            "No username set.\n\n1. Enter your GitHub username above\n2. Tap Save\n3. Long-press homescreen → Widgets → GitHub Contributions (drag to resize)"
+            "No username set.\n\n1. Enter your GitHub username above\n2. Tap Save\n3. Long-press homescreen → Widgets → GH-widgets (drag to resize)"
         } else {
-            "Tracking: @$u\n\nLong-press homescreen → Widgets → GitHub Contributions.\nLong-press the widget to resize it."
+            "Tracking: @$u\n\nLong-press homescreen → Widgets → GH-widgets.\nLong-press the widget to resize it."
         }
     }
 }
