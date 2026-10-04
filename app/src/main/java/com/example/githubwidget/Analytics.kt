@@ -36,7 +36,7 @@ object Analytics {
     private val MONTH_FMT = SimpleDateFormat("MMM yyyy", Locale.US)
     private const val DAY_MS = 24L * 60 * 60 * 1000
 
-    fun compute(days: List<Day>, total: Int): Analytics {
+    fun compute(days: List<Day>, total: Int): AnalyticsData {
         data class Dated(val time: Long, val count: Int, val cal: Calendar)
 
         val dated = days.mapNotNull { d ->
