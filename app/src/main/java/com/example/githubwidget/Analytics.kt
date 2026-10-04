@@ -51,7 +51,7 @@ object Analytics {
         }.sortedBy { it.time }
 
         if (dated.isEmpty()) {
-            return Analytics(total, 0, 0, 0, 0.0, 0.0, IntArray(7), -1, "", 0, 0, 0, 0, -1)
+            return AnalyticsData(total, 0, 0, 0, 0.0, 0.0, IntArray(7), -1, "", 0, 0, 0, 0, -1)
         }
 
         val latest = dated.last().time
