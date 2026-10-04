@@ -1,0 +1,4 @@
+# Keep Unix scripts on LF so the Gradle wrapper runs on Linux CI.
+gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary
