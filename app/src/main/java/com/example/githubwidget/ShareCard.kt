@@ -24,6 +24,24 @@ object ShareCard {
         val showStreak: Boolean
     )
 
+    /** Starting points for the share dialog — toggles only, never the theme. */
+    data class CardTemplate(
+        val id: String,
+        val name: String,
+        val dark: Boolean,
+        val showUsername: Boolean,
+        val showTotal: Boolean,
+        val showStreak: Boolean
+    )
+
+    val TEMPLATES = listOf(
+        CardTemplate("github", "GitHub", dark = true, showUsername = true, showTotal = true, showStreak = true),
+        CardTemplate("minimal", "Minimal", dark = true, showUsername = false, showTotal = true, showStreak = false),
+        CardTemplate("terminal", "Terminal", dark = true, showUsername = true, showTotal = true, showStreak = true),
+        CardTemplate("neon", "Neon", dark = true, showUsername = true, showTotal = true, showStreak = true),
+        CardTemplate("poster", "Poster", dark = false, showUsername = true, showTotal = true, showStreak = false)
+    )
+
     private val LIGHT_LEVELS = intArrayOf(
         Color.parseColor("#EBEDF0"),
         Color.parseColor("#9BE9A8"),
