@@ -279,7 +279,8 @@ class MainActivity : AppCompatActivity() {
                         showStreak = WidgetPrefs.showStreak(this)
                     ),
                     cornerRadius = WidgetPrefs.shapeRadiusFactor(WidgetPrefs.getShape(this)),
-                    gapScale = WidgetPrefs.getSpacing(this)
+                    gapScale = WidgetPrefs.getSpacing(this),
+                    customLevels = Studio.effectiveLevels(this, t)
                 )
                 runOnUiThread {
                     if (isFinishing || isDestroyed) return@runOnUiThread
