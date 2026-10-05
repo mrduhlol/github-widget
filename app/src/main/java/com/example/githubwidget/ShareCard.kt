@@ -55,14 +55,16 @@ object ShareCard {
         theme: GraphTheme,
         opts: Options,
         cornerRadius: Float,
-        gapScale: Float
+        gapScale: Float,
+        customLevels: IntArray? = null
     ): Bitmap {
         val w = 1080
         val pad = 72
         val bg = if (opts.dark) Color.parseColor("#0D1117") else Color.WHITE
         val primary = if (opts.dark) Color.parseColor("#F0F6FC") else Color.parseColor("#1F2328")
         val muted = if (opts.dark) Color.parseColor("#8B949E") else Color.parseColor("#59636E")
-        val levels = if (opts.dark) theme.levels else LIGHT_LEVELS
+        val levels = customLevels
+            ?: if (opts.dark) theme.levels else LIGHT_LEVELS
         val emptyBorder = if (opts.dark) Color.parseColor("#30363D") else Color.parseColor("#D0D7DE")
 
         val stats = Stats.compute(result.days)
