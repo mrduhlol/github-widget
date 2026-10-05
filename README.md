@@ -3,7 +3,7 @@
 Your GitHub contribution graph, live on your Android homescreen.
 
 <p align="center">
-  <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.v1.9.0.apk">
+  <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.v2.0.0.apk">
     <img src="https://img.shields.io/badge/DOWNLOAD_APK-39D353?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" height="60" />
   </a>
 </p>
