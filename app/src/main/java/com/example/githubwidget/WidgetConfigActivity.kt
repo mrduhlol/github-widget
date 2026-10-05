@@ -105,7 +105,7 @@ class WidgetConfigActivity : AppCompatActivity() {
                 paintOptions(themeButtons, i, themeAccent())
             }
         }
-        // Custom colors stay editable in the main app; here we keep the preset set.
+        // Custom colors stay editable in the Widget Studio; here we keep the preset set.
         paintOptions(themeButtons, Themes.ALL.indexOfFirst { it.id == themeId }.coerceAtLeast(0), themeAccent())
 
         val styleIds = WidgetPrefs.STYLES
