@@ -783,6 +783,10 @@ class StudioActivity : AppCompatActivity() {
             Toast.makeText(this, "Studio look reset — username and data kept", Toast.LENGTH_SHORT).show()
         }
 
+        findViewById<MaterialButton>(R.id.st_draw).setOnClickListener {
+            startActivity(Intent(this, DrawingActivity::class.java))
+        }
+
         findViewById<MaterialButton>(R.id.st_export).setOnClickListener {
             val json = Studio.exportLook(this)
             val intent = Intent(Intent.ACTION_SEND).apply {
