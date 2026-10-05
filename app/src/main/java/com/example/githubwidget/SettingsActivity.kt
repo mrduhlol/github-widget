@@ -52,10 +52,6 @@ class SettingsActivity : AppCompatActivity() {
                 .show()
         }
 
-        findViewById<MaterialButton>(R.id.set_studio).setOnClickListener {
-            startActivity(Intent(this, StudioActivity::class.java))
-        }
-
         findViewById<MaterialButton>(R.id.set_export).setOnClickListener {
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
