@@ -29,6 +29,8 @@ class StudioActivity : AppCompatActivity() {
 
     private var lastResult: ContributionsResult? = null
     private var tintBmp: android.graphics.Bitmap? = null
+    /** Set in onCreate once every control exists; used by the image picker. */
+    private var onStudioChanged: (() -> Unit)? = null
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
 
@@ -47,8 +49,7 @@ class StudioActivity : AppCompatActivity() {
             }
             Studio.setImageUri(this, uri.toString())
             Studio.setBgType(this, Studio.BG_IMAGE)
-            syncAll()
-            repaintWidget()
+            onStudioChanged?.invoke()
         }
 
     private fun sampleTint(weeks: Int) {
@@ -310,65 +311,6 @@ class StudioActivity : AppCompatActivity() {
         lateinit var overlayButtons: List<MaterialButton>
         lateinit var presetButtons: List<MaterialButton>
 
-        fun syncSwatches() {
-            bgColorBtn.backgroundTintList = ColorStateList.valueOf(Studio.getBgColor(this))
-            grad1.backgroundTintList = ColorStateList.valueOf(Studio.getBgColor(this))
-            grad2.backgroundTintList = ColorStateList.valueOf(Studio.getGrad2(this))
-            Studio.getGrad3(this)?.let {
-                grad3.backgroundTintList = ColorStateList.valueOf(it)
-            }
-            buildLevels()
-        }
-
-        fun syncAll() {
-            buildThemeRow()
-            paintOptions(styleButtons, WidgetPrefs.STYLES.indexOf(WidgetPrefs.getStyle(this)))
-            val ranges = listOf(WidgetPrefs.RANGE_3M, WidgetPrefs.RANGE_6M, WidgetPrefs.RANGE_12M)
-            paintOptions(rangeButtons, ranges.indexOf(WidgetPrefs.getRange(this)))
-            val shapes = listOf(
-                WidgetPrefs.SHAPE_SQUARE, WidgetPrefs.SHAPE_ROUNDED,
-                WidgetPrefs.SHAPE_SOFT, WidgetPrefs.SHAPE_CIRCLE
-            )
-            paintOptions(shapeButtons, shapes.indexOf(WidgetPrefs.getShape(this)))
-            paintOptions(sizeButtons, Studio.getTextSize(this))
-            val bgTypes = listOf(Studio.BG_SOLID, Studio.BG_GRADIENT, Studio.BG_IMAGE, Studio.BG_TRANSPARENT)
-            paintOptions(bgTypeButtons, bgTypes.indexOf(Studio.getBgType(this)))
-            paintOptions(scaleButtons, if (Studio.getImageScale(this) == Studio.SCALE_FIT) 1 else 0)
-            val angles = listOf(0, 45, 90, 135)
-            paintOptions(angleButtons, angles.indexOf(Studio.getGradAngle(this)).coerceAtLeast(0))
-            paintOptions(overlayButtons, overlayIndex())
-            paintOptions(presetButtons, -1)
-            cellSlider.value = Studio.getCellSize(this)
-            cellText.text = "${(Studio.getCellSize(this) * 100).toInt()}%"
-            spacingSlider.value = WidgetPrefs.getSpacing(this)
-            spacingText.text = spacingLabel(WidgetPrefs.getSpacing(this))
-            cornersSlider.value = WidgetPrefs.getCorners(this).toFloat()
-            cornersText.text = "${WidgetPrefs.getCorners(this)}dp"
-            bgOpSlider.value = Studio.getBgOpacity(this).toFloat()
-            bgOpText.text = "${Studio.getBgOpacity(this)}%"
-            blurSlider.value = Studio.getBlur(this).toFloat()
-            blurText.text = if (Studio.getBlur(this) == 0) "Off" else "${Studio.getBlur(this)}"
-            ovOpSlider.value = Studio.getOverlayOpacity(this).toFloat()
-            ovOpText.text = "${Studio.getOverlayOpacity(this)}%"
-            gradThird.isChecked = Studio.getGrad3(this) != null
-            gradRadial.isChecked = Studio.isGradRadial(this)
-            chkImgGraph.isChecked = Studio.imageThroughGraph(this)
-            chkTotal.isChecked = WidgetPrefs.showTotal(this)
-            chkStreak.isChecked = WidgetPrefs.showStreak(this)
-            chkLongest.isChecked = WidgetPrefs.showLongest(this)
-            chkUpdated.isChecked = WidgetPrefs.showUpdated(this)
-            chkActive.isChecked = Studio.showActiveDays(this)
-            if (labelInput.text.toString() != Studio.getCustomLabel(this)) {
-                labelInput.setText(Studio.getCustomLabel(this))
-            }
-            val t = Studio.getBgType(this)
-            solidRow.visibility = if (t == Studio.BG_SOLID || t == Studio.BG_GRADIENT) View.VISIBLE else View.GONE
-            gradBox.visibility = if (t == Studio.BG_GRADIENT) View.VISIBLE else View.GONE
-            imageBox.visibility = if (t == Studio.BG_IMAGE) View.VISIBLE else View.GONE
-            syncSwatches()
-            repaintPreview()
-        }
-
         fun spacingLabel(s: Float): String = when {
             s < 1f -> "Tight"
             s > 1f -> "Airy"
@@ -435,6 +377,65 @@ class StudioActivity : AppCompatActivity() {
                 })
                 rowLevels.addView(col)
             }
+        }
+
+        fun syncSwatches() {
+            bgColorBtn.backgroundTintList = ColorStateList.valueOf(Studio.getBgColor(this))
+            grad1.backgroundTintList = ColorStateList.valueOf(Studio.getBgColor(this))
+            grad2.backgroundTintList = ColorStateList.valueOf(Studio.getGrad2(this))
+            Studio.getGrad3(this)?.let {
+                grad3.backgroundTintList = ColorStateList.valueOf(it)
+            }
+            buildLevels()
+        }
+
+        fun syncAll() {
+            buildThemeRow()
+            paintOptions(styleButtons, WidgetPrefs.STYLES.indexOf(WidgetPrefs.getStyle(this)))
+            val ranges = listOf(WidgetPrefs.RANGE_3M, WidgetPrefs.RANGE_6M, WidgetPrefs.RANGE_12M)
+            paintOptions(rangeButtons, ranges.indexOf(WidgetPrefs.getRange(this)))
+            val shapes = listOf(
+                WidgetPrefs.SHAPE_SQUARE, WidgetPrefs.SHAPE_ROUNDED,
+                WidgetPrefs.SHAPE_SOFT, WidgetPrefs.SHAPE_CIRCLE
+            )
+            paintOptions(shapeButtons, shapes.indexOf(WidgetPrefs.getShape(this)))
+            paintOptions(sizeButtons, Studio.getTextSize(this))
+            val bgTypes = listOf(Studio.BG_SOLID, Studio.BG_GRADIENT, Studio.BG_IMAGE, Studio.BG_TRANSPARENT)
+            paintOptions(bgTypeButtons, bgTypes.indexOf(Studio.getBgType(this)))
+            paintOptions(scaleButtons, if (Studio.getImageScale(this) == Studio.SCALE_FIT) 1 else 0)
+            val angles = listOf(0, 45, 90, 135)
+            paintOptions(angleButtons, angles.indexOf(Studio.getGradAngle(this)).coerceAtLeast(0))
+            paintOptions(overlayButtons, overlayIndex())
+            paintOptions(presetButtons, -1)
+            cellSlider.value = Studio.getCellSize(this)
+            cellText.text = "${(Studio.getCellSize(this) * 100).toInt()}%"
+            spacingSlider.value = WidgetPrefs.getSpacing(this)
+            spacingText.text = spacingLabel(WidgetPrefs.getSpacing(this))
+            cornersSlider.value = WidgetPrefs.getCorners(this).toFloat()
+            cornersText.text = "${WidgetPrefs.getCorners(this)}dp"
+            bgOpSlider.value = Studio.getBgOpacity(this).toFloat()
+            bgOpText.text = "${Studio.getBgOpacity(this)}%"
+            blurSlider.value = Studio.getBlur(this).toFloat()
+            blurText.text = if (Studio.getBlur(this) == 0) "Off" else "${Studio.getBlur(this)}"
+            ovOpSlider.value = Studio.getOverlayOpacity(this).toFloat()
+            ovOpText.text = "${Studio.getOverlayOpacity(this)}%"
+            gradThird.isChecked = Studio.getGrad3(this) != null
+            gradRadial.isChecked = Studio.isGradRadial(this)
+            chkImgGraph.isChecked = Studio.imageThroughGraph(this)
+            chkTotal.isChecked = WidgetPrefs.showTotal(this)
+            chkStreak.isChecked = WidgetPrefs.showStreak(this)
+            chkLongest.isChecked = WidgetPrefs.showLongest(this)
+            chkUpdated.isChecked = WidgetPrefs.showUpdated(this)
+            chkActive.isChecked = Studio.showActiveDays(this)
+            if (labelInput.text.toString() != Studio.getCustomLabel(this)) {
+                labelInput.setText(Studio.getCustomLabel(this))
+            }
+            val t = Studio.getBgType(this)
+            solidRow.visibility = if (t == Studio.BG_SOLID || t == Studio.BG_GRADIENT) View.VISIBLE else View.GONE
+            gradBox.visibility = if (t == Studio.BG_GRADIENT) View.VISIBLE else View.GONE
+            imageBox.visibility = if (t == Studio.BG_IMAGE) View.VISIBLE else View.GONE
+            syncSwatches()
+            repaintPreview()
         }
 
         // ---------- actions ----------
@@ -564,25 +565,6 @@ class StudioActivity : AppCompatActivity() {
             }
         }
 
-        overlayButtons = overlayColors.mapIndexed { i, (name, _) ->
-            optionButton(name).also { b ->
-                b.setOnClickListener { applyOverlay(i) }
-                rowOverlays.addView(b)
-            }
-        }
-
-        presetButtons = Presets.ALL.map { id ->
-            optionButton(Presets.NAMES[id] ?: id).also { b ->
-                b.setOnClickListener {
-                    Presets.apply(this, id)
-                    syncAll()
-                    repaintWidget()
-                    Toast.makeText(this, "${Presets.NAMES[id]} look applied", Toast.LENGTH_SHORT).show()
-                }
-                rowPresets.addView(b)
-            }
-        }
-
         fun applyOverlay(i: Int) {
             when (i) {
                 0 -> Studio.setOverlayOpacity(this, 0)
@@ -613,6 +595,25 @@ class StudioActivity : AppCompatActivity() {
             paintOptions(overlayButtons, overlayIndex())
             repaintPreview()
             repaintWidget()
+        }
+
+        overlayButtons = overlayColors.mapIndexed { i, (name, _) ->
+            optionButton(name).also { b ->
+                b.setOnClickListener { applyOverlay(i) }
+                rowOverlays.addView(b)
+            }
+        }
+
+        presetButtons = Presets.ALL.map { id ->
+            optionButton(Presets.NAMES[id] ?: id).also { b ->
+                b.setOnClickListener {
+                    Presets.apply(this, id)
+                    syncAll()
+                    repaintWidget()
+                    Toast.makeText(this, "${Presets.NAMES[id]} look applied", Toast.LENGTH_SHORT).show()
+                }
+                rowPresets.addView(b)
+            }
         }
 
         // ---------- background controls ----------
@@ -788,7 +789,7 @@ class StudioActivity : AppCompatActivity() {
         }
 
         findViewById<MaterialButton>(R.id.st_export).setOnClickListener {
-            val json = Studio.exportLook(this)
+            val json = Studio.exportLook(this@StudioActivity)
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, json)
@@ -824,6 +825,11 @@ class StudioActivity : AppCompatActivity() {
         }
 
         // ---------- init ----------
+
+        onStudioChanged = {
+            syncAll()
+            repaintWidget()
+        }
 
         val username = Prefs.getUsername(this)
         if (username.isBlank()) {
