@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.githubwidget"
         minSdk = 26
         targetSdk = 34
-        versionCode = 9
-        versionName = "1.9.0"
+        versionCode = 10
+        versionName = "2.0.0"
     }
 
     buildTypes {
