@@ -217,40 +217,98 @@ object Achievements {
     fun nextMilestone(longestStreak: Int): Int =
         MILESTONES.firstOrNull { longestStreak < it } ?: -1
 
+    /** Personal bests from the available history. */
+    fun records(days: List<Day>): Records {
+        var bestCount = 0
+        var bestDate = ""
+        val months = HashMap<Int, Int>()
+        val weekdays = IntArray(7)
+        var anyActivity = false
+        val dayFmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val prettyDay = SimpleDateFormat("MMM d, yyyy", Locale.US)
+        val prettyMonth = SimpleDateFormat("MMM yyyy", Locale.US)
+        for (d in days) {
+            val c = d.count
+            if (c <= 0) continue
+            anyActivity = true
+            if (c > bestCount) {
+                bestCount = c
+                bestDate = try {
+                    prettyDay.format(dayFmt.parse(d.date) ?: continue)
+                } catch (_: Exception) {
+                    d.date
+                }
+            }
+            try {
+                val cal = Calendar.getInstance()
+                cal.time = dayFmt.parse(d.date) ?: continue
+                val key = cal.get(Calendar.YEAR) * 12 + cal.get(Calendar.MONTH)
+                months[key] = (months[key] ?: 0) + c
+                weekdays[cal.get(Calendar.DAY_OF_WEEK) - 1] += c
+            } catch (_: Exception) {
+                // Date stays counted in totals even if it can't be bucketed.
+            }
+        }
+        if (!anyActivity) return Records(0, 0, "", "", -1)
+        var bestMonth = ""
+        val topMonth = months.maxByOrNull { it.value }
+        if (topMonth != null) {
+            val cal = Calendar.getInstance()
+            cal.set(Calendar.YEAR, topMonth.key / 12)
+            cal.set(Calendar.MONTH, topMonth.key % 12)
+            cal.set(Calendar.DAY_OF_MONTH, 1)
+            bestMonth = prettyMonth.format(cal.time)
+        }
+        var bestDow = -1
+        var bestDowCount = 0
+        weekdays.forEachIndexed { i, v ->
+            if (v > bestDowCount) {
+                bestDowCount = v
+                bestDow = i
+            }
+        }
+        val streaks = Stats.compute(days)
+        return Records(streaks.longestStreak, bestCount, bestDate, bestMonth, bestDow)
+    }
+
     fun evaluate(total: Int, a: AnalyticsData): List<Achievement> {
+        fun prog(have: Int, goal: Int, title: String, unit: String): Achievement {
+            val unlocked = have >= goal
+            return Achievement(
+                "goal$goal$title", title,
+                "Reach $goal $unit.", unlocked,
+                if (unlocked) 1f else (have.toFloat() / goal).coerceIn(0f, 1f),
+                if (unlocked) "$goal / $goal" else "$have / $goal"
+            )
+        }
         val hasAny = a.activeDays > 0
         return listOf(
             Achievement(
                 "first", "First contribution",
-                "Make your first contribution.", hasAny
+                "Make your first contribution.", hasAny,
+                if (hasAny) 1f else 0f, ""
             ),
             Achievement(
                 "streak7", "7-day streak",
-                "Contribute 7 days in a row.", a.longestStreak >= 7
+                "Contribute 7 days in a row.", a.longestStreak >= 7,
+                (a.longestStreak.toFloat() / 7f).coerceIn(0f, 1f),
+                "${a.longestStreak.coerceAtMost(7)} / 7 days"
             ),
             Achievement(
                 "streak30", "30-day streak",
-                "Contribute 30 days in a row.", a.longestStreak >= 30
+                "Contribute 30 days in a row.", a.longestStreak >= 30,
+                (a.longestStreak.toFloat() / 30f).coerceIn(0f, 1f),
+                "${a.longestStreak.coerceAtMost(30)} / 30 days"
             ),
-            Achievement(
-                "total100", "100 contributions",
-                "Reach 100 contributions.", total >= 100
-            ),
-            Achievement(
-                "total500", "500 contributions",
-                "Reach 500 contributions.", total >= 500
-            ),
-            Achievement(
-                "total1000", "1,000 contributions",
-                "Reach 1,000 contributions.", total >= 1000
-            ),
-            Achievement(
-                "active100", "100 active days",
-                "Contribute on 100 different days.", a.activeDays >= 100
-            ),
+            prog(total, 100, "100 contributions", "contributions"),
+            prog(total, 500, "500 contributions", "contributions"),
+            prog(total, 1000, "1,000 contributions", "contributions"),
+            prog(a.activeDays, 100, "100 active days", "active days"),
             Achievement(
                 "consistent", "Consistent month",
-                "Active on 20+ of the last 30 days.", a.last30Active >= 20
+                "Active on 20+ of the last 30 days.", a.last30Active >= 20,
+                (a.last30Active.toFloat() / 20f).coerceIn(0f, 1f),
+                "${a.last30Active.coerceAtMost(20)} / 20 days"
             )
         )
     }
