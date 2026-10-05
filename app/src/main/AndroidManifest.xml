@@ -37,6 +37,11 @@
             android:label="Drawing Studio" />
 
         <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:label="Settings" />
+
+        <activity
             android:name=".WidgetConfigActivity"
             android:exported="false"
             android:label="Widget setup"
