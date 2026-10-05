@@ -59,14 +59,24 @@ class DrawingActivity : AppCompatActivity() {
             }
         }
         fun paintTools(buttons: List<MaterialButton>, selected: Int) {
-            val accent = Color.parseColor("#39D353")
+            val accent = Color.parseColor("#3FB950")
             buttons.forEachIndexed { i, b ->
                 if (i == selected) {
-                    b.backgroundTintList = ColorStateList.valueOf(accent)
-                    b.setTextColor(Color.parseColor("#010409"))
+                    b.backgroundTintList = ColorStateList.valueOf(
+                        androidx.core.graphics.ColorUtils.blendARGB(
+                            Color.parseColor("#0D1117"), accent, 0.45f
+                        )
+                    )
+                    b.setTextColor(Color.WHITE)
+                    b.setTypeface(null, android.graphics.Typeface.BOLD)
+                    b.strokeColor = ColorStateList.valueOf(accent)
+                    b.strokeWidth = dp(2)
                 } else {
-                    b.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#21262D"))
+                    b.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
                     b.setTextColor(Color.parseColor("#F0F6FC"))
+                    b.setTypeface(null, android.graphics.Typeface.NORMAL)
+                    b.strokeColor = ColorStateList.valueOf(Color.parseColor("#3D444D"))
+                    b.strokeWidth = dp(1)
                 }
             }
         }
