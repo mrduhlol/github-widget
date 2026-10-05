@@ -101,8 +101,31 @@ class MainActivity : AppCompatActivity() {
         // ---- preview ----
 
         fun paintPreviewCard() {
-            card.setCardBackgroundColor(Themes.cardColor(Prefs.getOpacity(this)))
             card.radius = dp(WidgetPrefs.getCorners(this)).toFloat()
+            // Unified pipeline: the card layer paints the Studio background
+            // (solid/gradient/image/transparent + blur + overlay) behind the
+            // content, exactly like the widget.
+            Thread {
+                try {
+                    val bg = CardRenderer.card(
+                        this, 1024, 512,
+                        dp(WidgetPrefs.getCorners(this)).toFloat() * 3f,
+                        Color.parseColor("#30363D")
+                    )
+                    runOnUiThread {
+                        if (isFinishing || isDestroyed) return@runOnUiThread
+                        previewBg.setImageBitmap(bg)
+                        previewBg.visibility = View.VISIBLE
+                        card.setCardBackgroundColor(Color.TRANSPARENT)
+                    }
+                } catch (_: Exception) {
+                    runOnUiThread {
+                        if (isFinishing || isDestroyed) return@runOnUiThread
+                        previewBg.visibility = View.GONE
+                        card.setCardBackgroundColor(Themes.cardColor(Prefs.getOpacity(this)))
+                    }
+                }
+            }.start()
         }
 
         /** Paints a dataset into the preview, honoring every look setting. */
