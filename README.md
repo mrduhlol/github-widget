@@ -1,6 +1,6 @@
 # GH-widgets
 
-Your GitHub contribution graph, live on your Android homescreen.
+Your GitHub contribution graph, live on your Android homescreen. Customize it, draw on it, use your own background, track your activity.
 
 <p align="center">
   <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.v2.0.0.apk">
@@ -15,21 +15,21 @@ Your GitHub contribution graph, live on your Android homescreen.
 ## Features
 
 - Live contribution graph on your homescreen
-- 5 graph colors — Matrix, Nebula, Abyss, Ember, Neon — plus a custom color picker
+- Widget Studio with live preview — theme, style, graph, background, content, presets
 - 5 widget styles — Classic, Minimal, Compact, Terminal, Glass
-- 4 one-tap presets — Default, Minimal, Developer, Neon — plus reset to default look
-- Graph range (3 months, 6 months, 1 year), cell shape and cell spacing
-- Card corner roundness and transparency sliders with live preview
-- Content toggles — contribution count, streaks, last updated
-- Activity analytics — weekly and monthly stats, averages, weekday breakdown, insights
-- Streak milestones and 8 data-based achievements
+- 5 graph themes — Matrix, Nebula, Abyss, Ember, Neon — plus spectrum color picker
+- Custom contribution palette — per-level colors or generated from the theme color
+- Custom backgrounds — solid, gradient (linear/radial, 2–3 colors), your own image, transparent
+- Background opacity, blur and color overlays, image-through-graph mode
+- Drawing Studio — brush, eraser, highlighter, shapes, fill, undo/redo, PNG export, use as background
+- Graph range (3 months, 6 months, 1 year), cell shape (square, rounded, soft, circle), cell size and spacing
+- Content toggles — count, streaks, active days, last updated, custom label, text size
+- Activity analytics — weekly/monthly stats, averages, weekday breakdown, insights, personal records
+- 8 data-based achievements with progress bars and streak milestones
+- Share Studio — 5 card templates (GitHub, Minimal, Terminal, Neon, Poster) via the native share sheet
 - Each widget keeps its own look — setup runs when a widget is added
-- Tap the graph for analytics, the header for the GitHub profile
-- Smart refresh — no requests offline, no duplicate refreshes
-- Shareable contribution cards via the native Android share sheet
+- Settings — data, look import/export as JSON, reset, privacy, about
 - Works offline — last fetched graph stays on screen with its age
-- Adaptive widget — compact, regular and wide layouts with month labels on large sizes
-- Auto-refresh every 6 hours, or tap the refresh icon for an instant refresh
 - No sign-in, no token — just your username
 
 ## Install
@@ -41,8 +41,48 @@ Your GitHub contribution graph, live on your Android homescreen.
 
 ## Use
 
-1. Open the **GH-widgets** app
-2. Enter your GitHub username and tap **Save** — your graph appears instantly
-3. Style it — theme previews, widget style, range, shape, transparency, info toggles or a preset — preview updates live
-4. Long-press your homescreen → **Widgets** → **GH-widgets** → drag it out
-5. Long-press the widget anytime to resize it
+1. Open **GH-widgets**, enter your GitHub username — your graph appears instantly
+2. Tap **Customize widget** to open the Widget Studio — every change previews live
+3. Long-press your homescreen → **Widgets** → **GH-widgets** → style it during setup
+4. Tap the widget graph for analytics, the header for your GitHub profile
+
+## Configuration
+
+- The app holds the defaults for new widgets; each placed widget can keep its own look
+- Share a look as JSON from the Studio or Settings, import it on another device
+- Reset the look anytime — username and cached data are never touched
+
+## Privacy
+
+- Username, look settings and the last fetched graph stay on this device only
+- Refresh sends your username to the public contribution API — no sign-in, no token
+- Images and drawings stay in the app's private storage; no telemetry, nothing uploaded
+
+## Architecture
+
+```
+GitHub API → Cache → Analytics
+                  ↓
+Visual config (global defaults + per-widget overrides + Studio background)
+                  ↓
+CardRenderer (solid / gradient / image / transparent → blur → overlay)
+                  ↓
+GraphRenderer (palette, shape, size, spacing, image tint)
+                  ↓
+Widget / Studio preview / Share card (one pipeline)
+```
+
+- `SharedPreferences` for settings (never images); drawings as PNG files; share via `FileProvider`
+- Photo Picker for images — no storage permission
+
+## Build
+
+```bash
+./gradlew assembleDebug
+```
+
+Requires JDK 17. Every push to `main` builds in CI; tags like `v2.0.0` publish the APK to Releases.
+
+## Contributing
+
+Issues and pull requests are welcome — https://github.com/mrduhlol/github-widget/issues
