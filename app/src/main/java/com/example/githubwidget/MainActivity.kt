@@ -64,6 +64,7 @@ class MainActivity : AppCompatActivity() {
         val colBest = findViewById<LinearLayout>(R.id.col_best)
         val colActive = findViewById<LinearLayout>(R.id.col_active)
         val previewGraph = findViewById<ImageView>(R.id.preview_graph)
+        val previewBg = findViewById<ImageView>(R.id.preview_bg)
         val previewStatus = findViewById<TextView>(R.id.preview_status)
         val themeName = findViewById<TextView>(R.id.text_theme_name)
         val rowThemes = findViewById<LinearLayout>(R.id.row_themes)
