@@ -27,6 +27,11 @@
             android:label="Activity" />
 
         <activity
+            android:name=".StudioActivity"
+            android:exported="false"
+            android:label="Widget Studio" />
+
+        <activity
             android:name=".WidgetConfigActivity"
             android:exported="false"
             android:label="Widget setup"
