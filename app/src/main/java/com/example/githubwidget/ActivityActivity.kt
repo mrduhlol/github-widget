@@ -320,23 +320,57 @@ class ActivityActivity : AppCompatActivity() {
             chkTotal.isChecked = t.showTotal
             chkStreak.isChecked = t.showStreak
         }
-        ShareCard.TEMPLATES.forEach { t ->
+        var selectedTemplate = 0
+        val templateButtons = ArrayList<com.google.android.material.button.MaterialButton>()
+        ShareCard.TEMPLATES.forEachIndexed { index, t ->
             val b = com.google.android.material.button.MaterialButton(this).apply {
                 text = t.name
                 textSize = 11f
-                cornerRadius = dp(8)
+                cornerRadius = dp(12)
                 minimumWidth = 0
                 minWidth = 0
+                minHeight = dp(48)
                 setPadding(dp(4), 0, dp(4), 0)
-                setBackgroundColor(Color.parseColor("#21262D"))
+                backgroundTintList = android.content.res.ColorStateList.valueOf(Color.TRANSPARENT)
                 setTextColor(Color.parseColor("#F0F6FC"))
+                strokeColor = android.content.res.ColorStateList.valueOf(Color.parseColor("#3D444D"))
+                strokeWidth = dp(1)
                 val lp = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 if (t != ShareCard.TEMPLATES.last()) lp.marginEnd = dp(6)
                 layoutParams = lp
-                setOnClickListener { applyTemplate(t) }
+                setOnClickListener {
+                    selectedTemplate = index
+                    applyTemplate(t)
+                    templateButtons.forEachIndexed { i, other ->
+                        if (i == selectedTemplate) {
+                            other.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                                androidx.core.graphics.ColorUtils.blendARGB(
+                                    Color.parseColor("#0D1117"),
+                                    Color.parseColor("#3FB950"), 0.45f
+                                )
+                            )
+                            other.setTextColor(Color.WHITE)
+                            other.strokeColor = android.content.res.ColorStateList.valueOf(
+                                Color.parseColor("#3FB950")
+                            )
+                            other.strokeWidth = dp(2)
+                        } else {
+                            other.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                                Color.TRANSPARENT
+                            )
+                            other.setTextColor(Color.parseColor("#F0F6FC"))
+                            other.strokeColor = android.content.res.ColorStateList.valueOf(
+                                Color.parseColor("#3D444D")
+                            )
+                            other.strokeWidth = dp(1)
+                        }
+                    }
+                }
             }
+            templateButtons.add(b)
             templateRow.addView(b)
         }
+        templateButtons.firstOrNull()?.performClick()
         box.addView(chkDark)
         box.addView(chkUser)
         box.addView(chkTotal)
