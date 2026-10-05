@@ -251,7 +251,7 @@ class ContributionWidgetProvider : AppWidgetProvider() {
             maxWeeks = weeks,
             showMonthLabels = size.monthLabels,
             cornerRadius = WidgetPrefs.shapeRadiusFactor(WidgetInstance.getShape(context, widgetId)),
-            gapScale = WidgetPrefs.getSpacing(context, widgetId),
+            gapScale = WidgetInstance.getSpacing(context, widgetId),
             cellScale = Studio.getCellSize(context),
             tint = tint,
             tintAmount = 0.35f
