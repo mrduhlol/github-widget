@@ -11,84 +11,103 @@
     android:orientation="vertical"
     android:padding="20dp">
 
-    <!-- Hero -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="GH://CONTRIBUTIONS"
+        android:text="GH://HOME"
         android:textColor="#39D353"
         android:textSize="12sp"
         android:typeface="monospace" />
 
     <TextView
+        android:id="@+id/home_user"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="Your graph, your style."
+        android:text="GH-widgets"
         android:textColor="#F0F6FC"
         android:textSize="24sp"
         android:textStyle="bold" />
 
-    <!-- Username -->
     <TextView
+        android:id="@+id/home_updated"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="GitHub username"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
+        android:layout_marginTop="2dp"
+        android:text=""
+        android:textColor="#8B949E"
+        android:textSize="12sp"
+        android:typeface="monospace" />
 
-    <com.google.android.material.textfield.TextInputLayout
+    <!-- First run -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/home_onboard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="e.g. torvalds"
-        app:boxBackgroundColor="#0D1117"
-        app:boxStrokeColor="#30363D"
-        app:hintTextColor="#8B949E">
+        android:layout_marginTop="16dp"
+        app:cardBackgroundColor="#0D1117"
+        app:cardCornerRadius="16dp"
+        app:strokeColor="#30363D"
+        app:strokeWidth="1dp">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/input_username"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text"
-            android:singleLine="true"
-            android:textColor="#F0F6FC"
-            android:textColorHint="#8B949E" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:orientation="vertical"
+            android:padding="16dp">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_save"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="Save &amp; show my graph"
-        app:backgroundTint="#238636"
-        app:cornerRadius="12dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="See your GitHub graph on your homescreen."
+                android:textColor="#F0F6FC"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
-    <!-- Live preview -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Widget preview"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Enter your username, pick a style, add the widget. Thirty seconds."
+                android:textColor="#8B949E"
+                android:textSize="12sp" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Exactly what your homescreen shows."
-        android:textColor="#8B949E"
-        android:textSize="11sp" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="GitHub username"
+                app:boxBackgroundColor="#010409"
+                app:boxStrokeColor="#30363D"
+                app:hintTextColor="#8B949E">
 
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/home_username"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:singleLine="true"
+                    android:textColor="#F0F6FC"
+                    android:textColorHint="#8B949E" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/home_start"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Show my graph"
+                app:backgroundTint="#238636"
+                app:cornerRadius="12dp" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Graph hero -->
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/card_preview"
+        android:id="@+id/home_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:visibility="gone"
         app:cardCornerRadius="16dp"
         app:strokeColor="#30363D"
@@ -99,445 +118,195 @@
             android:layout_height="wrap_content">
 
             <ImageView
-                android:id="@+id/preview_bg"
+                android:id="@+id/home_bg"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="fitXY"
                 android:visibility="gone" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="vertical"
+                android:padding="16dp">
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/preview_title"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/home_subtitle"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@user"
-                        android:textColor="#F0F6FC"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/preview_subtitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="Loading…"
                         android:textColor="#8B949E"
                         android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/home_total"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="–"
+                        android:textColor="#39D353"
+                        android:textSize="28sp"
+                        android:textStyle="bold"
+                        android:typeface="monospace" />
                 </LinearLayout>
 
                 <TextView
-                    android:id="@+id/preview_total"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="–"
-                    android:textColor="#39D353"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:typeface="monospace" />
+                    android:text="contributions"
+                    android:textColor="#8B949E"
+                    android:textSize="11sp" />
+
+                <ImageView
+                    android:id="@+id/home_graph"
+                    android:layout_width="match_parent"
+                    android:layout_height="140dp"
+                    android:layout_marginTop="8dp"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="Contribution graph"
+                    android:scaleType="fitCenter" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/home_streak"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="–"
+                            android:textSize="17sp"
+                            android:textStyle="bold"
+                            android:typeface="monospace" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="day streak"
+                            android:textColor="#8B949E"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/home_week"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="–"
+                            android:textColor="#F0F6FC"
+                            android:textSize="17sp"
+                            android:textStyle="bold"
+                            android:typeface="monospace" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="this week"
+                            android:textColor="#8B949E"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/home_active"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="–"
+                            android:textColor="#F0F6FC"
+                            android:textSize="17sp"
+                            android:textStyle="bold"
+                            android:typeface="monospace" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="active days"
+                            android:textColor="#8B949E"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:id="@+id/col_streak"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/stat_streak"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="–"
-                        android:textSize="17sp"
-                        android:textStyle="bold"
-                        android:typeface="monospace" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="day streak"
-                        android:textColor="#8B949E"
-                        android:textSize="10sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/col_best"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/stat_best"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="–"
-                        android:textColor="#F0F6FC"
-                        android:textSize="17sp"
-                        android:textStyle="bold"
-                        android:typeface="monospace" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="best day"
-                        android:textColor="#8B949E"
-                        android:textSize="10sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/col_active"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/stat_active"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="–"
-                        android:textColor="#F0F6FC"
-                        android:textSize="17sp"
-                        android:textStyle="bold"
-                        android:typeface="monospace" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="active days"
-                        android:textColor="#8B949E"
-                        android:textSize="10sp" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <ImageView
-                android:id="@+id/preview_graph"
-                android:layout_width="match_parent"
-                android:layout_height="140dp"
-                android:layout_marginTop="8dp"
-                android:adjustViewBounds="true"
-                android:contentDescription="Contribution graph preview"
-                android:scaleType="fitCenter" />
-
-            <TextView
-                android:id="@+id/preview_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textColor="#8B949E"
-                android:textSize="11sp" />
-        </LinearLayout>
         </FrameLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Appearance -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Appearance"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="Theme"
-        android:textColor="#8B949E"
-        android:textSize="12sp" />
-
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:scrollbars="none">
-
-        <LinearLayout
-            android:id="@+id/row_themes"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal" />
-    </HorizontalScrollView>
-
-    <TextView
-        android:id="@+id/text_theme_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:text="Matrix"
-        android:textColor="#8B949E"
-        android:textSize="12sp"
-        android:typeface="monospace" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:text="Widget style"
-        android:textColor="#8B949E"
-        android:textSize="12sp" />
-
-    <LinearLayout
-        android:id="@+id/row_styles"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:orientation="horizontal" />
-
-    <!-- Graph -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Graph"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="Range"
-        android:textColor="#8B949E"
-        android:textSize="12sp" />
-
-    <LinearLayout
-        android:id="@+id/row_ranges"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:orientation="horizontal" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:text="Cell shape"
-        android:textColor="#8B949E"
-        android:textSize="12sp" />
-
-    <LinearLayout
-        android:id="@+id/row_shapes"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:orientation="horizontal" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Cell spacing"
-            android:textColor="#8B949E"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/text_spacing"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Normal"
-            android:textColor="#8B949E"
-            android:textSize="12sp"
-            android:typeface="monospace" />
-    </LinearLayout>
-
-    <com.google.android.material.slider.Slider
-        android:id="@+id/slider_spacing"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:value="1"
-        android:valueFrom="0.5"
-        android:valueTo="1.5"
-        android:stepSize="0.5" />
-
-    <!-- Card -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Card"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Transparency"
-            android:textColor="#8B949E"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/text_opacity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="100%"
-            android:textColor="#8B949E"
-            android:textSize="12sp"
-            android:typeface="monospace" />
-    </LinearLayout>
-
-    <com.google.android.material.slider.Slider
-        android:id="@+id/slider_opacity"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:value="100"
-        android:valueFrom="20"
-        android:valueTo="100"
-        android:stepSize="5" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Corner roundness"
-            android:textColor="#8B949E"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/text_corners"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="16dp"
-            android:textColor="#8B949E"
-            android:textSize="12sp"
-            android:typeface="monospace" />
-    </LinearLayout>
-
-    <com.google.android.material.slider.Slider
-        android:id="@+id/slider_corners"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:value="16"
-        android:valueFrom="0"
-        android:valueTo="28"
-        android:stepSize="2" />
-
-    <!-- Content -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Widget information"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <com.google.android.material.checkbox.MaterialCheckBox
-        android:id="@+id/chk_total"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:text="Contribution count"
-        android:textColor="#F0F6FC" />
-
-    <com.google.android.material.checkbox.MaterialCheckBox
-        android:id="@+id/chk_streak"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Current streak"
-        android:textColor="#F0F6FC" />
-
-    <com.google.android.material.checkbox.MaterialCheckBox
-        android:id="@+id/chk_longest"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Longest streak"
-        android:textColor="#F0F6FC" />
-
-    <com.google.android.material.checkbox.MaterialCheckBox
-        android:id="@+id/chk_updated"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Last updated"
-        android:textColor="#F0F6FC" />
-
-    <!-- Presets -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Presets"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <LinearLayout
-        android:id="@+id/row_presets"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:orientation="horizontal" />
-
+    <!-- Primary action -->
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_reset"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Reset to default look"
-        app:backgroundTint="#21262D"
-        app:cornerRadius="12dp" />
-
-    <!-- Actions -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_refresh"
+        android:id="@+id/home_studio"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Refresh now"
-        app:backgroundTint="#21262D"
+        android:text="Customize widget"
+        app:backgroundTint="#238636"
         app:cornerRadius="12dp" />
 
+    <!-- Secondary row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/home_activity"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:text="Activity"
+            android:textSize="12sp"
+            app:backgroundTint="#21262D"
+            app:cornerRadius="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/home_share"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:text="Share"
+            android:textSize="12sp"
+            app:backgroundTint="#21262D"
+            app:cornerRadius="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/home_settings"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:text="Settings"
+            android:textSize="12sp"
+            app:backgroundTint="#21262D"
+            app:cornerRadius="12dp" />
+    </LinearLayout>
+
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_add_widget"
+        android:id="@+id/home_add_widget"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -545,23 +314,35 @@
         app:backgroundTint="#1F6FEB"
         app:cornerRadius="12dp" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_activity"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="View activity analytics"
-        app:backgroundTint="#21262D"
-        app:cornerRadius="12dp" />
-
-    <TextView
-        android:id="@+id/text_status"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
         android:layout_marginBottom="24dp"
-        android:textColor="#8B949E"
-        android:textSize="12sp" />
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/home_refresh"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:text="Refresh"
+            android:textSize="12sp"
+            app:backgroundTint="#21262D"
+            app:cornerRadius="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/home_switch"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:text="Switch user"
+            android:textSize="12sp"
+            app:backgroundTint="#21262D"
+            app:cornerRadius="12dp" />
+    </LinearLayout>
 
 </LinearLayout>
 </ScrollView>
