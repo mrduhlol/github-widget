@@ -70,6 +70,7 @@ class ActivityActivity : AppCompatActivity() {
         paintAnalytics(result, total, week, month, avg, active, best, streak, longest, milestone)
         showWeekdays(rowsWeekday, result)
         val analytics = Analytics.compute(result.days, result.totalLastYear)
+        showRecords(findViewById(R.id.rows_records), result)
         showInsights(rowsInsights, Analytics.insights(analytics))
         showAchievements(rowsAchievements, result.totalLastYear, analytics)
 
@@ -156,6 +157,45 @@ class ActivityActivity : AppCompatActivity() {
         }
     }
 
+    private fun showRecords(container: LinearLayout, result: ContributionsResult) {
+        container.removeAllViews()
+        val r = Achievements.records(result.days)
+        if (r.bestCount == 0) {
+            container.addView(TextView(this).apply {
+                text = "No records yet — contribute to set your first."
+                textSize = 12f
+                setTextColor(Color.parseColor("#8B949E"))
+            })
+            return
+        }
+        val rows = listOf(
+            "Longest streak" to if (r.longestStreak > 0) "${r.longestStreak} days" else "—",
+            "Most in a day" to "${fmt(r.bestCount)}${if (r.bestDate.isNotEmpty()) " • ${r.bestDate}" else ""}",
+            "Most active month" to r.bestMonth.ifEmpty { "—" },
+            "Most active weekday" to if (r.bestWeekday >= 0) Analytics.weekdayName(r.bestWeekday) else "—"
+        )
+        for ((label, value) in rows) {
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(0, dp(4), 0, dp(4))
+            }
+            row.addView(TextView(this).apply {
+                text = label
+                textSize = 12f
+                setTextColor(Color.parseColor("#8B949E"))
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            })
+            row.addView(TextView(this).apply {
+                text = value
+                textSize = 12f
+                typeface = Typeface.MONOSPACE
+                setTextColor(Color.parseColor("#F0F6FC"))
+            })
+            container.addView(row)
+        }
+    }
+
     private fun showInsights(container: LinearLayout, lines: List<String>) {
         container.removeAllViews()
         for (line in lines) {
@@ -200,7 +240,14 @@ class ActivityActivity : AppCompatActivity() {
                 setTextColor(Color.parseColor("#8B949E"))
             })
             row.addView(texts)
-            row.addView(TextView(this).apply {
+            val status = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = android.view.Gravity.END
+                layoutParams = LinearLayout.LayoutParams(
+                    dp(96), LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+            status.addView(TextView(this).apply {
                 text = if (ach.unlocked) "Unlocked" else "Locked"
                 textSize = 10f
                 typeface = Typeface.MONOSPACE
@@ -209,6 +256,32 @@ class ActivityActivity : AppCompatActivity() {
                     else Color.parseColor("#8B949E")
                 )
             })
+            if (!ach.unlocked && ach.progressText.isNotEmpty()) {
+                val track = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    setPadding(0, dp(4), 0, 0)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(6)
+                    )
+                    setBackgroundColor(Color.parseColor("#21262D"))
+                }
+                track.addView(View(this).apply {
+                    val w = (ach.progress * 96).toInt().coerceIn(0, 96)
+                    layoutParams = LinearLayout.LayoutParams(dp(w), LinearLayout.LayoutParams.MATCH_PARENT)
+                    setBackgroundColor(Color.parseColor("#39D353"))
+                    contentDescription = "Progress ${ach.progressText}"
+                })
+                status.addView(track)
+                status.addView(TextView(this).apply {
+                    text = ach.progressText
+                    textSize = 9f
+                    typeface = Typeface.MONOSPACE
+                    setTextColor(Color.parseColor("#8B949E"))
+                    setPadding(0, dp(2), 0, 0)
+                })
+            }
+            row.addView(status)
             container.addView(row)
         }
     }
