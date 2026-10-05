@@ -303,6 +303,40 @@ class ActivityActivity : AppCompatActivity() {
         val chkUser = check("Show username", true)
         val chkTotal = check("Show contribution count", true)
         val chkStreak = check("Show streak", true)
+        val templateRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 0, 0, dp(8))
+        }
+        box.addView(TextView(this).apply {
+            text = "Template"
+            textSize = 12f
+            setTextColor(Color.parseColor("#8B949E"))
+            setPadding(0, 0, 0, dp(4))
+        })
+        box.addView(templateRow)
+        fun applyTemplate(t: ShareCard.CardTemplate) {
+            chkDark.isChecked = t.dark
+            chkUser.isChecked = t.showUsername
+            chkTotal.isChecked = t.showTotal
+            chkStreak.isChecked = t.showStreak
+        }
+        ShareCard.TEMPLATES.forEach { t ->
+            val b = com.google.android.material.button.MaterialButton(this).apply {
+                text = t.name
+                textSize = 11f
+                cornerRadius = dp(8)
+                minimumWidth = 0
+                minWidth = 0
+                setPadding(dp(4), 0, dp(4), 0)
+                setBackgroundColor(Color.parseColor("#21262D"))
+                setTextColor(Color.parseColor("#F0F6FC"))
+                val lp = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                if (t != ShareCard.TEMPLATES.last()) lp.marginEnd = dp(6)
+                layoutParams = lp
+                setOnClickListener { applyTemplate(t) }
+            }
+            templateRow.addView(b)
+        }
         box.addView(chkDark)
         box.addView(chkUser)
         box.addView(chkTotal)
