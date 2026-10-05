@@ -32,6 +32,11 @@
             android:label="Widget Studio" />
 
         <activity
+            android:name=".DrawingActivity"
+            android:exported="false"
+            android:label="Drawing Studio" />
+
+        <activity
             android:name=".WidgetConfigActivity"
             android:exported="false"
             android:label="Widget setup"
