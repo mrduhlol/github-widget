@@ -183,11 +183,26 @@ object Analytics {
     }
 }
 
+/** Best-ever values from the available history. Empty when no activity. */
+data class Records(
+    val longestStreak: Int,
+    val bestCount: Int,
+    /** Best day as "Mar 4, 2026", or "" when nothing recorded. */
+    val bestDate: String,
+    val bestMonth: String,
+    /** 0 = Sunday .. 6 = Saturday, or -1 when nothing recorded. */
+    val bestWeekday: Int
+)
+
 data class Achievement(
     val id: String,
     val title: String,
     val desc: String,
-    val unlocked: Boolean
+    val unlocked: Boolean,
+    /** Progress toward the goal, 0.0..1.0. Always 1.0 when unlocked. */
+    val progress: Float,
+    /** e.g. "820 / 1000". Empty for binary achievements. */
+    val progressText: String
 )
 
 object Achievements {
