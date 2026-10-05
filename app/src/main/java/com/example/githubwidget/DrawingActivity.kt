@@ -40,7 +40,7 @@ class DrawingActivity : AppCompatActivity() {
             "Circle" to DrawingView.TOOL_CIRCLE,
             "Fill" to DrawingView.TOOL_FILL
         )
-        val toolButtons = tools.map { (name, id) ->
+        val toolButtons = tools.map { (name, _) ->
             MaterialButton(this).apply {
                 text = name
                 textSize = 12f
@@ -55,11 +55,13 @@ class DrawingActivity : AppCompatActivity() {
                 lp.marginEnd = dp(8)
                 layoutParams = lp
                 contentDescription = "$name tool"
-                setOnClickListener {
-                    canvas.tool = id
-                    paintTools(toolButtons, tools.indexOfFirst { it.second == id })
-                }
                 rowTools.addView(this)
+            }
+        }
+        toolButtons.forEachIndexed { i, b ->
+            b.setOnClickListener {
+                canvas.tool = tools[i].second
+                paintTools(toolButtons, i)
             }
         }
 
