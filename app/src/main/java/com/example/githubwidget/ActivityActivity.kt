@@ -361,7 +361,8 @@ class ActivityActivity : AppCompatActivity() {
                         val bmp = ShareCard.render(
                             result, theme, opts,
                             cornerRadius = WidgetPrefs.shapeRadiusFactor(WidgetPrefs.getShape(this)),
-                            gapScale = WidgetPrefs.getSpacing(this)
+                            gapScale = WidgetPrefs.getSpacing(this),
+                            customLevels = Studio.effectiveLevels(this, theme).takeIf { opts.dark }
                         )
                         runOnUiThread {
                             if (isFinishing || isDestroyed) return@runOnUiThread
