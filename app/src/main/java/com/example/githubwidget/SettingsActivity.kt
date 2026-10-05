@@ -59,7 +59,7 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.set_export).setOnClickListener {
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, Studio.exportLook(this))
+                putExtra(Intent.EXTRA_TEXT, Studio.exportLook(this@SettingsActivity))
             }
             startActivity(Intent.createChooser(intent, "Share look"))
         }
