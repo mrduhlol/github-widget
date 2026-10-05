@@ -6,12 +6,15 @@ Your GitHub contribution graph, live on your Android homescreen. Customize it, d
 
 <p align="center">
   <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.v2.0.0.apk">
-    <img src="https://img.shields.io/badge/DOWNLOAD_APK-39D353?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" height="60" />
+    <img height="64" alt="Download GH-widgets for Android" src="https://img.shields.io/badge/GET_GH%E2%80%90WIDGETS_FOR_ANDROID-238636?style=for-the-badge&logo=android&logoColor=white" />
   </a>
-</p>
-
-<p align="center">
-  <sub>Android 8.0+ &nbsp;•&nbsp; Free &nbsp;•&nbsp; No account needed</sub>
+  <br />
+  <sub>Tap the button on your phone — the APK installs straight from your files.</sub>
+  <br /><br />
+  <img alt="Latest release" src="https://img.shields.io/github/v/release/mrduhlol/github-widget?style=flat-square&label=version&color=1F6FEB" />
+  <img alt="APK size" src="https://img.shields.io/badge/size-%7E5.6_MB-0D1117?style=flat-square" />
+  <img alt="Android" src="https://img.shields.io/badge/android-8.0%2B-39D353?style=flat-square" />
+  <img alt="License" src="https://img.shields.io/badge/free-no_sign%E2%80%90in-8B949E?style=flat-square" />
 </p>
 
 ## Features
