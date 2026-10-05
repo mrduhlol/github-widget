@@ -74,10 +74,11 @@ class WidgetConfigActivity : AppCompatActivity() {
             MaterialButton(this).apply {
                 text = label
                 textSize = 12f
-                cornerRadius = dp(10)
+                cornerRadius = dp(12)
                 minimumWidth = 0
                 minWidth = 0
-                setPadding(dp(4), 0, dp(4), 0)
+                minHeight = dp(48)
+                setPadding(dp(6), 0, dp(6), 0)
                 val lp = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 lp.marginEnd = dp(8)
                 layoutParams = lp
