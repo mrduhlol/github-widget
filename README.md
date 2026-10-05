@@ -1,5 +1,7 @@
 # GH-widgets
 
+**Current version: v2.0.0** — Your GitHub, Your Widget.
+
 Your GitHub contribution graph, live on your Android homescreen. Customize it, draw on it, use your own background, track your activity.
 
 <p align="center">
