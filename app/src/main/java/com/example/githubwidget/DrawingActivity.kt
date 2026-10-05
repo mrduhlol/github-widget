@@ -58,13 +58,6 @@ class DrawingActivity : AppCompatActivity() {
                 rowTools.addView(this)
             }
         }
-        toolButtons.forEachIndexed { i, b ->
-            b.setOnClickListener {
-                canvas.tool = tools[i].second
-                paintTools(toolButtons, i)
-            }
-        }
-
         fun paintTools(buttons: List<MaterialButton>, selected: Int) {
             val accent = Color.parseColor("#39D353")
             buttons.forEachIndexed { i, b ->
@@ -75,6 +68,12 @@ class DrawingActivity : AppCompatActivity() {
                     b.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#21262D"))
                     b.setTextColor(Color.parseColor("#F0F6FC"))
                 }
+            }
+        }
+        toolButtons.forEachIndexed { i, b ->
+            b.setOnClickListener {
+                canvas.tool = tools[i].second
+                paintTools(toolButtons, i)
             }
         }
         paintTools(toolButtons, 0)
