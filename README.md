@@ -1,11 +1,11 @@
 # GH-widgets
 
-**Current version: v2.1.0** — one page, everything visible, buttons you can actually read.
+**Current version: v2.2.0** — premium share cards with your avatar, new app icon, readable white button text.
 
 Your GitHub contribution graph, live on your Android homescreen. Customize it, draw on it, use your own background, track your activity.
 
 <p align="center">
-  <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.v2.1.0.apk">
+  <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.v2.2.0.apk">
     <img height="64" alt="Download GH-widgets for Android" src="https://img.shields.io/badge/GET_GH%E2%80%90WIDGETS_FOR_ANDROID-238636?style=for-the-badge&logo=android&logoColor=white" />
   </a>
   <br />
@@ -21,7 +21,8 @@ Your GitHub contribution graph, live on your Android homescreen. Customize it, d
 
 - Live contribution graph on your homescreen
 - Everything on one page — live preview plus theme, style, graph, background, content and presets, no screen-hopping
-- High-contrast buttons and option chips — selected states are unmistakable, 48dp touch targets
+- High-contrast buttons and option chips — white text everywhere, unmistakable selected states, 48dp touch targets
+- Premium share cards — circular profile avatar with accent ring, stat band, records row
 - 5 widget styles — Classic, Minimal, Compact, Terminal, Glass
 - 5 graph themes — Matrix, Nebula, Abyss, Ember, Neon — plus spectrum color picker
 - Custom contribution palette — per-level colors or generated from the theme color
