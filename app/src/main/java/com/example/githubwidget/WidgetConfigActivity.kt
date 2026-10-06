@@ -98,7 +98,7 @@ class WidgetConfigActivity : AppCompatActivity() {
                     b.strokeWidth = dp(2)
                 } else {
                     b.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
-                    b.setTextColor(Color.parseColor("#F0F6FC"))
+                    b.setTextColor(Color.WHITE)
                     b.setTypeface(null, android.graphics.Typeface.NORMAL)
                     b.strokeColor = ColorStateList.valueOf(Color.parseColor("#3D444D"))
                     b.strokeWidth = dp(1)
