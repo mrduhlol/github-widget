@@ -1000,6 +1000,7 @@ class MainActivity : AppCompatActivity() {
         Thread {
             try {
                 val t = Themes.resolve(Prefs.getThemeId(this), Prefs.getCustomColor(this))
+                val avatar = ShareCard.fetchAvatar(this, cached.first.username)
                 val bmp = ShareCard.render(
                     cached.first, t,
                     ShareCard.Options(
@@ -1010,7 +1011,8 @@ class MainActivity : AppCompatActivity() {
                     ),
                     cornerRadius = WidgetPrefs.shapeRadiusFactor(WidgetPrefs.getShape(this)),
                     gapScale = WidgetPrefs.getSpacing(this),
-                    customLevels = Studio.effectiveLevels(this, t)
+                    customLevels = Studio.effectiveLevels(this, t),
+                    avatar = avatar
                 )
                 runOnUiThread {
                     if (isFinishing || isDestroyed) return@runOnUiThread
