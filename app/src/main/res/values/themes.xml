@@ -1,7 +1,8 @@
 <resources>
     <style name="Theme.GitHubWidget" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">#39D353</item>
-        <item name="colorOnPrimary">#010409</item>
+        <!-- White button text everywhere: dark-tinted buttons inherit this. -->
+        <item name="colorOnPrimary">#FFFFFF</item>
         <item name="android:windowBackground">#010409</item>
         <item name="colorSurface">#0D1117</item>
     </style>
