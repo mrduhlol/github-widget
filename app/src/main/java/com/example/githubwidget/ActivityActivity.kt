@@ -332,7 +332,7 @@ class ActivityActivity : AppCompatActivity() {
                 minHeight = dp(48)
                 setPadding(dp(4), 0, dp(4), 0)
                 backgroundTintList = android.content.res.ColorStateList.valueOf(Color.TRANSPARENT)
-                setTextColor(Color.parseColor("#F0F6FC"))
+                setTextColor(Color.WHITE)
                 strokeColor = android.content.res.ColorStateList.valueOf(Color.parseColor("#3D444D"))
                 strokeWidth = dp(1)
                 val lp = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
@@ -358,7 +358,7 @@ class ActivityActivity : AppCompatActivity() {
                             other.backgroundTintList = android.content.res.ColorStateList.valueOf(
                                 Color.TRANSPARENT
                             )
-                            other.setTextColor(Color.parseColor("#F0F6FC"))
+                            other.setTextColor(Color.WHITE)
                             other.strokeColor = android.content.res.ColorStateList.valueOf(
                                 Color.parseColor("#3D444D")
                             )
