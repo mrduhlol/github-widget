@@ -392,11 +392,13 @@ class ActivityActivity : AppCompatActivity() {
                         val theme = Themes.resolve(
                             Prefs.getThemeId(this), Prefs.getCustomColor(this)
                         )
+                        val avatar = ShareCard.fetchAvatar(this, result.username)
                         val bmp = ShareCard.render(
                             result, theme, opts,
                             cornerRadius = WidgetPrefs.shapeRadiusFactor(WidgetPrefs.getShape(this)),
                             gapScale = WidgetPrefs.getSpacing(this),
-                            customLevels = Studio.effectiveLevels(this, theme).takeIf { opts.dark }
+                            customLevels = Studio.effectiveLevels(this, theme).takeIf { opts.dark },
+                            avatar = avatar
                         )
                         runOnUiThread {
                             if (isFinishing || isDestroyed) return@runOnUiThread
