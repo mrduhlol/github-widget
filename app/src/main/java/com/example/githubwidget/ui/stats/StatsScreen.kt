@@ -23,14 +23,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.DateRange
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.ThumbUp
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,15 +55,18 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.githubwidget.data.RefreshState
 import com.example.githubwidget.data.Repository
 import com.example.githubwidget.data.Stats
 import com.example.githubwidget.data.UserData
+import com.example.githubwidget.design.NumberFont
 import com.example.githubwidget.design.Palettes
 import com.example.githubwidget.design.WidgetDesign
 import com.example.githubwidget.ui.components.AppIcons
@@ -77,6 +76,7 @@ import com.example.githubwidget.ui.components.ScreenHeader
 import com.example.githubwidget.ui.components.SectionCard
 import com.example.githubwidget.ui.components.SectionLabel
 import com.example.githubwidget.ui.theme.AppTheme
+import com.example.githubwidget.ui.theme.numberFontFamily
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -101,6 +101,7 @@ fun StatsScreen() {
     val avatar by Repository.avatar.collectAsState()
     val design by Repository.design.collectAsState()
     val refresh by Repository.refreshState.collectAsState()
+    val numberFont by Repository.numberFont.collectAsState()
     val loading = refresh is RefreshState.Loading
 
     // Only show the pull indicator when the user actually pulled.
@@ -121,7 +122,7 @@ fun StatsScreen() {
         },
         modifier = Modifier.fillMaxSize().statusBarsPadding(),
     ) {
-        StatsContent(current, avatar, design, refresh)
+        StatsContent(current, avatar, design, refresh, numberFont)
     }
 }
 
@@ -131,9 +132,11 @@ private fun StatsContent(
     avatar: android.graphics.Bitmap?,
     design: WidgetDesign,
     refresh: RefreshState,
+    numberFont: NumberFont,
 ) {
     val stats = remember(data.contributions) { Stats.from(data.contributions) }
     val context = LocalContext.current
+    val numbersFamily = remember(numberFont) { numberFontFamily(context, numberFont) }
     val dark = AppTheme.colors.isDark
     val empty = AppTheme.colors.raised
     val levels = remember(design, dark, empty) {
@@ -163,7 +166,7 @@ private fun StatsContent(
         if (refresh is RefreshState.Failed) {
             item("error") { ErrorBanner(refresh.message) }
         }
-        item("hero") { HeroCard(data, avatar, stats) }
+        item("hero") { HeroCard(data, avatar, stats, numbersFamily) }
         item("year") {
             SectionCard(title = "Your year") {
                 YearHeatmap(
@@ -174,11 +177,11 @@ private fun StatsContent(
                 )
             }
         }
-        item("tiles") { StatTiles(stats) }
-        item("month") { InsightCard(stats) }
+        item("tiles") { StatTiles(stats, numbersFamily) }
+        item("month") { InsightCard(stats, numbersFamily) }
         item("weekdays") { WeekdayCard(stats, design.weekStartsMonday) }
         item("months") { MonthsCard(stats) }
-        item("share") { ShareCard(data, avatar, design) }
+        item("share") { ShareCard(data, avatar, design, numberFont) }
     }
 }
 
@@ -249,7 +252,7 @@ private fun ErrorBanner(message: String) {
 // ------------------------------------------------------------------ hero
 
 @Composable
-private fun HeroCard(data: UserData, avatar: android.graphics.Bitmap?, stats: Stats) {
+private fun HeroCard(data: UserData, avatar: android.graphics.Bitmap?, stats: Stats, numbersFamily: FontFamily) {
     val login = data.profile?.login ?: data.contributions.username
     val name = data.profile?.displayName ?: login
     val primary = MaterialTheme.colorScheme.primary
@@ -292,8 +295,10 @@ private fun HeroCard(data: UserData, avatar: android.graphics.Bitmap?, stats: St
             Text(
                 numbers.format(stats.total),
                 style = MaterialTheme.typography.displaySmall.copy(
-                    fontSize = MaterialTheme.typography.displaySmall.fontSize * 1.35f,
-                    lineHeight = MaterialTheme.typography.displaySmall.lineHeight * 1.3f,
+                    fontSize = 52.sp,
+                    lineHeight = 56.sp,
+                    letterSpacing = (-1.2).sp,
+                    fontFamily = numbersFamily,
                 ),
                 fontWeight = FontWeight.Bold,
                 color = AppTheme.colors.textPrimary,
@@ -335,46 +340,28 @@ private fun Pill(text: String, color: Color = MaterialTheme.colorScheme.primary,
 
 // ------------------------------------------------------------------ tiles
 
-private data class Tile(
-    val label: String,
-    val value: String,
-    val suffix: String?,
-    val icon: ImageVector,
-    val tint: Color,
-)
+private data class Tile(val label: String, val value: String, val suffix: String?)
 
 @Composable
-private fun StatTiles(stats: Stats) {
-    val warning = AppTheme.colors.warning
-    val neutral = AppTheme.colors.textSecondary
-    val primary = MaterialTheme.colorScheme.primary
+private fun StatTiles(stats: Stats, numbersFamily: FontFamily) {
     val dateFormat = remember { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.getDefault()) }
     val tiles = listOf(
-        Tile(
-            "Current streak", numbers.format(stats.currentStreak), if (stats.currentStreak == 1) "day" else "days",
-            AppIcons.Flame, if (stats.currentStreak > 0) warning else neutral,
-        ),
-        Tile(
-            "Longest streak", numbers.format(stats.longestStreak), if (stats.longestStreak == 1) "day" else "days",
-            Icons.Rounded.Star, neutral,
-        ),
-        Tile("Today", numbers.format(stats.today), null, Icons.Rounded.CheckCircle, if (stats.today > 0) primary else neutral),
-        Tile("This week", numbers.format(stats.thisWeek), null, Icons.Rounded.DateRange, neutral),
+        Tile("Current streak", numbers.format(stats.currentStreak), if (stats.currentStreak == 1) "day" else "days"),
+        Tile("Longest streak", numbers.format(stats.longestStreak), if (stats.longestStreak == 1) "day" else "days"),
+        Tile("Today", numbers.format(stats.today), null),
+        Tile("This week", numbers.format(stats.thisWeek), null),
         Tile(
             stats.bestDay?.let { "Best day · ${it.date.format(dateFormat)}" } ?: "Best day",
-            numbers.format(stats.bestDay?.count ?: 0), null, Icons.Rounded.ThumbUp, neutral,
+            numbers.format(stats.bestDay?.count ?: 0), null,
         ),
-        Tile(
-            "Active days", numbers.format(stats.activeDays), "of ${numbers.format(stats.trackedDays)}",
-            AppIcons.Graph, neutral,
-        ),
+        Tile("Active days", numbers.format(stats.activeDays), "of ${numbers.format(stats.trackedDays)}"),
     )
     Column {
         SectionLabel("At a glance", Modifier.padding(start = 4.dp, bottom = 8.dp))
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             tiles.chunked(2).forEach { pair ->
                 Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    pair.forEach { StatTile(it, Modifier.weight(1f).fillMaxHeight()) }
+                    pair.forEach { StatTile(it, numbersFamily, Modifier.weight(1f).fillMaxHeight()) }
                 }
             }
         }
@@ -382,46 +369,44 @@ private fun StatTiles(stats: Stats) {
 }
 
 @Composable
-private fun StatTile(tile: Tile, modifier: Modifier = Modifier) {
+private fun StatTile(tile: Tile, numbersFamily: FontFamily, modifier: Modifier = Modifier) {
     Surface(
         modifier,
         shape = RoundedCornerShape(20.dp),
         color = AppTheme.colors.card,
         border = BorderStroke(1.dp, AppTheme.colors.hairline),
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Box(
-                Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)).background(tile.tint.copy(alpha = 0.12f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(tile.icon, contentDescription = null, tint = tile.tint, modifier = Modifier.size(18.dp))
-            }
-            Spacer(Modifier.height(14.dp))
+        Column(Modifier.padding(horizontal = 18.dp, vertical = 16.dp)) {
+            Text(
+                tile.label,
+                style = MaterialTheme.typography.labelMedium,
+                color = AppTheme.colors.textSecondary,
+                maxLines = 2,
+            )
+            Spacer(Modifier.height(10.dp))
             Text(
                 buildAnnotatedString {
                     append(tile.value)
                     if (tile.suffix != null) {
                         withStyle(
                             SpanStyle(
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = AppTheme.colors.textSecondary,
                             ),
                         ) { append(" ${tile.suffix}") }
                     }
                 },
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.displaySmall.copy(
+                    fontSize = 34.sp,
+                    lineHeight = 38.sp,
+                    letterSpacing = (-0.8).sp,
+                    fontFamily = numbersFamily,
+                ),
                 fontWeight = FontWeight.Bold,
                 color = AppTheme.colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                tile.label,
-                style = MaterialTheme.typography.bodySmall,
-                color = AppTheme.colors.textSecondary,
-                maxLines = 2,
             )
         }
     }
@@ -433,7 +418,7 @@ private fun weekdayPlural(day: DayOfWeek): String =
     day.getDisplayName(TextStyle.FULL, Locale.getDefault()).let { if (Locale.getDefault().language == "en") "${it}s" else it }
 
 @Composable
-private fun InsightCard(stats: Stats) {
+private fun InsightCard(stats: Stats, numbersFamily: FontFamily) {
     val last = stats.last30
     val prev = stats.previous30
     val change: Int? = if (prev != null && prev > 0) (((last - prev) * 100.0) / prev).roundToInt() else null
@@ -451,7 +436,13 @@ private fun InsightCard(stats: Stats) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 numbers.format(last),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 36.sp,
+                    lineHeight = 40.sp,
+                    letterSpacing = (-0.6).sp,
+                    fontFamily = numbersFamily,
+                ),
+                fontWeight = FontWeight.Bold,
                 color = AppTheme.colors.textPrimary,
                 modifier = Modifier.weight(1f, fill = false),
             )
@@ -568,7 +559,7 @@ private fun MonthsCard(stats: Stats) {
 // ------------------------------------------------------------------ share
 
 @Composable
-private fun ShareCard(data: UserData, avatar: android.graphics.Bitmap?, design: WidgetDesign) {
+private fun ShareCard(data: UserData, avatar: android.graphics.Bitmap?, design: WidgetDesign, numberFont: NumberFont) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var busy by remember { mutableStateOf(false) }
@@ -599,7 +590,7 @@ private fun ShareCard(data: UserData, avatar: android.graphics.Bitmap?, design: 
             onClick = {
                 busy = true
                 scope.launch {
-                    val ok = ShareImage.share(context, data, avatar, design)
+                    val ok = ShareImage.share(context, data, avatar, design, numberFont)
                     busy = false
                     if (!ok) {
                         Toast.makeText(context, "Couldn't create the image. Please try again.", Toast.LENGTH_SHORT).show()

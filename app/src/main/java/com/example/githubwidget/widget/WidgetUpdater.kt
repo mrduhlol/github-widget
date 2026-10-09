@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.SizeF
 import android.widget.RemoteViews
@@ -32,8 +33,10 @@ object WidgetUpdater {
         if (ids.isEmpty()) return
         Repository.init(context)
         val mgr = AppWidgetManager.getInstance(context)
+        // Widgets of the same size look identical, so each bitmap is drawn once per pass.
+        val drawn = HashMap<Triple<Float, Float, Boolean>, Bitmap>()
         for (id in ids) {
-            runCatching { mgr.updateAppWidget(id, build(context, mgr.getAppWidgetOptions(id))) }
+            runCatching { mgr.updateAppWidget(id, build(context, mgr.getAppWidgetOptions(id), drawn)) }
         }
         markDrawn(context, ids)
     }
@@ -65,7 +68,7 @@ object WidgetUpdater {
         return SizeF(320f, 160f)
     }
 
-    private fun build(context: Context, options: Bundle?): RemoteViews {
+    private fun build(context: Context, options: Bundle?, drawn: MutableMap<Triple<Float, Float, Boolean>, Bitmap>): RemoteViews {
         val size = sizeDp(context, options)
         val design = Repository.design.value
         val data = Repository.data.value
@@ -74,9 +77,12 @@ object WidgetUpdater {
             Repository.hasUser -> WidgetRenderer.Placeholder.LOADING
             else -> WidgetRenderer.Placeholder.SIGNED_OUT
         }
-        fun render(dark: Boolean) = WidgetRenderer.render(
-            context, design, data, Repository.avatar.value, size.width, size.height, dark, placeholder,
-        )
+        fun render(dark: Boolean) = drawn.getOrPut(Triple(size.width, size.height, dark)) {
+            WidgetRenderer.render(
+                context, design, data, Repository.avatar.value, size.width, size.height, dark, placeholder,
+                Repository.numberFont.value,
+            )
+        }
 
         val views = RemoteViews(context.packageName, R.layout.widget_root)
         // The layout shows one image in light mode and the other in dark mode
