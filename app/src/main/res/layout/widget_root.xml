@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The whole widget is one rendered image. layout-night swaps which image is
+     visible so the "Auto" background follows the phone's light/dark mode. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/widget_image_light"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/widget_label"
+        android:scaleType="fitCenter"
+        android:visibility="visible" />
+
+    <ImageView
+        android:id="@+id/widget_image_dark"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/widget_label"
+        android:scaleType="fitCenter"
+        android:visibility="gone" />
+</FrameLayout>
