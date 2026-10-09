@@ -1,9 +1,124 @@
 <resources>
     <style name="Theme.GitHubWidget" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="colorPrimary">#39D353</item>
-        <!-- White button text everywhere: dark-tinted buttons inherit this. -->
-        <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="android:windowBackground">#010409</item>
-        <item name="colorSurface">#0D1117</item>
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorOnPrimary">@color/on_accent</item>
+        <item name="colorPrimaryContainer">@color/accent_soft</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorOutline">@color/stroke_strong</item>
+        <item name="android:colorBackground">@color/bg</item>
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:statusBarColor">@color/bg</item>
+        <item name="android:navigationBarColor">@color/bg</item>
+        <item name="materialButtonStyle">@style/Button.Primary</item>
+        <item name="chipStyle">@style/Chip.Option</item>
+        <item name="textInputStyle">@style/Input</item>
+    </style>
+
+    <!-- Screen layout -->
+    <style name="Screen">
+        <item name="android:background">@color/bg</item>
+    </style>
+    <style name="Card">
+        <item name="android:background">@drawable/bg_card</item>
+        <item name="android:padding">18dp</item>
+        <item name="android:layout_marginTop">14dp</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <!-- Typography -->
+    <style name="Text.Eyebrow" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textColor">@color/accent</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+    <style name="Text.Title" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">26sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+    <style name="Text.Section" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+    <style name="Text.Label" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+    <style name="Text.Body" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineSpacingMultiplier">1.2</item>
+    </style>
+    <style name="Text.Caption" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textColor">@color/text_tertiary</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="Text.Stat" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Buttons -->
+    <style name="Button.Primary" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/accent</item>
+        <item name="android:textColor">@color/on_accent</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="cornerRadius">14dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+    <style name="Button.Secondary" parent="Widget.Material3.Button.TonalButton">
+        <item name="backgroundTint">@color/surface_raised</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="iconTint">@color/text_primary</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="cornerRadius">14dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+    <style name="Button.Ghost" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+    <style name="Button.Danger" parent="Button.Secondary">
+        <item name="android:textColor">@color/danger</item>
+    </style>
+
+    <!-- Chips / inputs -->
+    <style name="Chip.Option" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/chip_bg</item>
+        <item name="android:textColor">@color/chip_text</item>
+        <item name="chipStrokeColor">@color/chip_stroke</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipCornerRadius">12dp</item>
+        <item name="chipMinHeight">40dp</item>
+        <item name="checkedIconVisible">false</item>
+    </style>
+    <style name="Input" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/surface</item>
+        <item name="boxStrokeColor">@color/accent</item>
+        <item name="boxCornerRadiusTopStart">14dp</item>
+        <item name="boxCornerRadiusTopEnd">14dp</item>
+        <item name="boxCornerRadiusBottomStart">14dp</item>
+        <item name="boxCornerRadiusBottomEnd">14dp</item>
+        <item name="hintTextColor">@color/accent</item>
+        <item name="android:textColorHint">@color/text_tertiary</item>
     </style>
 </resources>
