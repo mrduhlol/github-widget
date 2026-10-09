@@ -6,7 +6,6 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
@@ -20,6 +19,7 @@ import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.setPadding
 import com.google.android.material.button.MaterialButton
@@ -119,6 +119,16 @@ class MainActivity : AppCompatActivity() {
         val cornersText = findViewById<TextView>(R.id.st_corners_text)
         val cornersSlider = findViewById<Slider>(R.id.st_corners)
         val rowPresets = findViewById<LinearLayout>(R.id.st_presets)
+        val emptyState = findViewById<View>(R.id.home_empty)
+        val advToggle = findViewById<View>(R.id.home_advanced_toggle)
+        val advArrow = findViewById<TextView>(R.id.home_advanced_arrow)
+        val advBox = findViewById<View>(R.id.home_advanced_box)
+
+        advToggle.setOnClickListener {
+            val open = advBox.visibility != View.VISIBLE
+            advBox.visibility = if (open) View.VISIBLE else View.GONE
+            advArrow.text = if (open) "Hide" else "Show"
+        }
 
         fun theme(): GraphTheme =
             Themes.resolve(Prefs.getThemeId(this), Prefs.getCustomColor(this))
@@ -134,7 +144,7 @@ class MainActivity : AppCompatActivity() {
                     val bmp = CardRenderer.card(
                         this, 1024, 512,
                         dp(WidgetPrefs.getCorners(this)).toFloat() * 3f,
-                        Color.parseColor("#30363D")
+                        ContextCompat.getColor(this, R.color.stroke)
                     )
                     runOnUiThread {
                         if (isFinishing || isDestroyed) return@runOnUiThread
@@ -217,12 +227,13 @@ class MainActivity : AppCompatActivity() {
             showResult(cached, TimeAgo.format(ts))
         }
 
-        // ---------- option chips (always light text on dark) ----------
+        // ---------- option chips ----------
 
         fun optionButton(label: String): MaterialButton =
             MaterialButton(this).apply {
                 text = label
-                textSize = 12f
+                textSize = 13f
+                isAllCaps = false
                 cornerRadius = dp(12)
                 minimumWidth = 0
                 minWidth = 0
@@ -236,12 +247,12 @@ class MainActivity : AppCompatActivity() {
         /** Selected chip: accent-tinted fill + accent border + bold white text. */
         fun paintOptions(buttons: List<MaterialButton>, selected: Int) {
             val accent = theme().accent
-            val idleStroke = ColorStateList.valueOf(Color.parseColor("#3D444D"))
+            val idleStroke = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.stroke_strong))
             val activeStroke = ColorStateList.valueOf(accent)
             buttons.forEachIndexed { i, b ->
                 if (i == selected) {
                     b.backgroundTintList = ColorStateList.valueOf(
-                        ColorUtils.blendARGB(Color.parseColor("#0D1117"), accent, 0.45f)
+                        ColorUtils.blendARGB(ContextCompat.getColor(this, R.color.surface), accent, 0.35f)
                     )
                     b.setTextColor(Color.WHITE)
                     b.setTypeface(null, android.graphics.Typeface.BOLD)
@@ -249,7 +260,7 @@ class MainActivity : AppCompatActivity() {
                     b.strokeWidth = dp(2)
                 } else {
                     b.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
-                    b.setTextColor(Color.WHITE)
+                    b.setTextColor(ContextCompat.getColor(this, R.color.text_secondary))
                     b.setTypeface(null, android.graphics.Typeface.NORMAL)
                     b.strokeColor = idleStroke
                     b.strokeWidth = dp(1)
@@ -263,9 +274,9 @@ class MainActivity : AppCompatActivity() {
         fun themeTile(name: String, colors: IntArray, selected: Boolean, onTap: () -> Unit): MaterialCardView {
             val tile = MaterialCardView(this).apply {
                 radius = dp(12).toFloat()
-                setCardBackgroundColor(Color.parseColor("#0D1117"))
+                setCardBackgroundColor(ContextCompat.getColor(context, R.color.surface_raised))
                 strokeWidth = if (selected) dp(2) else dp(1)
-                strokeColor = if (selected) Color.WHITE else Color.parseColor("#3D444D")
+                strokeColor = ContextCompat.getColor(context, if (selected) R.color.accent else R.color.stroke)
                 val lp = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
@@ -292,9 +303,8 @@ class MainActivity : AppCompatActivity() {
             inner.addView(squares)
             inner.addView(TextView(this).apply {
                 text = name
-                textSize = 10f
-                typeface = Typeface.MONOSPACE
-                setTextColor(if (selected) Color.WHITE else Color.parseColor("#8B949E"))
+                textSize = 11f
+                setTextColor(ContextCompat.getColor(this@MainActivity, if (selected) R.color.text_primary else R.color.text_secondary))
                 setPadding(0, dp(6), 0, 0)
             })
             tile.addView(inner)
@@ -392,9 +402,8 @@ class MainActivity : AppCompatActivity() {
                 })
                 col.addView(TextView(this).apply {
                     text = names[i]
-                    textSize = 9f
-                    typeface = Typeface.MONOSPACE
-                    setTextColor(Color.parseColor("#8B949E"))
+                    textSize = 11f
+                    setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_secondary))
                     setPadding(0, dp(4), 0, 0)
                 })
                 rowLevels.addView(col)
@@ -850,8 +859,10 @@ class MainActivity : AppCompatActivity() {
 
         fun load(username: String) {
             if (username.isBlank()) {
-                user.text = "GH-widgets"
-                updated.text = "Enter your GitHub username above."
+                user.text = "GitHub Widget"
+                updated.text = "Add a username to get started."
+                emptyState.visibility = View.VISIBLE
+                card.visibility = View.GONE
                 title.text = "No data yet"
                 subtitle.text = "Save a username to load your graph."
                 footer.visibility = View.GONE
@@ -859,6 +870,8 @@ class MainActivity : AppCompatActivity() {
                 paintCard()
                 return
             }
+            emptyState.visibility = View.GONE
+            card.visibility = View.VISIBLE
             val cached = Cache.load(this)
             val hasCache = cached != null && cached.first.username.equals(username, ignoreCase = true)
             if (hasCache) {
