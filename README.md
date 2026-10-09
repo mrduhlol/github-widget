@@ -5,7 +5,7 @@
 Your GitHub contribution graph, live on your Android home screen. Pick a look in a few taps — no sign-in, no token, just your username.
 
 <p align="center">
-  <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.v3.0.0.apk">
+  <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">
     <img height="64" alt="Download GH-widgets for Android" src="https://img.shields.io/badge/GET_GH%E2%80%90WIDGETS_FOR_ANDROID-238636?style=for-the-badge&logo=android&logoColor=white" />
   </a>
   <br />

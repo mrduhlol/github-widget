@@ -39,17 +39,21 @@ jobs:
           VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           mv app/build/outputs/apk/debug/app-debug.apk "app/build/outputs/apk/debug/GH-widget.v${VERSION}.apk"
+          # Stable filename: README links to this so version bumps never break the download.
+          cp "app/build/outputs/apk/debug/GH-widget.v${VERSION}.apk" app/build/outputs/apk/debug/GH-widget.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: GH-widgets
-          path: app/build/outputs/apk/debug/GH-widget.v*.apk
+          path: app/build/outputs/apk/debug/GH-widget*.apk
 
-      # On tags like v1.0, attach the APK to a GitHub Release so README can link it.
+      # On tags like v3.0.0, attach the APK to a GitHub Release so README can link it.
       - name: Release APK
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/debug/GH-widget.v*.apk
+          files: |
+            app/build/outputs/apk/debug/GH-widget.v*.apk
+            app/build/outputs/apk/debug/GH-widget.apk
           generate_release_notes: true
