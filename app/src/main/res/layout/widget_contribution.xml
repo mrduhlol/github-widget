@@ -15,7 +15,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="12dp">
+        android:paddingStart="16dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="14dp">
 
         <LinearLayout
             android:id="@+id/widget_header"
@@ -34,15 +37,17 @@
                     android:id="@+id/widget_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
                     android:text="@user"
                     android:textColor="#F0F6FC"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textSize="14sp" />
 
                 <TextView
                     android:id="@+id/widget_subtitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="sans-serif"
                     android:text="Loading…"
                     android:textColor="#8B949E"
                     android:textSize="11sp" />
@@ -52,16 +57,17 @@
                 android:id="@+id/widget_total"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:fontFamily="sans-serif-medium"
                 android:text="–"
                 android:textColor="#39D353"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:typeface="monospace" />
+                android:textSize="20sp" />
 
             <TextView
                 android:id="@+id/widget_refresh"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
+                android:layout_marginStart="4dp"
                 android:contentDescription="Refresh widget"
                 android:gravity="center"
                 android:text="⟳"
@@ -73,7 +79,7 @@
             android:id="@+id/widget_graph"
             android:layout_width="match_parent"
             android:layout_height="110dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="10dp"
             android:adjustViewBounds="true"
             android:contentDescription="Contribution graph"
             android:scaleType="fitCenter" />
@@ -82,7 +88,8 @@
             android:id="@+id/widget_updated"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
+            android:fontFamily="sans-serif"
             android:text="Less                                      More"
             android:textColor="#8B949E"
             android:textSize="10sp" />
