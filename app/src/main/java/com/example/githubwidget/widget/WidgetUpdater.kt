@@ -38,16 +38,35 @@ object WidgetUpdater {
         markDrawn(context, ids)
     }
 
-    /** Portrait size of the widget in dp; launchers report min width x max height for portrait. */
-    fun sizeDp(options: Bundle?): SizeF {
-        if (options == null) return SizeF(320f, 160f)
-        val w = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
-        val h = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
-        return if (w > 0 && h > 0) SizeF(w.toFloat(), h.toFloat()) else SizeF(320f, 160f)
+    /**
+     * Current size of the widget in dp.
+     *
+     * In portrait the launcher reports the live size as min width x max height;
+     * in landscape it is max width x min height. When the bundle is missing or
+     * half-filled (right after placement, some launchers) fall back to
+     * whatever positive values exist instead of a fixed guess, so the rendered
+     * bitmap keeps the view's aspect and never letterboxes.
+     */
+    fun sizeDp(context: Context, options: Bundle?): SizeF {
+        if (options != null) {
+            val minW = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
+            val maxW = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH)
+            val minH = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+            val maxH = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
+            val landscape =
+                context.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+            val w = if (landscape) maxW else minW
+            val h = if (landscape) minH else maxH
+            if (w > 0 && h > 0) return SizeF(w.toFloat(), h.toFloat())
+            val fw = maxOf(minW, maxW)
+            val fh = maxOf(minH, maxH)
+            if (fw > 0 && fh > 0) return SizeF(fw.toFloat(), fh.toFloat())
+        }
+        return SizeF(320f, 160f)
     }
 
     private fun build(context: Context, options: Bundle?): RemoteViews {
-        val size = sizeDp(options)
+        val size = sizeDp(context, options)
         val design = Repository.design.value
         val data = Repository.data.value
         val placeholder = when {

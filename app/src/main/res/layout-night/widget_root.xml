@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:contentDescription="@string/widget_label"
-        android:scaleType="fitCenter"
+        android:scaleType="fitXY"
         android:visibility="gone" />
 
     <ImageView
@@ -19,6 +19,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:contentDescription="@string/widget_label"
-        android:scaleType="fitCenter"
+        android:scaleType="fitXY"
         android:visibility="visible" />
 </FrameLayout>
