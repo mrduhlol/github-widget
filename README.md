@@ -1,11 +1,11 @@
 # GH-widgets
 
-**Current version: v2.2.0** — premium share cards with your avatar, new app icon, readable white button text.
+**Current version: v3.0.0** — rebuilt from scratch: a simpler app, a cleaner widget, and one-tap setup.
 
-Your GitHub contribution graph, live on your Android homescreen. Customize it, draw on it, use your own background, track your activity.
+Your GitHub contribution graph, live on your Android home screen. Pick a look in a few taps — no sign-in, no token, just your username.
 
 <p align="center">
-  <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.v2.2.0.apk">
+  <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.v3.0.0.apk">
     <img height="64" alt="Download GH-widgets for Android" src="https://img.shields.io/badge/GET_GH%E2%80%90WIDGETS_FOR_ANDROID-238636?style=for-the-badge&logo=android&logoColor=white" />
   </a>
   <br />
@@ -19,24 +19,17 @@ Your GitHub contribution graph, live on your Android homescreen. Customize it, d
 
 ## Features
 
-- Live contribution graph on your homescreen
-- Everything on one page — live preview plus theme, style, graph, background, content and presets, no screen-hopping
-- High-contrast buttons and option chips — white text everywhere, unmistakable selected states, 48dp touch targets
-- Premium share cards — circular profile avatar with accent ring, stat band, records row
-- 5 widget styles — Classic, Minimal, Compact, Terminal, Glass
-- 5 graph themes — Matrix, Nebula, Abyss, Ember, Neon — plus spectrum color picker
-- Custom contribution palette — per-level colors or generated from the theme color
-- Custom backgrounds — solid, gradient (linear/radial, 2–3 colors), your own image, transparent
-- Background opacity, blur and color overlays, image-through-graph mode
-- Drawing Studio — brush, eraser, highlighter, shapes, fill, undo/redo, PNG export, use as background
-- Graph range (3 months, 6 months, 1 year), cell shape (square, rounded, soft, circle), cell size and spacing
-- Content toggles — count, streaks, active days, last updated, custom label, text size
-- Activity analytics — weekly/monthly stats, averages, weekday breakdown, insights, personal records
-- 8 data-based achievements with progress bars and streak milestones
-- Share Studio — 5 card templates (GitHub, Minimal, Terminal, Neon, Poster) via the native share sheet
-- Each widget keeps its own look — setup runs when a widget is added
-- Settings — data, look import/export as JSON, reset, privacy, about
-- Works offline — last fetched graph stays on screen with its age
+- **Set up in under a minute** — type your username, confirm it's you, tap *Add to home screen*. Done.
+- **What you see is what you get** — the app preview is drawn by the same code as the widget
+- **Fits any size** — the graph fills the widget; make it wider to see more weeks
+- **3 styles** — Classic (name, graph, stats), Graph only, Numbers (big stats + small graph)
+- **9 color palettes** plus *Match wallpaper* (Android 12+) and your own custom color
+- **Background** — Auto (follows your phone's light/dark mode), Dark, Light or Black, with adjustable see-through
+- **Graph options** — how much history, square shape, week start, month names
+- **Choose what's shown** — name, photo, total, streak, today's count
+- **Stats** — full-year graph you can tap, streaks, best day, weekly and monthly charts, plain-language insights
+- **Share your year** as an image
+- **Works offline** — the last graph stays on screen and refreshes automatically (every 1–12 hours)
 - No sign-in, no token — just your username
 
 ## Install
@@ -48,48 +41,14 @@ Your GitHub contribution graph, live on your Android homescreen. Customize it, d
 
 ## Use
 
-1. Open **GH-widgets**, enter your GitHub username — your graph appears instantly
-2. Tap **Customize widget** to open the Widget Studio — every change previews live
-3. Long-press your homescreen → **Widgets** → **GH-widgets** → style it during setup
-4. Tap the widget graph for analytics, the header for your GitHub profile
+1. Open **GH Widgets** and tap **Get started**
+2. Type your GitHub username (or paste your profile link) and confirm it's you
+3. Tap **Add to home screen** — your phone asks where to put it
+4. Change colors and style anytime in the **Widget** tab; the widget updates instantly
+5. Tap the widget to open the app and get the latest data
 
-## Configuration
+## Development
 
-- The app holds the defaults for new widgets; each placed widget can keep its own look
-- Share a look as JSON from the Studio or Settings, import it on another device
-- Reset the look anytime — username and cached data are never touched
-
-## Privacy
-
-- Username, look settings and the last fetched graph stay on this device only
-- Refresh sends your username to the public contribution API — no sign-in, no token
-- Images and drawings stay in the app's private storage; no telemetry, nothing uploaded
-
-## Architecture
-
-```
-GitHub API → Cache → Analytics
-                  ↓
-Visual config (global defaults + per-widget overrides + Studio background)
-                  ↓
-CardRenderer (solid / gradient / image / transparent → blur → overlay)
-                  ↓
-GraphRenderer (palette, shape, size, spacing, image tint)
-                  ↓
-Widget / Studio preview / Share card (one pipeline)
-```
-
-- `SharedPreferences` for settings (never images); drawings as PNG files; share via `FileProvider`
-- Photo Picker for images — no storage permission
-
-## Build
-
-```bash
-./gradlew assembleDebug
-```
-
-Requires JDK 17. Every push to `main` builds in CI; tags like `v2.0.0` publish the APK to Releases.
-
-## Contributing
-
-Issues and pull requests are welcome — https://github.com/mrduhlol/github-widget/issues
+- Kotlin + Jetpack Compose (Material 3); WorkManager for background refresh
+- The widget is a single bitmap from `widget/WidgetRenderer.kt` — the in-app preview uses the same renderer
+- `./gradlew testDebugUnitTest` renders sample widgets to `app/build/widget-renders/` (Robolectric) for visual review without a device

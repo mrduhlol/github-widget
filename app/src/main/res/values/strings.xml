@@ -1,4 +1,5 @@
 <resources>
-    <string name="app_name">GH-widgets</string>
-    <string name="widget_desc">Shows your GitHub contribution graph on the homescreen. Resizable, with custom colors and transparency.</string>
+    <string name="app_name">GH Widgets</string>
+    <string name="widget_label">GitHub contributions</string>
+    <string name="widget_desc">Your GitHub contribution graph. Resize it to see more weeks.</string>
 </resources>
