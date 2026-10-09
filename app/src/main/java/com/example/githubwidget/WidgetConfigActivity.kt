@@ -11,6 +11,9 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
+import android.view.View
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.slider.Slider
@@ -73,7 +76,7 @@ class WidgetConfigActivity : AppCompatActivity() {
         fun optionButton(label: String): MaterialButton =
             MaterialButton(this).apply {
                 text = label
-                textSize = 12f
+                textSize = 13f
                 cornerRadius = dp(12)
                 minimumWidth = 0
                 minWidth = 0
@@ -85,22 +88,22 @@ class WidgetConfigActivity : AppCompatActivity() {
             }
 
         fun paintOptions(buttons: List<MaterialButton>, selected: Int, accent: Int) {
+            val surface = ContextCompat.getColor(this, R.color.surface)
+            val strokeC = ContextCompat.getColor(this, R.color.stroke_strong)
+            val primary = ContextCompat.getColor(this, R.color.text_primary)
+            val secondary = ContextCompat.getColor(this, R.color.text_secondary)
             buttons.forEachIndexed { i, b ->
                 if (i == selected) {
-                    b.backgroundTintList = ColorStateList.valueOf(
-                        androidx.core.graphics.ColorUtils.blendARGB(
-                            Color.parseColor("#0D1117"), accent, 0.45f
-                        )
-                    )
-                    b.setTextColor(Color.WHITE)
+                    b.backgroundTintList = ColorStateList.valueOf(ColorUtils.blendARGB(surface, accent, 0.25f))
+                    b.setTextColor(primary)
                     b.setTypeface(null, android.graphics.Typeface.BOLD)
                     b.strokeColor = ColorStateList.valueOf(accent)
                     b.strokeWidth = dp(2)
                 } else {
                     b.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
-                    b.setTextColor(Color.WHITE)
+                    b.setTextColor(secondary)
                     b.setTypeface(null, android.graphics.Typeface.NORMAL)
-                    b.strokeColor = ColorStateList.valueOf(Color.parseColor("#3D444D"))
+                    b.strokeColor = ColorStateList.valueOf(strokeC)
                     b.strokeWidth = dp(1)
                 }
             }
@@ -109,11 +112,49 @@ class WidgetConfigActivity : AppCompatActivity() {
         fun themeAccent(): Int =
             Themes.resolve(themeId, WidgetInstance.getCustomColor(this, widgetId)).accent
 
+        val previewGrid = findViewById<LinearLayout>(R.id.cfg_preview_grid)
+        val previewCaption = findViewById<TextView>(R.id.cfg_preview_caption)
+        val cells = ArrayList<View>()
+        val levels = floatArrayOf(0.15f, 0.35f, 0.6f, 1f)
+        for (c in 0 until 18) {
+            val col = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            for (r in 0 until 5) {
+                val cell = View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(dp(14), dp(14)).apply {
+                        gravity = android.view.Gravity.CENTER
+                        topMargin = if (r == 0) 0 else dp(3)
+                    }
+                    tag = levels[(c * 7 + r * 3 + c * r) % levels.size]
+                }
+                cells.add(cell)
+                col.addView(cell)
+            }
+            previewGrid.addView(col)
+        }
+        fun updatePreview() {
+            val accent = themeAccent()
+            val base = ContextCompat.getColor(this, R.color.surface_raised)
+            cells.forEach { v ->
+                val lvl = v.tag as Float
+                val bg = android.graphics.drawable.GradientDrawable().apply {
+                    cornerRadius = dp(3).toFloat()
+                    setColor(ColorUtils.blendARGB(base, accent, lvl))
+                }
+                v.background = bg
+            }
+            val name = Themes.ALL.firstOrNull { it.id == themeId }?.name ?: ""
+            previewCaption.text = "$name \u00b7 ${WidgetPrefs.STYLE_NAMES[styleId] ?: styleId}"
+        }
+
         val themeButtons = Themes.ALL.map { t -> optionButton(t.name).also { rowThemes.addView(it) } }
         themeButtons.forEachIndexed { i, b ->
             b.setOnClickListener {
                 themeId = Themes.ALL[i].id
                 paintOptions(themeButtons, i, themeAccent())
+                updatePreview()
             }
         }
         // Custom colors stay editable in the Widget Studio; here we keep the preset set.
@@ -128,6 +169,7 @@ class WidgetConfigActivity : AppCompatActivity() {
             b.setOnClickListener {
                 styleId = styleIds[i]
                 paintOptions(styleButtons, i, themeAccent())
+                updatePreview()
             }
         }
         paintOptions(styleButtons, styleIds.indexOf(styleId).coerceAtLeast(0), themeAccent())
@@ -142,6 +184,8 @@ class WidgetConfigActivity : AppCompatActivity() {
             }
         }
         paintOptions(rangeButtons, rangeIds.indexOf(rangeId).coerceAtLeast(0), themeAccent())
+
+        updatePreview()
 
         slider.addOnChangeListener { _, value, _ ->
             opacityText.text = "${value.toInt()}%"

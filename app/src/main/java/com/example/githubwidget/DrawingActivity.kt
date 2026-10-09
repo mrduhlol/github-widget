@@ -7,6 +7,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.slider.Slider
 import java.io.File
@@ -43,11 +45,12 @@ class DrawingActivity : AppCompatActivity() {
         val toolButtons = tools.map { (name, _) ->
             MaterialButton(this).apply {
                 text = name
-                textSize = 12f
-                cornerRadius = dp(10)
+                textSize = 13f
+                cornerRadius = dp(12)
+                minHeight = dp(48)
                 minimumWidth = 0
                 minWidth = 0
-                setPadding(dp(6), 0, dp(6), 0)
+                setPadding(dp(14), 0, dp(14), 0)
                 val lp = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
@@ -59,23 +62,23 @@ class DrawingActivity : AppCompatActivity() {
             }
         }
         fun paintTools(buttons: List<MaterialButton>, selected: Int) {
-            val accent = Color.parseColor("#3FB950")
+            val accent = ContextCompat.getColor(this, R.color.accent)
+            val surface = ContextCompat.getColor(this, R.color.surface)
+            val strokeC = ContextCompat.getColor(this, R.color.stroke_strong)
+            val primary = ContextCompat.getColor(this, R.color.text_primary)
+            val secondary = ContextCompat.getColor(this, R.color.text_secondary)
             buttons.forEachIndexed { i, b ->
                 if (i == selected) {
-                    b.backgroundTintList = ColorStateList.valueOf(
-                        androidx.core.graphics.ColorUtils.blendARGB(
-                            Color.parseColor("#0D1117"), accent, 0.45f
-                        )
-                    )
-                    b.setTextColor(Color.WHITE)
+                    b.backgroundTintList = ColorStateList.valueOf(ColorUtils.blendARGB(surface, accent, 0.25f))
+                    b.setTextColor(primary)
                     b.setTypeface(null, android.graphics.Typeface.BOLD)
                     b.strokeColor = ColorStateList.valueOf(accent)
                     b.strokeWidth = dp(2)
                 } else {
                     b.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
-                    b.setTextColor(Color.WHITE)
+                    b.setTextColor(secondary)
                     b.setTypeface(null, android.graphics.Typeface.NORMAL)
-                    b.strokeColor = ColorStateList.valueOf(Color.parseColor("#3D444D"))
+                    b.strokeColor = ColorStateList.valueOf(strokeC)
                     b.strokeWidth = dp(1)
                 }
             }

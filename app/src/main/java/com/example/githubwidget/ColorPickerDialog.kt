@@ -1,6 +1,8 @@
 package com.example.githubwidget
 
-import android.app.AlertDialog
+import android.graphics.drawable.GradientDrawable
+import androidx.core.content.ContextCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -121,7 +123,7 @@ object ColorPickerDialog {
 
         val box = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(20), dp(20), dp(4))
+            setPadding(dp(24), dp(8), dp(24), dp(0))
         }
         val preview = View(context).apply {
             layoutParams = LinearLayout.LayoutParams(
@@ -130,8 +132,7 @@ object ColorPickerDialog {
         }
         val hex = TextView(context).apply {
             textSize = 14f
-            typeface = android.graphics.Typeface.MONOSPACE
-            setTextColor(Color.parseColor("#8B949E"))
+            setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
             setPadding(0, dp(8), 0, dp(12))
         }
 
@@ -139,7 +140,11 @@ object ColorPickerDialog {
 
         fun refresh() {
             val c = current()
-            preview.setBackgroundColor(c)
+            preview.background = GradientDrawable().apply {
+                cornerRadius = dp(16).toFloat()
+                setColor(c)
+                setStroke(dp(1), ContextCompat.getColor(context, R.color.stroke_strong))
+            }
             hex.text = Themes.toHex(c)
         }
 
@@ -160,7 +165,7 @@ object ColorPickerDialog {
             refresh()
         }
         bar.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, dp(36)
+            LinearLayout.LayoutParams.MATCH_PARENT, dp(44)
         )
 
         box.addView(preview)
@@ -169,11 +174,22 @@ object ColorPickerDialog {
         box.addView(grid)
         refresh()
 
-        AlertDialog.Builder(context)
-            .setTitle("Pick a graph color")
+        val dialog = MaterialAlertDialogBuilder(context)
+            .setTitle("Pick a color")
             .setView(box)
-            .setPositiveButton("Use this color") { _, _ -> onPick(current()) }
+            .setPositiveButton("Use color") { _, _ -> onPick(current()) }
             .setNegativeButton("Cancel", null)
-            .show()
+            .create()
+        dialog.window?.setBackgroundDrawable(GradientDrawable().apply {
+            cornerRadius = dp(24).toFloat()
+            setColor(ContextCompat.getColor(context, R.color.surface))
+            setStroke(dp(1), ContextCompat.getColor(context, R.color.stroke))
+        })
+        dialog.show()
+        val accent = ContextCompat.getColor(context, R.color.accent)
+        dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)?.apply { setTextColor(accent); minHeight = dp(48) }
+        dialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE)?.apply {
+            setTextColor(ContextCompat.getColor(context, R.color.text_secondary)); minHeight = dp(48)
+        }
     }
 }

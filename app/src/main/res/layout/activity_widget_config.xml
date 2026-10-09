@@ -1,195 +1,189 @@
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Screen"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#010409"
-    android:fillViewport="true">
+    android:orientation="vertical">
 
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="20dp">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="GH://WIDGET SETUP"
-        android:textColor="#39D353"
-        android:textSize="12sp"
-        android:typeface="monospace" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="This widget, your style."
-        android:textColor="#F0F6FC"
-        android:textSize="22sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text="Applies to this widget only. The app holds the defaults for new widgets."
-        android:textColor="#8B949E"
-        android:textSize="12sp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="GitHub username"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <com.google.android.material.textfield.TextInputLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="e.g. torvalds"
-        app:boxBackgroundColor="#0D1117"
-        app:boxStrokeColor="#30363D"
-        app:hintTextColor="#8B949E">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/cfg_username"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text"
-            android:singleLine="true"
-            android:textColor="#F0F6FC"
-            android:textColorHint="#8B949E" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:orientation="vertical"
+            android:padding="20dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Theme"
-        android:textColor="#8B949E"
-        android:textSize="12sp" />
+            <TextView style="@style/Text.Eyebrow" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Widget setup" />
 
-    <LinearLayout
-        android:id="@+id/cfg_themes"
+            <TextView style="@style/Text.Title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Set up your widget" />
+
+            <TextView style="@style/Text.Body" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="These options apply to this widget only. The app holds the defaults for new widgets." />
+
+            <LinearLayout style="@style/Card" android:layout_width="match_parent" android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/cfg_preview_title"
+                        style="@style/Text.Section"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Preview" />
+
+                    <TextView
+                        android:id="@+id/cfg_preview_caption"
+                        style="@style/Text.Caption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/cfg_preview_grid"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/Card" android:layout_width="match_parent" android:layout_height="wrap_content">
+
+                <TextView style="@style/Text.Section" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="GitHub username" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:hint="e.g. torvalds">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/cfg_username"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:minHeight="48dp"
+                        android:singleLine="true"
+                        android:textColor="@color/text_primary" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <LinearLayout style="@style/Card" android:layout_width="match_parent" android:layout_height="wrap_content">
+
+                <TextView style="@style/Text.Section" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Appearance" />
+        <TextView style="@style/Text.Label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:text="Theme" />
+
+                <LinearLayout
+                    android:id="@+id/cfg_themes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal" />
+        <TextView style="@style/Text.Label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Widget style" />
+
+                <LinearLayout
+                    android:id="@+id/cfg_styles"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal" />
+        <TextView style="@style/Text.Label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Graph range" />
+
+                <LinearLayout
+                    android:id="@+id/cfg_ranges"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView style="@style/Text.Label" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Transparency" />
+
+                    <TextView
+                        android:id="@+id/cfg_opacity_text"
+                        style="@style/Text.Label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="100%"
+                        android:textColor="@color/text_primary" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/cfg_opacity"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:stepSize="5"
+                    android:value="100"
+                    android:valueFrom="20"
+                    android:valueTo="100" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/Card" android:layout_width="match_parent" android:layout_height="wrap_content">
+
+                <TextView style="@style/Text.Section" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Widget information" />
+
+                <TextView style="@style/Text.Caption" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:layout_marginTop="2dp" android:text="Choose which stats appear on the widget." />
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/cfg_total"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="Contribution count"
+                android:textColor="@color/text_primary" />
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/cfg_streak"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="Current streak"
+                android:textColor="@color/text_primary" />
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/cfg_longest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="Longest streak"
+                android:textColor="@color/text_primary" />
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/cfg_updated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="Last updated"
+                android:textColor="@color/text_primary" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:orientation="horizontal" />
+        android:background="@color/surface"
+        android:paddingBottom="14dp"
+        android:paddingEnd="20dp"
+        android:paddingStart="20dp"
+        android:paddingTop="14dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:text="Widget style"
-        android:textColor="#8B949E"
-        android:textSize="12sp" />
-
-    <LinearLayout
-        android:id="@+id/cfg_styles"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:orientation="horizontal" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:text="Graph range"
-        android:textColor="#8B949E"
-        android:textSize="12sp" />
-
-    <LinearLayout
-        android:id="@+id/cfg_ranges"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:orientation="horizontal" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="0dp"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/cfg_save"
+            style="@style/Button.Primary"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Transparency"
-            android:textColor="#8B949E"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/cfg_opacity_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="100%"
-            android:textColor="#8B949E"
-            android:textSize="12sp"
-            android:typeface="monospace" />
-    </LinearLayout>
-
-    <com.google.android.material.slider.Slider
-        android:id="@+id/cfg_opacity"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:value="100"
-        android:valueFrom="20"
-        android:valueTo="100"
-        android:stepSize="5" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Widget information"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <com.google.android.material.checkbox.MaterialCheckBox
-        android:id="@+id/cfg_total"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:text="Contribution count"
-        android:textColor="#F0F6FC" />
-
-    <com.google.android.material.checkbox.MaterialCheckBox
-        android:id="@+id/cfg_streak"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Current streak"
-        android:textColor="#F0F6FC" />
-
-    <com.google.android.material.checkbox.MaterialCheckBox
-        android:id="@+id/cfg_longest"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Longest streak"
-        android:textColor="#F0F6FC" />
-
-    <com.google.android.material.checkbox.MaterialCheckBox
-        android:id="@+id/cfg_updated"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Last updated"
-        android:textColor="#F0F6FC" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/cfg_save"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
-        android:layout_marginTop="20dp"
-        android:text="Save widget"
-        app:backgroundTint="#238636"
-        app:cornerRadius="12dp" />
-
+            android:text="Add widget" />
+    </FrameLayout>
 </LinearLayout>
-</ScrollView>
