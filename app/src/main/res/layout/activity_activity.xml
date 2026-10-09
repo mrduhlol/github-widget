@@ -2,392 +2,371 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#010409"
+    android:background="@color/bg"
     android:fillViewport="true">
 
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:paddingBottom="32dp"
+    android:paddingEnd="20dp"
+    android:paddingStart="20dp"
+    android:paddingTop="8dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="GH://ACTIVITY"
-        android:textColor="#39D353"
-        android:textSize="12sp"
-        android:typeface="monospace" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginStart="-12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/btn_back"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:gravity="center"
+            android:text="←"
+            android:textColor="@color/text_primary"
+            android:textSize="24sp" />
+
+        <TextView
+            style="@style/Text.Section"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="Activity" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/an_title"
+        style="@style/Text.Title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="Activity"
-        android:textColor="#F0F6FC"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:layout_marginTop="8dp"
+        android:text="Activity" />
 
     <TextView
         android:id="@+id/an_updated"
+        style="@style/Text.Caption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text=""
-        android:textColor="#8B949E"
-        android:textSize="12sp"
-        android:typeface="monospace" />
+        android:layout_marginTop="4dp"
+        android:text="" />
 
-    <!-- Stat grid -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:orientation="horizontal">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="6dp"
-            android:layout_weight="1"
-            android:background="#0D1117"
-            android:orientation="vertical"
-            android:padding="14dp">
-
-            <TextView
-                android:id="@+id/an_total"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="–"
-                android:textColor="#F0F6FC"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:typeface="monospace" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="contributions"
-                android:textColor="#8B949E"
-                android:textSize="11sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_weight="1"
-            android:background="#0D1117"
-            android:orientation="vertical"
-            android:padding="14dp">
-
-            <TextView
-                android:id="@+id/an_week"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="–"
-                android:textColor="#F0F6FC"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:typeface="monospace" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="this week"
-                android:textColor="#8B949E"
-                android:textSize="11sp" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:orientation="horizontal">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="6dp"
-            android:layout_weight="1"
-            android:background="#0D1117"
-            android:orientation="vertical"
-            android:padding="14dp">
-
-            <TextView
-                android:id="@+id/an_month"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="–"
-                android:textColor="#F0F6FC"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:typeface="monospace" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="this month"
-                android:textColor="#8B949E"
-                android:textSize="11sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_weight="1"
-            android:background="#0D1117"
-            android:orientation="vertical"
-            android:padding="14dp">
-
-            <TextView
-                android:id="@+id/an_avg"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="–"
-                android:textColor="#F0F6FC"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:typeface="monospace" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="avg / active day"
-                android:textColor="#8B949E"
-                android:textSize="11sp" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:orientation="horizontal">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="6dp"
-            android:layout_weight="1"
-            android:background="#0D1117"
-            android:orientation="vertical"
-            android:padding="14dp">
-
-            <TextView
-                android:id="@+id/an_active"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="–"
-                android:textColor="#F0F6FC"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:typeface="monospace" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="active days"
-                android:textColor="#8B949E"
-                android:textSize="11sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_weight="1"
-            android:background="#0D1117"
-            android:orientation="vertical"
-            android:padding="14dp">
-
-            <TextView
-                android:id="@+id/an_best"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="–"
-                android:textColor="#F0F6FC"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:typeface="monospace" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="best day"
-                android:textColor="#8B949E"
-                android:textSize="11sp" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- Streaks -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Streaks"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="16dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:background="#0D1117"
-        android:orientation="vertical"
-        android:padding="14dp">
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/an_total"
+                style="@style/Text.Stat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="–" />
+
+            <TextView
+                style="@style/Text.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="contributions" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/an_week"
+                style="@style/Text.Stat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="–" />
+
+            <TextView
+                style="@style/Text.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="this week" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/an_month"
+                style="@style/Text.Stat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="–" />
+
+            <TextView
+                style="@style/Text.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="this month" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/an_avg"
+                style="@style/Text.Stat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="–" />
+
+            <TextView
+                style="@style/Text.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="avg / active day" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/an_active"
+                style="@style/Text.Stat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="–" />
+
+            <TextView
+                style="@style/Text.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="active days" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/an_best"
+                style="@style/Text.Stat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="–" />
+
+            <TextView
+                style="@style/Text.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="best day" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        style="@style/Text.Section"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:text="Streaks" />
+
+    <LinearLayout
+        style="@style/Card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:padding="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
+            android:minHeight="32dp"
             android:orientation="horizontal">
 
             <TextView
+                style="@style/Text.Body"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Current streak"
-                android:textColor="#8B949E"
-                android:textSize="12sp" />
+                android:text="Current streak" />
 
             <TextView
                 android:id="@+id/an_streak"
+                style="@style/Text.Section"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="–"
-                android:textColor="#39D353"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:typeface="monospace" />
+                android:textColor="@color/accent" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:gravity="center_vertical"
+            android:minHeight="32dp"
             android:orientation="horizontal">
 
             <TextView
+                style="@style/Text.Body"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Longest streak"
-                android:textColor="#8B949E"
-                android:textSize="12sp" />
+                android:text="Longest streak" />
 
             <TextView
                 android:id="@+id/an_longest"
+                style="@style/Text.Section"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="–"
-                android:textColor="#F0F6FC"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:typeface="monospace" />
+                android:text="–" />
         </LinearLayout>
 
         <TextView
             android:id="@+id/an_milestone"
+            style="@style/Text.Caption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text=""
-            android:textColor="#8B949E"
-            android:textSize="11sp"
-            android:typeface="monospace" />
+            android:text="" />
     </LinearLayout>
 
-    <!-- Weekday breakdown -->
     <TextView
+        style="@style/Text.Section"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Activity by weekday"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
+        android:layout_marginTop="28dp"
+        android:text="Activity by weekday" />
 
     <LinearLayout
         android:id="@+id/rows_weekday"
+        style="@style/Card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="#0D1117"
-        android:orientation="vertical"
-        android:padding="14dp" />
+        android:layout_marginTop="12dp"
+        android:padding="16dp" />
 
-    <!-- Personal records -->
     <TextView
+        style="@style/Text.Section"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Personal records"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
+        android:layout_marginTop="28dp"
+        android:text="Personal records" />
 
     <LinearLayout
         android:id="@+id/rows_records"
+        style="@style/Card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="#0D1117"
-        android:orientation="vertical"
-        android:padding="14dp" />
+        android:layout_marginTop="12dp"
+        android:padding="16dp" />
 
-    <!-- Insights -->
     <TextView
+        style="@style/Text.Section"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Insights"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
+        android:layout_marginTop="28dp"
+        android:text="Insights" />
 
     <LinearLayout
         android:id="@+id/rows_insights"
+        style="@style/Card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="#0D1117"
-        android:orientation="vertical"
-        android:padding="14dp" />
+        android:layout_marginTop="12dp"
+        android:padding="16dp" />
 
-    <!-- Achievements -->
     <TextView
+        style="@style/Text.Section"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Achievements"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
+        android:layout_marginTop="28dp"
+        android:text="Achievements" />
 
     <LinearLayout
         android:id="@+id/rows_achievements"
+        style="@style/Card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="#0D1117"
-        android:orientation="vertical"
-        android:padding="6dp" />
+        android:layout_marginTop="12dp"
+        android:padding="8dp" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_share"
+        style="@style/Button.Primary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
-        android:layout_marginTop="20dp"
-        android:text="Share contribution card"
-        app:backgroundTint="#238636"
-        app:cornerRadius="12dp" />
+        android:layout_marginTop="24dp"
+        android:text="Share contribution card" />
 
 </LinearLayout>
 </ScrollView>

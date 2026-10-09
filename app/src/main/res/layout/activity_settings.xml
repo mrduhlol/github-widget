@@ -2,192 +2,289 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#010409"
+    android:background="@color/bg"
     android:fillViewport="true">
 
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="20dp">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="GH://SETTINGS"
-        android:textColor="#39D353"
-        android:textSize="12sp"
-        android:typeface="monospace" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="Settings"
-        android:textColor="#F0F6FC"
-        android:textSize="24sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Data"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/set_refresh"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Refresh now"
-        android:textSize="12sp"
-        app:backgroundTint="#21262D"
-        app:cornerRadius="12dp" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/set_clear_cache"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Clear cached data"
-        android:textSize="12sp"
-        app:backgroundTint="#21262D"
-        app:cornerRadius="12dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Look"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
+    android:paddingBottom="32dp"
+    android:paddingEnd="20dp"
+    android:paddingStart="20dp"
+    android:paddingTop="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_height="56dp"
+        android:layout_marginStart="-12dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/set_export"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
-            android:text="Share look"
-            android:textSize="12sp"
-            app:backgroundTint="#21262D"
-            app:cornerRadius="12dp" />
+        <TextView
+            android:id="@+id/btn_back"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:gravity="center"
+            android:text="←"
+            android:textColor="@color/text_primary"
+            android:textSize="24sp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/set_import"
-            android:layout_width="0dp"
+        <TextView
+            style="@style/Text.Section"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:text="Import look"
-            android:textSize="12sp"
-            app:backgroundTint="#21262D"
-            app:cornerRadius="12dp" />
+            android:text="Settings" />
     </LinearLayout>
 
     <TextView
+        style="@style/Text.Title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Settings" />
+
+    <TextView
+        style="@style/Text.Section"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Reset"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/set_reset_look"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Reset look"
-        android:textSize="12sp"
-        app:backgroundTint="#21262D"
-        app:cornerRadius="12dp" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/set_reset_all"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Reset everything"
-        android:textSize="12sp"
-        app:backgroundTint="#5A1A1A"
-        app:cornerRadius="12dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Privacy"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="GH-widgets stores your GitHub username, widget look and the last fetched contribution graph on this device only. When refreshing, the app sends your username to the public contribution API to fetch your graph — no sign-in, no token, no account access. Background images and drawings stay in the app's private storage. There is no telemetry and nothing is uploaded anywhere."
-        android:textColor="#8B949E"
-        android:textSize="12sp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="About"
-        android:textColor="#F0F6FC"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/set_version"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="GH-widgets"
-        android:textColor="#8B949E"
-        android:textSize="12sp"
-        android:typeface="monospace" />
+        android:text="Data" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_card"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/set_refresh"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:minHeight="64dp"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:paddingBottom="12dp"
+            android:paddingEnd="16dp"
+            android:paddingStart="16dp"
+            android:paddingTop="12dp">
+
+            <TextView
+                style="@style/Text.Section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Refresh now"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                style="@style/Text.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Fetch your latest contributions" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="16dp"
+            android:background="@color/stroke" />
+
+        <LinearLayout
+            android:id="@+id/set_clear_cache"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:minHeight="64dp"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:paddingBottom="12dp"
+            android:paddingEnd="16dp"
+            android:paddingStart="16dp"
+            android:paddingTop="12dp">
+
+            <TextView
+                style="@style/Text.Section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Clear cached data"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                style="@style/Text.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Remove the saved contribution graph" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        style="@style/Text.Section"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Look" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_card"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/set_export"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:minHeight="64dp"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:paddingBottom="12dp"
+            android:paddingEnd="16dp"
+            android:paddingStart="16dp"
+            android:paddingTop="12dp">
+
+            <TextView
+                style="@style/Text.Section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Share look"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                style="@style/Text.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Send your widget style as text" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="16dp"
+            android:background="@color/stroke" />
+
+        <LinearLayout
+            android:id="@+id/set_import"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:minHeight="64dp"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:paddingBottom="12dp"
+            android:paddingEnd="16dp"
+            android:paddingStart="16dp"
+            android:paddingTop="12dp">
+
+            <TextView
+                style="@style/Text.Section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Import look"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                style="@style/Text.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Paste a look someone shared" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        style="@style/Text.Section"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Reset" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/set_reset_look"
+        style="@style/Button.Secondary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Reset look" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/set_reset_all"
+        style="@style/Button.Danger"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:text="Reset everything" />
+
+    <TextView
+        style="@style/Text.Section"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Privacy" />
+
+    <TextView
+        style="@style/Text.Body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="GH-widgets stores your GitHub username, widget look and the last fetched contribution graph on this device only. When refreshing, the app sends your username to the public contribution API to fetch your graph — no sign-in, no token, no account access. Background images and drawings stay in the app's private storage. There is no telemetry and nothing is uploaded anywhere." />
+
+    <TextView
+        style="@style/Text.Section"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="About" />
+
+    <TextView
+        android:id="@+id/set_version"
+        style="@style/Text.Body"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="GH-widgets" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:baselineAligned="false"
         android:orientation="horizontal">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/set_repo"
+            style="@style/Button.Secondary"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="4dp"
             android:layout_weight="1"
-            android:text="Repository"
-            android:textSize="12sp"
-            app:backgroundTint="#21262D"
-            app:cornerRadius="12dp" />
+            android:text="Repository" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/set_issue"
+            style="@style/Button.Secondary"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:text="Report issue"
-            android:textSize="12sp"
-            app:backgroundTint="#21262D"
-            app:cornerRadius="12dp" />
+            android:text="Report issue" />
     </LinearLayout>
 
 </LinearLayout>

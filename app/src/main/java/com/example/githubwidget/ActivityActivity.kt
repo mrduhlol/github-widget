@@ -10,6 +10,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.google.android.material.checkbox.MaterialCheckBox
 import java.text.NumberFormat
 import java.util.Locale
@@ -26,6 +27,7 @@ class ActivityActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_activity)
+        findViewById<View>(R.id.btn_back).setOnClickListener { finish() }
 
         val title = findViewById<TextView>(R.id.an_title)
         val updated = findViewById<TextView>(R.id.an_updated)
@@ -54,7 +56,7 @@ class ActivityActivity : AppCompatActivity() {
 
         val cached = Cache.load(this)
         if (cached == null || !cached.first.username.equals(username, ignoreCase = true)) {
-            title.text = "Activity — @$username"
+            title.text = "@$username"
             updated.text = "No data yet."
             share.visibility = View.GONE
             showInsights(
@@ -65,7 +67,7 @@ class ActivityActivity : AppCompatActivity() {
         }
 
         val (result, ts) = cached
-        title.text = "Activity — @${result.username}"
+        title.text = "@${result.username}"
         updated.text = "Updated ${TimeAgo.format(ts)}"
         paintAnalytics(result, total, week, month, avg, active, best, streak, longest, milestone)
         showWeekdays(rowsWeekday, result)
@@ -110,6 +112,37 @@ class ActivityActivity : AppCompatActivity() {
         }
     }
 
+    private fun color(id: Int): Int = ContextCompat.getColor(this, id)
+
+    private fun label(text: String, size: Float, colorRes: Int, bold: Boolean = false) =
+        TextView(this).apply {
+            this.text = text
+            textSize = size
+            setTextColor(color(colorRes))
+            if (bold) typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        }
+
+    private fun bar(fraction: Float, colorRes: Int, height: Int = 6): View {
+        val track = android.widget.FrameLayout(this).apply {
+            background = android.graphics.drawable.GradientDrawable().apply {
+                cornerRadius = dp(height).toFloat()
+                setColor(color(R.color.surface_raised))
+            }
+        }
+        track.addView(View(this).apply {
+            background = android.graphics.drawable.GradientDrawable().apply {
+                cornerRadius = dp(height).toFloat()
+                setColor(color(colorRes))
+            }
+        }, android.widget.FrameLayout.LayoutParams(0, dp(height)))
+        track.post {
+            val lp = track.getChildAt(0).layoutParams
+            lp.width = (track.width * fraction.coerceIn(0f, 1f)).toInt()
+            track.getChildAt(0).layoutParams = lp
+        }
+        return track
+    }
+
     private fun showWeekdays(container: LinearLayout, result: ContributionsResult) {
         container.removeAllViews()
         val a = Analytics.compute(result.days, result.totalLastYear)
@@ -118,40 +151,26 @@ class ActivityActivity : AppCompatActivity() {
         val order = listOf(1, 2, 3, 4, 5, 6, 0)
         for (dow in order) {
             val count = a.weekdayTotals[dow]
-            val blocks = if (count > 0) ((count * 10f / max).toInt().coerceAtLeast(1)) else 0
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
-                setPadding(0, dp(3), 0, dp(3))
-            }
-            row.addView(TextView(this).apply {
-                text = Analytics.weekdayName(dow).take(3)
-                textSize = 12f
-                setTextColor(Color.parseColor("#8B949E"))
-                layoutParams = LinearLayout.LayoutParams(dp(44), LinearLayout.LayoutParams.WRAP_CONTENT)
-            })
-            row.addView(TextView(this).apply {
-                text = "█".repeat(blocks)
-                textSize = 12f
-                typeface = Typeface.MONOSPACE
-                setTextColor(Color.parseColor("#39D353"))
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                setPadding(0, dp(8), 0, dp(8))
                 contentDescription = "${Analytics.weekdayName(dow)}: $count contributions"
+            }
+            row.addView(label(Analytics.weekdayName(dow).take(3), 13f, R.color.text_secondary).apply {
+                layoutParams = LinearLayout.LayoutParams(dp(48), LinearLayout.LayoutParams.WRAP_CONTENT)
             })
-            row.addView(TextView(this).apply {
-                text = fmt(count)
-                textSize = 12f
-                typeface = Typeface.MONOSPACE
-                setTextColor(Color.parseColor("#F0F6FC"))
+            row.addView(bar(count.toFloat() / max, R.color.accent, 8).apply {
+                layoutParams = LinearLayout.LayoutParams(0, dp(8), 1f)
+            })
+            row.addView(label(fmt(count), 13f, R.color.text_primary, true).apply {
+                gravity = android.view.Gravity.END
+                layoutParams = LinearLayout.LayoutParams(dp(56), LinearLayout.LayoutParams.WRAP_CONTENT)
             })
             container.addView(row)
         }
         if (a.mostActiveWeekday >= 0) {
-            container.addView(TextView(this).apply {
-                text = "Most active: ${Analytics.weekdayName(a.mostActiveWeekday)}"
-                textSize = 11f
-                typeface = Typeface.MONOSPACE
-                setTextColor(Color.parseColor("#8B949E"))
+            container.addView(label("Most active: ${Analytics.weekdayName(a.mostActiveWeekday)}", 12f, R.color.text_tertiary).apply {
                 setPadding(0, dp(8), 0, 0)
             })
         }
@@ -161,11 +180,7 @@ class ActivityActivity : AppCompatActivity() {
         container.removeAllViews()
         val r = Achievements.records(result.days)
         if (r.bestCount == 0) {
-            container.addView(TextView(this).apply {
-                text = "No records yet — contribute to set your first."
-                textSize = 12f
-                setTextColor(Color.parseColor("#8B949E"))
-            })
+            container.addView(label("No records yet — contribute to set your first.", 14f, R.color.text_secondary))
             return
         }
         val rows = listOf(
@@ -174,24 +189,16 @@ class ActivityActivity : AppCompatActivity() {
             "Most active month" to r.bestMonth.ifEmpty { "—" },
             "Most active weekday" to if (r.bestWeekday >= 0) Analytics.weekdayName(r.bestWeekday) else "—"
         )
-        for ((label, value) in rows) {
+        for ((name, value) in rows) {
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
-                setPadding(0, dp(4), 0, dp(4))
+                minimumHeight = dp(40)
             }
-            row.addView(TextView(this).apply {
-                text = label
-                textSize = 12f
-                setTextColor(Color.parseColor("#8B949E"))
+            row.addView(label(name, 14f, R.color.text_secondary).apply {
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
-            row.addView(TextView(this).apply {
-                text = value
-                textSize = 12f
-                typeface = Typeface.MONOSPACE
-                setTextColor(Color.parseColor("#F0F6FC"))
-            })
+            row.addView(label(value, 14f, R.color.text_primary, true))
             container.addView(row)
         }
     }
@@ -199,10 +206,8 @@ class ActivityActivity : AppCompatActivity() {
     private fun showInsights(container: LinearLayout, lines: List<String>) {
         container.removeAllViews()
         for (line in lines) {
-            container.addView(TextView(this).apply {
-                text = "•  $line"
-                textSize = 12f
-                setTextColor(Color.parseColor("#F0F6FC"))
+            container.addView(label(line, 14f, R.color.text_primary).apply {
+                setLineSpacing(0f, 1.2f)
                 setPadding(0, dp(4), 0, dp(4))
             })
         }
@@ -213,15 +218,10 @@ class ActivityActivity : AppCompatActivity() {
         for (ach in Achievements.evaluate(total, a)) {
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
-                setPadding(dp(8), dp(8), dp(8), dp(8))
+                setPadding(dp(8), dp(12), dp(8), dp(12))
             }
-            row.addView(TextView(this).apply {
-                text = if (ach.unlocked) "✓" else "○"
-                textSize = 16f
-                setTextColor(
-                    if (ach.unlocked) Color.parseColor("#39D353")
-                    else Color.parseColor("#8B949E")
-                )
+            row.addView(label(if (ach.unlocked) "✓" else "○", 16f,
+                if (ach.unlocked) R.color.accent else R.color.text_tertiary).apply {
                 layoutParams = LinearLayout.LayoutParams(dp(32), LinearLayout.LayoutParams.WRAP_CONTENT)
                 contentDescription = if (ach.unlocked) "Unlocked" else "Locked"
             })
@@ -229,59 +229,23 @@ class ActivityActivity : AppCompatActivity() {
                 orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
-            texts.addView(TextView(this).apply {
-                text = ach.title
-                textSize = 13f
-                setTextColor(Color.parseColor("#F0F6FC"))
-            })
-            texts.addView(TextView(this).apply {
-                text = ach.desc
-                textSize = 11f
-                setTextColor(Color.parseColor("#8B949E"))
-            })
-            row.addView(texts)
-            val status = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = android.view.Gravity.END
-                layoutParams = LinearLayout.LayoutParams(
-                    dp(96), LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-            }
-            status.addView(TextView(this).apply {
-                text = if (ach.unlocked) "Unlocked" else "Locked"
-                textSize = 10f
-                typeface = Typeface.MONOSPACE
-                setTextColor(
-                    if (ach.unlocked) Color.parseColor("#39D353")
-                    else Color.parseColor("#8B949E")
-                )
+            texts.addView(label(ach.title, 15f,
+                if (ach.unlocked) R.color.text_primary else R.color.text_secondary, true))
+            texts.addView(label(ach.desc, 12f, R.color.text_tertiary).apply {
+                setPadding(0, dp(2), 0, 0)
             })
             if (!ach.unlocked && ach.progressText.isNotEmpty()) {
-                val track = LinearLayout(this).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    setPadding(0, dp(4), 0, 0)
+                texts.addView(bar(ach.progress.toFloat(), R.color.accent).apply {
                     layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(6)
-                    )
-                    setBackgroundColor(Color.parseColor("#21262D"))
-                }
-                track.addView(View(this).apply {
-                    val w = (ach.progress * 96).toInt().coerceIn(0, 96)
-                    layoutParams = LinearLayout.LayoutParams(dp(w), LinearLayout.LayoutParams.MATCH_PARENT)
-                    setBackgroundColor(Color.parseColor("#39D353"))
+                        LinearLayout.LayoutParams.MATCH_PARENT, dp(6)
+                    ).apply { topMargin = dp(8) }
                     contentDescription = "Progress ${ach.progressText}"
                 })
-                status.addView(track)
-                status.addView(TextView(this).apply {
-                    text = ach.progressText
-                    textSize = 9f
-                    typeface = Typeface.MONOSPACE
-                    setTextColor(Color.parseColor("#8B949E"))
-                    setPadding(0, dp(2), 0, 0)
+                texts.addView(label(ach.progressText, 12f, R.color.text_tertiary).apply {
+                    setPadding(0, dp(4), 0, 0)
                 })
             }
-            row.addView(status)
+            row.addView(texts)
             container.addView(row)
         }
     }

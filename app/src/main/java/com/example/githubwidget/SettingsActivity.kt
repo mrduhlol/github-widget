@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -20,6 +21,7 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+        findViewById<View>(R.id.btn_back).setOnClickListener { finish() }
 
         try {
             val info = packageManager.getPackageInfo(packageName, 0)
@@ -29,7 +31,7 @@ class SettingsActivity : AppCompatActivity() {
             // Version label keeps its static fallback.
         }
 
-        findViewById<MaterialButton>(R.id.set_refresh).setOnClickListener {
+        findViewById<View>(R.id.set_refresh).setOnClickListener {
             val u = Prefs.getUsername(this)
             if (u.isBlank()) {
                 Toast.makeText(this, "Set a GitHub username first", Toast.LENGTH_SHORT).show()
@@ -39,7 +41,7 @@ class SettingsActivity : AppCompatActivity() {
             Toast.makeText(this, "Refreshing widgets…", Toast.LENGTH_SHORT).show()
         }
 
-        findViewById<MaterialButton>(R.id.set_clear_cache).setOnClickListener {
+        findViewById<View>(R.id.set_clear_cache).setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle("Clear cached data?")
                 .setMessage("The saved contribution graph is removed. Widgets show a loading state until the next refresh.")
@@ -52,7 +54,7 @@ class SettingsActivity : AppCompatActivity() {
                 .show()
         }
 
-        findViewById<MaterialButton>(R.id.set_export).setOnClickListener {
+        findViewById<View>(R.id.set_export).setOnClickListener {
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, Studio.exportLook(this@SettingsActivity))
@@ -60,7 +62,7 @@ class SettingsActivity : AppCompatActivity() {
             startActivity(Intent.createChooser(intent, "Share look"))
         }
 
-        findViewById<MaterialButton>(R.id.set_import).setOnClickListener {
+        findViewById<View>(R.id.set_import).setOnClickListener {
             val field = EditText(this).apply { hint = "Paste a shared look" }
             val box = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
