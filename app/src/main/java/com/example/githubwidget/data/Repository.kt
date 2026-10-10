@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import com.example.githubwidget.design.NumberFont
 import com.example.githubwidget.design.WidgetDesign
 import com.example.githubwidget.widget.RefreshWorker
 import com.example.githubwidget.widget.WidgetUpdater
@@ -49,6 +50,7 @@ object Repository {
     private const val KEY_USERNAME = "username"
     private const val KEY_DESIGN = "design_v3"
     private const val KEY_REFRESH_HOURS = "refresh_hours"
+    private const val KEY_NUMBER_FONT = "number_font"
     private const val CACHE_FILE = "contributions_v3.json"
     private const val AVATAR_FILE = "avatar.png"
 
@@ -75,6 +77,9 @@ object Repository {
     private val _refreshHours = MutableStateFlow(DEFAULT_REFRESH_HOURS)
     val refreshHours: StateFlow<Int> = _refreshHours.asStateFlow()
 
+    private val _numberFont = MutableStateFlow(NumberFont.SYSTEM)
+    val numberFont: StateFlow<NumberFont> = _numberFont.asStateFlow()
+
     private val _refreshState = MutableStateFlow<RefreshState>(RefreshState.Idle)
     val refreshState: StateFlow<RefreshState> = _refreshState.asStateFlow()
 
@@ -90,6 +95,7 @@ object Repository {
         _username.value = prefs.getString(KEY_USERNAME, "").orEmpty()
         _design.value = WidgetDesign.fromJson(prefs.getString(KEY_DESIGN, null))
         _refreshHours.value = prefs.getInt(KEY_REFRESH_HOURS, DEFAULT_REFRESH_HOURS)
+        _numberFont.value = NumberFont.fromName(prefs.getString(KEY_NUMBER_FONT, null))
         _data.value = readCache()?.takeIf { it.contributions.username.equals(_username.value, true) }
         _avatar.value = runCatching { BitmapFactory.decodeFile(File(app.filesDir, AVATAR_FILE).path) }.getOrNull()
         initialized = true
@@ -219,6 +225,13 @@ object Repository {
     }
 
     fun resetDesign() = updateDesign { WidgetDesign() }
+
+    fun setNumberFont(font: NumberFont) {
+        _numberFont.value = font
+        prefs().edit().putString(KEY_NUMBER_FONT, font.name).apply()
+        // The widgets draw their text in this font, so repaint them.
+        scope.launch { WidgetUpdater.updateAll(app) }
+    }
 
     fun setRefreshHours(hours: Int) {
         _refreshHours.value = hours

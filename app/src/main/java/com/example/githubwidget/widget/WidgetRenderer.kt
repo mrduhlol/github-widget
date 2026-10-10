@@ -8,13 +8,13 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Shader
-import android.graphics.Typeface
 import android.text.TextPaint
 import androidx.core.graphics.ColorUtils
 import com.example.githubwidget.data.Stats
 import com.example.githubwidget.data.UserData
 import com.example.githubwidget.data.SampleData
 import com.example.githubwidget.design.Background
+import com.example.githubwidget.design.NumberFont
 import com.example.githubwidget.design.ColorSet
 import com.example.githubwidget.design.Palettes
 import com.example.githubwidget.design.WidgetDesign
@@ -46,6 +46,7 @@ object WidgetRenderer {
         heightDp: Float,
         dark: Boolean,
         placeholder: Placeholder = if (data == null) Placeholder.SIGNED_OUT else Placeholder.NONE,
+        font: NumberFont = NumberFont.SYSTEM,
     ): Bitmap {
         val density = context.resources.displayMetrics.density
         var scale = density
@@ -60,7 +61,7 @@ object WidgetRenderer {
             Background.DARK, Background.BLACK -> true
         }
         val colors = Palettes.colors(context, design, isDark)
-        Painter(Canvas(bmp), scale, widthDp, heightDp, design, colors).draw(data, avatar, placeholder)
+        Painter(Canvas(bmp), scale, widthDp, heightDp, design, colors, context, font).draw(data, avatar, placeholder)
         return bmp
     }
 
@@ -71,6 +72,8 @@ object WidgetRenderer {
         val hDp: Float,
         val design: WidgetDesign,
         val colors: ColorSet,
+        val context: Context,
+        val font: NumberFont,
     ) {
         val numbers: NumberFormat = NumberFormat.getIntegerInstance()
         val seeThrough = design.opacity < 45
@@ -79,12 +82,12 @@ object WidgetRenderer {
         fun text(sizeSp: Float, color: Int, bold: Boolean = false) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = dp(sizeSp)
             this.color = color
-            typeface = if (bold) Typeface.create("sans-serif", Typeface.BOLD) else Typeface.SANS_SERIF
+            typeface = NumberFont.typeface(context, font, if (bold) 700 else 400)
             if (seeThrough) setShadowLayer(dp(3f), 0f, dp(1f), if (colors.isDark) 0x99000000.toInt() else 0x66FFFFFF)
         }
 
         fun medium(sizeSp: Float, color: Int) = text(sizeSp, color).apply {
-            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            typeface = NumberFont.typeface(context, font, 500)
         }
 
         fun draw(data: UserData?, avatar: Bitmap?, placeholder: Placeholder) {
