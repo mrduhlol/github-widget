@@ -3,14 +3,10 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Rising activity bars: deep green climbing to a glowing peak -->
-    <path android:fillColor="#0E4429" android:pathData="M26,74h11v14h-11z" />
-    <path android:fillColor="#006D32" android:pathData="M40,64h11v24h-11z" />
-    <path android:fillColor="#26A641" android:pathData="M54,52h11v36h-11z" />
-    <path android:fillColor="#39D353" android:pathData="M68,38h11v50h-11z" />
-    <!-- Glow halo + hot peak -->
-    <path android:fillColor="#5939D353" android:pathData="M73.5,15m-13,0a13,13 0 1,0 26,0a13,13 0 1,0 -26,0" />
-    <path android:fillColor="#C9FFD6" android:pathData="M73.5,21m-8,0a8,8 0 1,0 16,0a8,8 0 1,0 -16,0" />
-    <!-- Baseline -->
-    <path android:fillColor="#30363D" android:pathData="M22,90h64v4h-64z" />
+    <!-- Contribution cluster: dark greens rising to one hot cell -->
+    <path android:fillColor="#0E4429" android:pathData="M16,16h15v15h-15zM36,16h15v15h-15zM16,36h15v15h-15zM56,76h15v15h-15zM76,76h15v15h-15z" />
+    <path android:fillColor="#006D32" android:pathData="M56,16h15v15h-15zM36,36h15v15h-15zM16,56h15v15h-15zM36,76h15v15h-15zM76,56h15v15h-15z" />
+    <path android:fillColor="#26A641" android:pathData="M76,36h15v15h-15zM56,56h15v15h-15zM16,76h15v15h-15z" />
+    <path android:fillColor="#39D353" android:pathData="M76,16h15v15h-15zM36,56h15v15h-15z" />
+    <path android:fillColor="#9EFFB0" android:pathData="M56,36h15v15h-15z" />
 </vector>

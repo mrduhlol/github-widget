@@ -1,6 +1,6 @@
 # GH-widgets
 
-**Current version: v3.0.1** — rebuilt from scratch: a simpler app, a cleaner widget, and one-tap setup.
+**Current version: v3.0.2** — rebuilt from scratch: a simpler app, a cleaner widget, and one-tap setup.
 
 Your GitHub contribution graph, live on your Android home screen. Pick a look in a few taps — no sign-in, no token, just your username.
 
