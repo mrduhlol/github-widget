@@ -42,28 +42,34 @@ object WidgetUpdater {
     }
 
     /**
-     * Current size of the widget in dp.
+     * Live size of the widget in dp.
      *
-     * In portrait the launcher reports the live size as min width x max height;
-     * in landscape it is max width x min height. When the bundle is missing or
-     * half-filled (right after placement, some launchers) fall back to
-     * whatever positive values exist instead of a fixed guess, so the rendered
-     * bitmap keeps the view's aspect and never letterboxes.
+     * On API 31+ the launcher reports the exact size via OPTION_APPWIDGET_SIZES
+     * (first entry is portrait). Below that, MIN_WIDTH/MIN_HEIGHT track the
+     * live size — MAX_* are resize bounds, never the size to draw at. Drawing
+     * at anything else stretches or letterboxes the bitmap (fitXY).
      */
     fun sizeDp(context: Context, options: Bundle?): SizeF {
+        if (options != null && android.os.Build.VERSION.SDK_INT >= 31) {
+            @Suppress("DEPRECATION")
+            val sizes: ArrayList<SizeF>? = if (android.os.Build.VERSION.SDK_INT >= 33) {
+                options.getParcelableArrayList(
+                    AppWidgetManager.OPTION_APPWIDGET_SIZES, SizeF::class.java,
+                )
+            } else {
+                options.getParcelableArrayList(AppWidgetManager.OPTION_APPWIDGET_SIZES)
+            }
+            if (!sizes.isNullOrEmpty()) {
+                val landscape =
+                    context.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+                val s = if (sizes.size == 1 || !landscape) sizes[0] else sizes[1]
+                if (s.width > 0 && s.height > 0) return s
+            }
+        }
         if (options != null) {
-            val minW = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
-            val maxW = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH)
-            val minH = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
-            val maxH = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
-            val landscape =
-                context.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-            val w = if (landscape) maxW else minW
-            val h = if (landscape) minH else maxH
+            val w = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
+            val h = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
             if (w > 0 && h > 0) return SizeF(w.toFloat(), h.toFloat())
-            val fw = maxOf(minW, maxW)
-            val fh = maxOf(minH, maxH)
-            if (fw > 0 && fh > 0) return SizeF(fw.toFloat(), fh.toFloat())
         }
         return SizeF(320f, 160f)
     }
