@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.example.githubwidget.data.SampleData
 import com.example.githubwidget.data.Stats
 import com.example.githubwidget.design.Background
+import com.example.githubwidget.design.NumberFont
 import com.example.githubwidget.design.CellShape
 import com.example.githubwidget.design.Range
 import com.example.githubwidget.design.WidgetDesign
@@ -54,6 +55,17 @@ class WidgetRenderSnapshotTest {
         save("seethrough", d.copy(opacity = 20, paletteId = "teal"), 340f, 170f)
         save("black_mono", d.copy(background = Background.BLACK, paletteId = "mono"), 340f, 170f)
         save("signed_out", d, 340f, 170f, signedOut = true)
+    }
+
+    @Test
+    fun renderEachFont() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        NumberFont.entries.forEach { font ->
+            val bmp = WidgetRenderer.render(
+                ctx, WidgetDesign(layout = WidgetLayout.NUMBERS), SampleData.userData, null, 340f, 170f, true, font = font,
+            )
+            File(out, "font_${font.name.lowercase()}.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        }
     }
 
     @Test

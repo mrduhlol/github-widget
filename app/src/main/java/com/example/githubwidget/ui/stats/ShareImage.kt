@@ -21,6 +21,7 @@ import androidx.core.graphics.ColorUtils
 import com.example.githubwidget.data.Stats
 import com.example.githubwidget.data.UserData
 import com.example.githubwidget.design.Background
+import com.example.githubwidget.design.NumberFont
 import com.example.githubwidget.design.Palettes
 import com.example.githubwidget.design.WidgetDesign
 import com.example.githubwidget.widget.GraphPainter
@@ -47,9 +48,15 @@ internal object ShareImage {
     private const val DIM = 0xFF656D76.toInt()
 
     /** Renders, saves and opens the share sheet. Returns false if anything went wrong. */
-    suspend fun share(context: Context, data: UserData, avatar: Bitmap?, design: WidgetDesign): Boolean {
+    suspend fun share(
+        context: Context,
+        data: UserData,
+        avatar: Bitmap?,
+        design: WidgetDesign,
+        numberFont: NumberFont = NumberFont.SYSTEM,
+    ): Boolean {
         val file = runCatching {
-            val bmp = withContext(Dispatchers.Default) { render(context, data, avatar, design) }
+            val bmp = withContext(Dispatchers.Default) { render(context, data, avatar, design, numberFont) }
             withContext(Dispatchers.IO) {
                 val dir = File(context.cacheDir, "shared").apply { mkdirs() }
                 File(dir, "my-github-year.png").also { f ->
@@ -75,7 +82,13 @@ internal object ShareImage {
         }.isSuccess
     }
 
-    fun render(context: Context, data: UserData, avatar: Bitmap?, design: WidgetDesign): Bitmap {
+    fun render(
+        context: Context,
+        data: UserData,
+        avatar: Bitmap?,
+        design: WidgetDesign,
+        numberFont: NumberFont = NumberFont.SYSTEM,
+    ): Bitmap {
         val bmp = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
         val colors = Palettes.colors(context, design.copy(background = Background.DARK, opacity = 100), true)
@@ -83,6 +96,7 @@ internal object ShareImage {
         val stats = Stats.from(data.contributions)
         val numbers = NumberFormat.getIntegerInstance()
         val pad = 72f
+        val bold = { weight: Int -> NumberFont.typeface(context, numberFont, weight) }
 
         // Background with a soft glow in the user's color.
         c.drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply {
@@ -109,16 +123,17 @@ internal object ShareImage {
         c.drawText(ellipsize("@$login", loginPaint, maxText), textX, avTop + 110f, loginPaint)
 
         // The big number.
-        val totalPaint = text(168f, WHITE, bold = true).apply { letterSpacing = -0.02f }
+        val totalPaint = numberPaint(184f, WHITE, bold(800)).apply { letterSpacing = -0.03f }
         c.drawText(numbers.format(stats.total), pad - 6f, 470f, totalPaint)
+        // Baseline sits below the comma's descender so the two lines don't touch.
         val subPaint = text(40f, GRAY)
         c.drawText(
             if (stats.total == 1) "contribution in the last year" else "contributions in the last year",
-            pad, 532f, subPaint,
+            pad, 584f, subPaint,
         )
 
         // The year graph on its own card.
-        val graphCard = RectF(pad, 596f, W - pad, 832f)
+        val graphCard = RectF(pad, 640f, W - pad, 872f)
         drawTile(c, graphCard, 36f)
         val levels = colors.levels.copyOf().also { it[0] = EMPTY }
         GraphPainter.draw(
@@ -139,7 +154,7 @@ internal object ShareImage {
         // Four stat tiles.
         val gap = 24f
         val tileW = (W - 2 * pad - gap) / 2f
-        val tileH = 170f
+        val tileH = 164f
         val shortDate = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
         val tiles = listOf(
             Triple("Current streak", numbers.format(stats.currentStreak), if (stats.currentStreak == 1) " day" else " days"),
@@ -151,30 +166,30 @@ internal object ShareImage {
             ),
             Triple("Active days", numbers.format(stats.activeDays), " of ${numbers.format(stats.trackedDays)}"),
         )
-        val labelPaint = text(30f, GRAY)
-        val valuePaint = text(64f, WHITE, bold = true)
-        val suffixPaint = text(32f, GRAY)
+        val labelPaint = text(30f, GRAY, medium = true)
+        val valuePaint = numberPaint(72f, WHITE, bold(700)).apply { letterSpacing = -0.02f }
+        val suffixPaint = text(32f, GRAY, medium = true)
         tiles.forEachIndexed { i, (label, value, suffix) ->
             val x = pad + (i % 2) * (tileW + gap)
-            val y = 880f + (i / 2) * (tileH + gap)
+            val y = 916f + (i / 2) * (tileH + gap)
             val r = RectF(x, y, x + tileW, y + tileH)
             drawTile(c, r, 32f)
             c.drawText(label, x + 36f, y + 60f, labelPaint)
-            c.drawText(value, x + 36f, y + 138f, valuePaint)
+            c.drawText(value, x + 36f, y + 134f, valuePaint)
             val vw = valuePaint.measureText(value)
             val room = tileW - 72f - vw
             if (suffix.isNotEmpty() && room > 40f) {
-                c.drawText(ellipsize(suffix, suffixPaint, room), x + 36f + vw, y + 138f, suffixPaint)
+                c.drawText(ellipsize(suffix, suffixPaint, room), x + 36f + vw, y + 134f, suffixPaint)
             }
         }
 
         // Footer: a tiny 2×2 graph mark and the app name.
-        val footer = text(28f, DIM)
+        val footer = text(28f, DIM, medium = true)
         val label = "Made with GH Widgets"
         val markSize = 28f
         val total = markSize + 14f + footer.measureText(label)
         val fx = (W - total) / 2f
-        val fy = 1286f
+        val fy = 1312f
         val sq = (markSize - 4f) / 2f
         val markPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         val markColors = intArrayOf(colors.levels[2], colors.levels[4], colors.levels[4], colors.levels[3])
@@ -228,10 +243,20 @@ internal object ShareImage {
         })
     }
 
-    private fun text(size: Float, color: Int, bold: Boolean = false) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+    private fun numberPaint(size: Float, color: Int, face: Typeface) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
         textSize = size
         this.color = color
-        typeface = if (bold) Typeface.create("sans-serif", Typeface.BOLD) else Typeface.create("sans-serif", Typeface.NORMAL)
+        typeface = face
+    }
+
+    private fun text(size: Float, color: Int, bold: Boolean = false, medium: Boolean = false) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+        textSize = size
+        this.color = color
+        typeface = when {
+            bold -> Typeface.create("sans-serif", Typeface.BOLD)
+            medium -> Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            else -> Typeface.create("sans-serif", Typeface.NORMAL)
+        }
     }
 
     private fun ellipsize(s: String, paint: TextPaint, width: Float): String =
