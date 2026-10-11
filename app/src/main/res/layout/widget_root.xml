@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:contentDescription="@string/widget_label"
-        android:scaleType="fitXY"
+        android:scaleType="fitCenter"
         android:visibility="visible" />
 
     <ImageView
@@ -19,18 +19,19 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:contentDescription="@string/widget_label"
-        android:scaleType="fitXY"
+        android:scaleType="fitCenter"
         android:visibility="gone" />
 
     <ImageButton
         android:id="@+id/widget_refresh"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="6dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="12dp"
         android:background="@drawable/widget_refresh_bg"
         android:contentDescription="@string/widget_refresh_desc"
-        android:padding="5dp"
+        android:padding="4dp"
         android:scaleType="centerInside"
         android:src="@drawable/ic_refresh" />
 </FrameLayout>
