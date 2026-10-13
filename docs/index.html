@@ -64,6 +64,7 @@
   .mask:nth-child(2) > span { animation-delay: 0.14s; }
   @keyframes rise { from { transform: translateY(110%); } to { transform: none; } }
   .hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; margin-top: 56px; }
+  .hero-row > *, .how-grid > *, .cta-grid > * { min-width: 0; }
   .hero .lede { font-size: var(--step-lead); color: var(--ink); max-width: 34ch; margin-bottom: 40px; animation: fadeup 0.7s ease 0.35s both; }
   .hero-actions { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; animation: fadeup 0.7s ease 0.45s both; }
   .hero .meta { margin-top: 26px; color: var(--muted); font-size: var(--step-small); font-weight: 600; animation: fadeup 0.7s ease 0.55s both; }
@@ -177,8 +178,9 @@
   @media (max-width: 900px) {
     .nav-links { display: none; }
     .hero { padding: 40px 0 80px; }
-    .hero h1 { font-size: 8.6vw; }
+    .hero h1 { font-size: 8.4vw; }
     .hero-row { grid-template-columns: 1fr; }
+    .hero-actions { flex-direction: column; align-items: flex-start; }
     .demo-panel { grid-template-columns: 1fr; }
     .demo-left { padding: 32px 20px; }
     .demo-right { padding: 28px 24px; }
