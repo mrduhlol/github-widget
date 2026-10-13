@@ -14,3 +14,7 @@ local.properties
 .github/skills/
 node_modules/
 .hyperframes/
+
+# Skill working files (inspector output, downloaded staging assets)
+.taste-skill/
+assets/
