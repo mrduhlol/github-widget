@@ -45,9 +45,11 @@ object WidgetUpdater {
      * Live size of the widget in dp.
      *
      * On API 31+ the launcher reports the exact size via OPTION_APPWIDGET_SIZES
-     * (first entry is portrait). Below that, MIN_WIDTH/MIN_HEIGHT track the
-     * live size — MAX_* are resize bounds, never the size to draw at. Drawing
-     * at anything else stretches or letterboxes the bitmap (fitXY).
+     * (first entry is portrait). Below that, take each axis as max(MIN, MAX):
+     * some launchers (e.g. Samsung) report the resize bound in MIN — drawing
+     * at a bound size stretches or letterboxes the bitmap (fitXY). The live
+     * size is never smaller than a bound, so max() recovers it; when the
+     * launcher already tracks live size MIN == MAX and nothing changes.
      */
     fun sizeDp(context: Context, options: Bundle?): SizeF {
         if (options != null && android.os.Build.VERSION.SDK_INT >= 31) {
@@ -67,8 +69,12 @@ object WidgetUpdater {
             }
         }
         if (options != null) {
-            val w = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
-            val h = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+            val minW = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
+            val minH = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+            val maxW = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH)
+            val maxH = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
+            val w = maxOf(minW, maxW)
+            val h = maxOf(minH, maxH)
             if (w > 0 && h > 0) return SizeF(w.toFloat(), h.toFloat())
         }
         return SizeF(320f, 160f)

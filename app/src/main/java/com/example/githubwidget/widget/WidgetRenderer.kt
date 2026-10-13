@@ -172,7 +172,7 @@ object WidgetRenderer {
             val gridArea = RectF(area.left, top, area.right, bottom)
             val grid = graph(gridArea, data, roomForMonths(gridArea.height()))
             if (footer) {
-                drawFooter(RectF(grid.left, area.bottom - footerH, grid.right, area.bottom), stats)
+                drawFooter(RectF(grid.left, area.bottom - footerH, grid.right, area.bottom), stats, data.fetchedAt)
             }
         }
 
@@ -230,7 +230,9 @@ object WidgetRenderer {
             }
         }
 
-        fun drawFooter(r: RectF, stats: Stats) {
+        fun drawFooter(r: RectF, stats: Stats, fetchedAt: Long) {
+            // Keep clear of the refresh button overlaid at bottom-end (24dp + 6dp margin).
+            val end = r.right - dp(34f)
             val parts = buildList {
                 if (design.showStreak) add(streakText(stats.currentStreak))
                 if (design.showToday) add(todayText(stats.today))
@@ -245,9 +247,18 @@ object WidgetRenderer {
                 val d = dp(3.5f)
                 canvas.drawCircle(x + d, r.centerY(), d, dot)
                 x += d * 2 + dp(5f)
-                val shown = ellipsize(s, p, r.right - x)
+                val shown = ellipsize(s, p, end - x)
                 canvas.drawText(shown, x, base, p)
                 x += p.measureText(shown) + dp(14f)
+            }
+            // Small "last updated" note after the stats, only when it fits.
+            if (fetchedAt > 0) {
+                val note = text(9.5f, colors.textSecondary)
+                val noteStr = updatedAgo(fetchedAt)
+                if (end - x > note.measureText(noteStr) + dp(4f)) {
+                    canvas.drawText(noteStr, x, r.centerY() + note.textSize * 0.36f, note)
+                    x += note.measureText(noteStr) + dp(14f)
+                }
             }
             // "Less ▪▪▪▪▪ More" legend on the right when there's plenty of room.
             val legendW = dp(5 * 10f + 4 * 3f)
@@ -255,8 +266,8 @@ object WidgetRenderer {
             val lessW = labelP.measureText("Less ")
             val moreW = labelP.measureText(" More")
             val total = lessW + legendW + moreW
-            if (r.right - x > total + dp(8f)) {
-                var lx = r.right - total
+            if (end - x > total + dp(8f)) {
+                var lx = end - total
                 canvas.drawText("Less", lx, base, labelP)
                 lx += lessW
                 val cell = dp(10f)
@@ -386,5 +397,18 @@ object WidgetRenderer {
         0 -> "None today"
         1 -> "1 today"
         else -> "$count today"
+    }
+
+    fun updatedAgo(fetchedAt: Long, now: Long = System.currentTimeMillis()): String {
+        val minutes = ((now - fetchedAt) / 60_000).coerceAtLeast(0)
+        return when {
+            minutes < 1 -> "Updated just now"
+            minutes < 60 -> "Updated $minutes min ago"
+            minutes < 24 * 60 -> (minutes / 60).toInt().let { if (it == 1) "Updated 1 hour ago" else "Updated $it hours ago" }
+            minutes < 48 * 60 -> "Updated yesterday"
+            else -> "Updated on " + java.time.Instant.ofEpochMilli(fetchedAt)
+                .atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                .format(java.time.format.DateTimeFormatter.ofPattern("MMM d", java.util.Locale.getDefault()))
+        }
     }
 }

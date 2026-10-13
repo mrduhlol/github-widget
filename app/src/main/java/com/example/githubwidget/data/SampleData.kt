@@ -30,10 +30,10 @@ object SampleData {
             }
             Day(date, count, level)
         }
-        Contributions("octocat", days.sumOf { it.count }, days)
+        Contributions("mrduhlol", days.sumOf { it.count }, days)
     }
 
     val userData: UserData by lazy {
-        UserData(contributions, Profile("octocat", "The Octocat", ""), System.currentTimeMillis())
+        UserData(contributions, Profile("mrduhlol", "mrduhlol", ""), System.currentTimeMillis())
     }
 }

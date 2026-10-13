@@ -24,13 +24,13 @@
 
     <ImageButton
         android:id="@+id/widget_refresh"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_gravity="bottom|end"
-        android:layout_margin="8dp"
+        android:layout_margin="6dp"
         android:background="@drawable/widget_refresh_bg"
         android:contentDescription="@string/widget_refresh_desc"
-        android:padding="7dp"
+        android:padding="5dp"
         android:scaleType="centerInside"
         android:src="@drawable/ic_refresh" />
 </FrameLayout>

@@ -372,7 +372,7 @@ private fun UsernameStep(name: String, onNameChange: (String) -> Unit, onFound: 
                 isError = error != null,
                 textStyle = MaterialTheme.typography.titleLarge.copy(color = AppTheme.colors.textPrimary),
                 placeholder = {
-                    Text("username", style = MaterialTheme.typography.titleLarge, color = AppTheme.colors.textTertiary)
+                    Text("ex: mrduhlol", style = MaterialTheme.typography.titleLarge, color = AppTheme.colors.textTertiary)
                 },
                 prefix = {
                     Text("@", style = MaterialTheme.typography.titleLarge, color = AppTheme.colors.textTertiary)
@@ -428,7 +428,7 @@ private fun UsernameStep(name: String, onNameChange: (String) -> Unit, onFound: 
     )
 }
 
-/** "github.com/ octocat" with the name part highlighted. */
+/** "github.com/ mrduhlol" with the name part highlighted. */
 @Composable
 private fun ProfileLinkExample() {
     Surface(
@@ -446,7 +446,7 @@ private fun ProfileLinkExample() {
                     .padding(horizontal = 10.dp, vertical = 4.dp),
             ) {
                 Text(
-                    "octocat",
+                    "mrduhlol",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,

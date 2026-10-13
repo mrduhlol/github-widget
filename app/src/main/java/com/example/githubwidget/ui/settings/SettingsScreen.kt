@@ -267,6 +267,12 @@ fun SettingsScreen(onChangeAccount: () -> Unit) {
                     icon = Icons.Rounded.Favorite,
                     onClick = { openUrl(context, PROJECT_URL) },
                 )
+                NavRow(
+                    title = "@mrduhlol",
+                    subtitle = "Developer on GitHub",
+                    icon = Icons.Rounded.AccountCircle,
+                    onClick = { openUrl(context, "https://github.com/mrduhlol") },
+                )
             }
         }
 
