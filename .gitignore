@@ -5,3 +5,12 @@ app/build/
 local.properties
 .idea/
 *.iml
+
+# Agent skills & tooling (local installs; skills-lock.json restores them)
+.agents/
+.codex/
+.github/agents/
+.github/hooks/
+.github/skills/
+node_modules/
+.hyperframes/
