@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0; width: 1920px; height: 1080px;
+        overflow: hidden; background: #0d1117;
+      }
+      #root {
+        position: relative; width: 100%; height: 100%; overflow: hidden;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        color: #f0f6fc; background: #0d1117;
+      }
+      .clip { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+      .scene-inner { display: flex; flex-direction: column; align-items: center; text-align: center; }
+      .badge {
+        display: inline-block; padding: 14px 34px; border-radius: 999px;
+        border: 2px solid #39d353; color: #39d353;
+        font-size: 34px; font-weight: 700; letter-spacing: 0.22em;
+      }
+      h1.title { font-size: 132px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
+      h1.title .green { color: #39d353; }
+      .subtitle { font-size: 44px; color: #8b949e; margin-top: 28px; font-weight: 500; }
+      .phone {
+        width: 560px; border-radius: 64px; background: #161b22;
+        border: 3px solid #30363d; padding: 40px 36px 48px;
+        display: flex; flex-direction: column; align-items: center; gap: 26px;
+      }
+      .phone-name { font-size: 40px; font-weight: 700; }
+      .graph { display: grid; grid-template-rows: repeat(7, 26px); grid-auto-flow: column; gap: 7px; }
+      .cell { width: 26px; height: 26px; border-radius: 6px; background: #161b22; }
+      .phone-stats { display: flex; gap: 56px; font-size: 34px; color: #8b949e; }
+      .phone-stats b { color: #f0f6fc; font-size: 44px; display: block; }
+      .caption { font-size: 46px; font-weight: 600; margin-top: 10px; }
+      .caption .green { color: #39d353; }
+      .cards { display: flex; gap: 48px; }
+      .card {
+        width: 460px; border-radius: 36px; background: #161b22;
+        border: 3px solid #30363d; padding: 44px 36px;
+        display: flex; flex-direction: column; align-items: center; gap: 22px;
+      }
+      .card.hot { border-color: #39d353; }
+      .card h2 { font-size: 52px; font-weight: 800; }
+      .card p { font-size: 34px; color: #8b949e; }
+      .mini-graph { display: grid; grid-template-rows: repeat(5, 20px); grid-auto-flow: column; gap: 6px; }
+      .mini-cell { width: 20px; height: 20px; border-radius: 5px; }
+      .bignum { font-size: 120px; font-weight: 800; color: #39d353; }
+      .stats-row { display: flex; gap: 110px; }
+      .stat { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+      .stat .label { font-size: 36px; color: #8b949e; }
+      .stat .value { font-size: 96px; font-weight: 800; }
+      .cta-btn {
+        margin-top: 40px; padding: 30px 90px; border-radius: 999px;
+        background: #238636; color: #fff; font-size: 56px; font-weight: 800;
+      }
+      .cta-sub { margin-top: 30px; font-size: 38px; color: #8b949e; }
+      .side { display: flex; flex-direction: row; align-items: center; gap: 90px; }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="24"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Scene 1: title -->
+      <section class="clip" data-start="0" data-duration="4.5" data-track-index="0">
+        <div class="scene-inner" id="main-s1">
+          <span class="badge" id="main-s1-badge">GH-WIDGETS · v3.1.0</span>
+          <h1 class="title" id="main-s1-title" style="margin-top: 36px">
+            Your GitHub graph.<br /><span class="green">Live on your home screen.</span>
+          </h1>
+          <p class="subtitle" id="main-s1-sub">Free · No sign-in · ~5.6 MB</p>
+        </div>
+      </section>
+
+      <!-- Scene 2: widget demo -->
+      <section class="clip" data-start="4.5" data-duration="5.5" data-track-index="1">
+        <div class="scene-inner side" id="main-s2">
+          <div class="phone" id="main-s2-phone">
+            <div class="phone-name">@mrduhlol</div>
+            <div class="graph" id="main-s2-graph"></div>
+            <div class="phone-stats">
+              <div><b>1,248</b>total</div>
+              <div><b>23</b>streak</div>
+              <div><b>31</b>today</div>
+            </div>
+          </div>
+          <div style="text-align: left">
+            <p class="caption" id="main-s2-cap">No sign-in.<br />No token.<br /><span class="green">Just your username.</span></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Scene 3: styles -->
+      <section class="clip" data-start="10" data-duration="5.5" data-track-index="2">
+        <div class="scene-inner" id="main-s3">
+          <p class="caption" id="main-s3-cap" style="margin-bottom: 44px">3 styles · <span class="green">9 palettes</span> · your own color</p>
+          <div class="cards">
+            <div class="card hot" id="main-s3-c1"><h2>Classic</h2><div class="mini-graph" data-mini="1"></div><p>name · graph · stats</p></div>
+            <div class="card" id="main-s3-c2"><h2>Graph only</h2><div class="mini-graph" data-mini="2"></div><p>pure contributions</p></div>
+            <div class="card" id="main-s3-c3"><h2>Numbers</h2><div class="bignum">1,248</div><p>big stats · mini graph</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Scene 4: stats / offline -->
+      <section class="clip" data-start="15.5" data-duration="4.5" data-track-index="3">
+        <div class="scene-inner" id="main-s4">
+          <p class="caption" id="main-s4-cap" style="margin-bottom: 48px">Streaks, best days, insights — <span class="green">even offline.</span></p>
+          <div class="stats-row">
+            <div class="stat" id="main-s4-a"><span class="value">23🔥</span><span class="label">day streak</span></div>
+            <div class="stat" id="main-s4-b"><span class="value">31</span><span class="label">best day</span></div>
+            <div class="stat" id="main-s4-c"><span class="value">1–12h</span><span class="label">auto refresh</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Scene 5: CTA -->
+      <section class="clip" data-start="20" data-duration="4" data-track-index="4">
+        <div class="scene-inner" id="main-s5">
+          <h1 class="title" id="main-s5-title">Get <span class="green">GH-widgets</span></h1>
+          <div class="cta-btn" id="main-s5-btn">Download free APK</div>
+          <p class="cta-sub" id="main-s5-sub">Android 8.0+ · v3.1.0 · github.com/mrduhlol/github-widget</p>
+        </div>
+      </section>
+    </div>
+    <script>
+      // Deterministic seeded fill for the graphs (no randomness at render).
+      function mulberry32(seed) {
+        return function () {
+          seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+          var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+      var greens = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"];
+      function fillGraph(el, cols, rows, rand) {
+        for (var c = 0; c < cols; c++) {
+          for (var r = 0; r < rows; r++) {
+            var d = document.createElement("div");
+            var v = rand();
+            var lvl = v < 0.18 ? 0 : v < 0.42 ? 1 : v < 0.65 ? 2 : v < 0.85 ? 3 : 4;
+            d.style.background = greens[lvl];
+            d.className = el.id === "main-s2-graph" ? "cell" : "mini-cell";
+            el.appendChild(d);
+          }
+        }
+      }
+      fillGraph(document.getElementById("main-s2-graph"), 16, 7, mulberry32(42));
+      var minis = document.querySelectorAll(".mini-graph");
+      minis.forEach(function (el, i) {
+        fillGraph(el, 12, 5, mulberry32(100 + i));
+      });
+
+      var tl = gsap.timeline({ paused: true });
+      // Scene 1
+      tl.fromTo("#main-s1-badge", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.2);
+      tl.fromTo("#main-s1-title", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.5);
+      tl.fromTo("#main-s1-sub", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 1.0);
+      tl.to("#main-s1", { opacity: 0, y: -40, duration: 0.4, ease: "power2.in" }, 4.0);
+      // Scene 2
+      tl.fromTo("#main-s2-phone", { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 0.7, ease: "power3.out" }, 4.6);
+      tl.fromTo("#main-s2-graph .cell", { opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)", stagger: 0.006 }, 5.0);
+      tl.fromTo("#main-s2-cap", { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.7, ease: "power3.out" }, 5.2);
+      tl.to("#main-s2", { opacity: 0, duration: 0.35 }, 9.6);
+      // Scene 3
+      tl.fromTo("#main-s3-cap", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 10.1);
+      tl.fromTo("#main-s3-c1", { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 10.4);
+      tl.fromTo("#main-s3-c2", { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 10.6);
+      tl.fromTo("#main-s3-c3", { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 10.8);
+      tl.to("#main-s3", { opacity: 0, duration: 0.35 }, 15.1);
+      // Scene 4
+      tl.fromTo("#main-s4-cap", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 15.6);
+      tl.fromTo("#main-s4-a", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 15.9);
+      tl.fromTo("#main-s4-b", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 16.1);
+      tl.fromTo("#main-s4-c", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 16.3);
+      tl.to("#main-s4", { opacity: 0, duration: 0.35 }, 19.6);
+      // Scene 5
+      tl.fromTo("#main-s5-title", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 20.1);
+      tl.fromTo("#main-s5-btn", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.55, ease: "back.out(1.6)" }, 20.6);
+      tl.fromTo("#main-s5-sub", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 21.1);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
