@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>GH-widgets — Your GitHub graph, on your home screen</title>
 <meta name="description" content="GH-widgets puts your GitHub contribution graph on your Android home screen. Free, no sign-in, just your username." />
-<script>document.documentElement.className += " js";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&display=swap" rel="stylesheet" />
@@ -55,7 +54,7 @@
   .btn:active { transform: scale(0.97); }
   .btn.small { padding: 12px 30px; font-size: 17px; }
 
-  .hero { padding: 60px 0 110px; }
+  .hero { padding-top: 60px; padding-bottom: 110px; }
   .hero h1 {
     font-size: clamp(54px, 7.2vw, 108px); font-weight: 800;
     letter-spacing: -0.04em; line-height: 0.98;
@@ -90,7 +89,7 @@
   .dot { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; padding: 0; }
   .dot[aria-pressed="true"] { border-color: var(--ink); }
 
-  section.block { padding: 110px 0; }
+  section.block { padding-top: 110px; padding-bottom: 110px; }
   .sec-head { font-size: var(--step-head); font-weight: 800; letter-spacing: -0.03em; line-height: 1; max-width: 20ch; }
   .sec-sub { color: var(--ink); font-size: var(--step-lead); margin-top: 18px; max-width: 52ch; }
 
@@ -162,17 +161,17 @@
   footer .giant span { color: var(--bright); }
   footer .foot-row { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 50px; color: var(--muted); font-weight: 600; }
   footer .foot-row a:hover { color: var(--ink); }
-  footer .credits { margin-top: 26px; color: var(--ink); font-size: var(--step-small); max-width: 90ch; }
+  footer .credits { margin-top: 26px; color: var(--ink); font-size: var(--step-small); max-width: 60ch; }
 
-  /* Scroll reveals: enhancement only, content is visible without JS */
-  .js .rv { opacity: 0; transform: translateY(28px); }
-  .js .rv.in { opacity: 1; transform: none; transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); }
+  /* Scroll entrances: pure CSS view-timeline, no JS needed */
+  .rv { animation: rv-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-timeline: view(); animation-range: entry 5% cover 28%; }
+  @keyframes rv-in { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+  @supports not (animation-timeline: view()) { .rv { animation: none; } }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     .mask > span { animation: none; }
     .hero .lede, .hero-actions, .hero .meta, .widget-stage { animation: none; }
-    .js .rv { opacity: 1; transform: none; }
-    .js .rv.in { transition: none; }
+    .rv { animation: none; }
   }
 
   @media (max-width: 900px) {
@@ -188,7 +187,7 @@
     .how-steps .step { min-height: 52vh; }
     .how-steps .step p:first-child { font-size: 24px; }
     .cta-grid { grid-template-columns: 1fr; }
-    section.block { padding: 70px 0; }
+    section.block { padding-top: 70px; padding-bottom: 70px; }
     .stats-field { padding: 44px 26px 54px; }
   }
 </style>
@@ -528,16 +527,6 @@
       });
     }, { rootMargin: "-40% 0px -40% 0px" });
     steps.forEach(function (s) { stepObs.observe(s); });
-
-    var obs = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (en.isIntersecting) { en.target.classList.add("in"); obs.unobserve(en.target); }
-      });
-    }, { threshold: 0.15 });
-    document.querySelectorAll(".rv").forEach(function (el, i) {
-      el.style.transitionDelay = Math.min(i % 4, 3) * 70 + "ms";
-      obs.observe(el);
-    });
   }
 })();
 </script>
