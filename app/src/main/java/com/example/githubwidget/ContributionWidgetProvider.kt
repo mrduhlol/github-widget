@@ -3,6 +3,7 @@ package com.example.githubwidget
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import com.example.githubwidget.data.Repository
 import com.example.githubwidget.widget.RefreshWorker
@@ -18,6 +19,14 @@ import kotlinx.coroutines.launch
  * The class name is kept from v2 so widgets already placed keep working.
  */
 class ContributionWidgetProvider : AppWidgetProvider() {
+
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        if (intent.action == ACTION_REFRESH) {
+            Repository.init(context)
+            RefreshWorker.runOnce(context)
+        }
+    }
 
     override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) {
         paint(context, ids)
@@ -46,5 +55,9 @@ class ContributionWidgetProvider : AppWidgetProvider() {
                 pending.finish()
             }
         }
+    }
+
+    companion object {
+        const val ACTION_REFRESH = "com.example.githubwidget.action.REFRESH"
     }
 }

@@ -49,6 +49,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -59,6 +60,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.githubwidget.data.AppUpdate
+import com.example.githubwidget.data.AppUpdateInfo
 import com.example.githubwidget.data.RefreshState
 import com.example.githubwidget.data.Repository
 import com.example.githubwidget.ui.components.AddWidgetHelpSheet
@@ -73,6 +76,7 @@ import com.example.githubwidget.ui.components.SegmentedChoice
 import com.example.githubwidget.ui.components.WidgetPinning
 import com.example.githubwidget.ui.theme.AppTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private const val PROJECT_URL = "https://github.com/mrduhlol/github-widget"
 
@@ -256,6 +260,7 @@ fun SettingsScreen(onChangeAccount: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 Hairline()
                 Spacer(Modifier.height(4.dp))
+                UpdateCheckRow(version)
                 NavRow(
                     title = "Project page",
                     subtitle = "Source code and feedback",
@@ -309,6 +314,84 @@ fun SettingsScreen(onChangeAccount: () -> Unit) {
                 Repository.signOut()
             },
             onDismiss = { confirmSignOut = false },
+        )
+    }
+}
+
+// ------------------------------------------------------------------ app update
+
+/** "Check for updates" row: compares the installed version with the latest GitHub Release. */
+@Composable
+private fun UpdateCheckRow(currentVersion: String?) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var checking by rememberSaveable { mutableStateOf(false) }
+    var available by remember { mutableStateOf<AppUpdateInfo?>(null) }
+    var status by rememberSaveable { mutableStateOf<String?>(null) }
+    var showDialog by rememberSaveable { mutableStateOf(false) }
+
+    NavRow(
+        title = "Check for updates",
+        subtitle = when {
+            checking -> "Checking…"
+            available != null -> "Version ${available!!.latestVersion} available"
+            status != null -> status
+            currentVersion != null -> "Version $currentVersion · Tap to check"
+            else -> "Tap to check"
+        },
+        icon = AppIcons.Download,
+        onClick = {
+            if (checking) return@NavRow
+            checking = true
+            status = null
+            scope.launch {
+                AppUpdate.check(context)
+                    .onSuccess { info ->
+                        checking = false
+                        if (info != null) {
+                            available = info
+                            showDialog = true
+                        } else {
+                            available = null
+                            status = "You're up to date"
+                        }
+                    }
+                    .onFailure {
+                        checking = false
+                        status = "Couldn't check — try again later"
+                    }
+            }
+        },
+        trailing = if (checking) {
+            {
+                CircularProgressIndicator(
+                    Modifier.padding(end = 4.dp).size(20.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = 2.dp,
+                )
+            }
+        } else {
+            null
+        },
+    )
+
+    val info = available
+    if (showDialog && info != null) {
+        ConfirmDialog(
+            title = "Update available?",
+            body = "Version ${info.latestVersion} is out" +
+                (if (currentVersion != null) " (you have $currentVersion)" else "") +
+                ". Download the APK and install it to update.",
+            confirm = "Download",
+            onConfirm = {
+                showDialog = false
+                AppUpdate.markPrompted(context, info.latestVersion)
+                openUrl(context, info.downloadUrl)
+            },
+            onDismiss = {
+                showDialog = false
+                AppUpdate.markPrompted(context, info.latestVersion)
+            },
         )
     }
 }

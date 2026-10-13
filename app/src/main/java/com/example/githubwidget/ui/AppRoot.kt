@@ -1,5 +1,8 @@
 package com.example.githubwidget.ui
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -18,14 +22,20 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import com.example.githubwidget.data.AppUpdate
+import com.example.githubwidget.data.AppUpdateInfo
 import com.example.githubwidget.data.Repository
 import com.example.githubwidget.ui.components.AppIcons
 import com.example.githubwidget.ui.design.DesignScreen
@@ -47,9 +57,30 @@ enum class Tab(val label: String, val icon: ImageVector) {
  */
 @Composable
 fun AppRoot() {
+    val context = LocalContext.current
     val username by Repository.username.collectAsState()
     var changingAccount by rememberSaveable { mutableStateOf(false) }
     var tab by rememberSaveable { mutableStateOf(Tab.WIDGET) }
+
+    // Auto-check GitHub Releases at most once a day; pops the update dialog itself.
+    var autoInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
+    var showAutoDialog by remember { mutableStateOf(false) }
+    val installedVersion = remember { AppUpdate.currentVersion(context) }
+    LaunchedEffect(Unit) {
+        if (AppUpdate.shouldAutoCheck(context)) {
+            AppUpdate.check(context)
+                .onSuccess { info ->
+                    AppUpdate.markChecked(context)
+                    if (info != null && !AppUpdate.wasPrompted(context, info.latestVersion)) {
+                        autoInfo = info
+                        showAutoDialog = true
+                    }
+                }
+                .onFailure {
+                    // Stay silent; the next launch tries again.
+                }
+        }
+    }
 
     val showOnboarding = username.isBlank() || changingAccount
     Crossfade(showOnboarding, label = "root") { onboarding ->
@@ -65,6 +96,59 @@ fun AppRoot() {
         } else {
             MainTabs(tab, onTab = { tab = it }, onChangeAccount = { changingAccount = true })
         }
+    }
+
+    val info = autoInfo
+    if (showAutoDialog && info != null) {
+        val current = installedVersion
+        AlertDialog(
+            onDismissRequest = {
+                showAutoDialog = false
+                AppUpdate.markPrompted(context, info.latestVersion)
+            },
+            containerColor = AppTheme.colors.card,
+            shape = MaterialTheme.shapes.large,
+            title = {
+                Text(
+                    "Update available",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = AppTheme.colors.textPrimary,
+                )
+            },
+            text = {
+                Text(
+                    "Version ${info.latestVersion} is out" +
+                        (if (current != null) " (you have $current)" else "") +
+                        ". Download the APK and install it to update.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AppTheme.colors.textSecondary,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showAutoDialog = false
+                    AppUpdate.markPrompted(context, info.latestVersion)
+                    try {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse(info.downloadUrl))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                        )
+                    } catch (_: ActivityNotFoundException) {
+                        // No browser installed; nothing sensible to do.
+                    }
+                }) {
+                    Text("Download", style = MaterialTheme.typography.labelLarge)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showAutoDialog = false
+                    AppUpdate.markPrompted(context, info.latestVersion)
+                }) {
+                    Text("Later", style = MaterialTheme.typography.labelLarge, color = AppTheme.colors.textSecondary)
+                }
+            },
+        )
     }
 }
 

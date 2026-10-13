@@ -21,4 +21,16 @@
         android:contentDescription="@string/widget_label"
         android:scaleType="fitXY"
         android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/widget_refresh"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="8dp"
+        android:background="@drawable/widget_refresh_bg"
+        android:contentDescription="@string/widget_refresh_desc"
+        android:padding="7dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_refresh" />
 </FrameLayout>

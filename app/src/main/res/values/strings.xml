@@ -2,4 +2,5 @@
     <string name="app_name">GH Widgets</string>
     <string name="widget_label">GitHub contributions</string>
     <string name="widget_desc">Your GitHub contribution graph. Resize it to see more weeks.</string>
+    <string name="widget_refresh_desc">Refresh</string>
 </resources>

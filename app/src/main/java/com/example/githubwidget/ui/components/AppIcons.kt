@@ -42,9 +42,16 @@ object AppIcons {
         )
     }
 
+    /** Arrow pointing down into a tray — downloads / app updates. */
+    val Download: ImageVector by lazy {
+        icon(
+            "Download",
+            "M19,9h-4V3H9v6H5l7,7 7,-7zM5,18v2h14v-2H5z",
+        )
+    }
+
     /** Small contribution grid, used as a decorative mark. */
-    val Graph: ImageVector by lazy {
-        val cells = buildList {
+    val Graph: ImageVector by lazy {        val cells = buildList {
             for (r in 0..2) for (c in 0..2) {
                 val x = 3 + c * 6.5f
                 val y = 3 + r * 6.5f
