@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>GH-widgets — Your GitHub graph, on your home screen</title>
 <meta name="description" content="GH-widgets puts your GitHub contribution graph on your Android home screen. Free, no sign-in, just your username." />
+<script>document.documentElement.className += " js";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&display=swap" rel="stylesheet" />
@@ -18,7 +19,6 @@
     --accent: #238636;
     --accent-ink: #ffffff;
     --bright: #39d353;
-    --g0: #161b22; --g1: #0e4429; --g2: #006d32; --g3: #26a641; --g4: #39d353;
     --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
     --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
     --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
@@ -40,7 +40,6 @@
 
   .wrap { padding-left: var(--margin); padding-right: var(--margin); max-width: 1440px; margin: 0 auto; }
 
-  /* Navigation: plain bar */
   nav { display: flex; align-items: center; justify-content: space-between; padding: 28px var(--margin); max-width: 1440px; margin: 0 auto; }
   .wordmark { font-weight: 800; font-size: 22px; letter-spacing: -0.02em; text-decoration: none; }
   .wordmark span { color: var(--bright); }
@@ -50,28 +49,30 @@
   .btn {
     display: inline-block; background: var(--accent); color: var(--accent-ink);
     font-weight: 800; text-decoration: none; border: 0; cursor: pointer;
-    padding: 18px 46px; border-radius: 999px; font-size: 20px; min-height: 44px;
+    padding: 18px 46px; border-radius: 999px; font-size: 19px; min-height: 44px;
   }
   .btn:hover { background: #2ea043; }
   .btn:active { transform: scale(0.97); }
   .btn.small { padding: 12px 30px; font-size: 17px; }
 
-  /* Hero */
-  .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; padding: 70px 0 120px; }
+  .hero { padding: 60px 0 110px; }
   .hero h1 {
-    font-size: clamp(64px, 7vw, 118px); font-weight: 800;
-    letter-spacing: -0.04em; line-height: 0.95;
+    font-size: clamp(54px, 7.2vw, 108px); font-weight: 800;
+    letter-spacing: -0.04em; line-height: 0.98;
   }
   .mask { display: block; overflow: hidden; }
-  .mask > span { display: block; }
-  .hero .lede { font-size: var(--step-lead); color: var(--muted); max-width: 34ch; margin: 30px 0 40px; }
-  .hero .meta { margin-top: 26px; color: var(--muted); font-size: var(--step-small); font-weight: 600; }
-  .hero-actions { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
+  .mask > span { display: block; animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .mask:nth-child(2) > span { animation-delay: 0.14s; }
+  @keyframes rise { from { transform: translateY(110%); } to { transform: none; } }
+  .hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; margin-top: 56px; }
+  .hero .lede { font-size: var(--step-lead); color: var(--ink); max-width: 34ch; margin-bottom: 40px; animation: fadeup 0.7s ease 0.35s both; }
+  .hero-actions { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; animation: fadeup 0.7s ease 0.45s both; }
+  .hero .meta { margin-top: 26px; color: var(--muted); font-size: var(--step-small); font-weight: 600; animation: fadeup 0.7s ease 0.55s both; }
   .ghost-link { color: var(--muted); font-weight: 600; }
   .ghost-link:hover { color: var(--ink); }
+  @keyframes fadeup { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
 
-  /* Live widget fragment (product UI, real size) */
-  .widget-stage { background: var(--surface); border-radius: var(--radius); padding: 48px 40px; }
+  .widget-stage { background: var(--surface); border-radius: var(--radius); padding: 48px 40px; animation: fadeup 0.8s ease 0.6s both; }
   .widget { background: var(--bg); border-radius: 20px; padding: 30px 28px; min-height: 300px; }
   .widget .w-name { font-weight: 800; font-size: 24px; margin-bottom: 18px; }
   .widget .w-graph { display: grid; grid-template-rows: repeat(7, 15px); grid-auto-flow: column; gap: 4px; margin-bottom: 20px; }
@@ -91,9 +92,8 @@
 
   section.block { padding: 110px 0; }
   .sec-head { font-size: var(--step-head); font-weight: 800; letter-spacing: -0.03em; line-height: 1; max-width: 20ch; }
-  .sec-sub { color: var(--muted); font-size: var(--step-lead); margin-top: 18px; max-width: 52ch; }
+  .sec-sub { color: var(--ink); font-size: var(--step-lead); margin-top: 18px; max-width: 52ch; }
 
-  /* Showcase panel */
   .demo-panel { background: var(--surface); border-radius: var(--radius); margin-top: 56px; display: grid; grid-template-columns: 62fr 38fr; overflow: hidden; }
   .demo-left { padding: 56px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
   .demo-left .widget { width: 100%; max-width: 520px; }
@@ -111,23 +111,24 @@
   .clip-block video { width: 100%; border-radius: var(--radius); display: block; background: #000; }
   .clip-block p { color: var(--muted); margin-top: 16px; font-size: var(--step-small); font-weight: 600; }
 
-  /* How it works: pinned fragment + statements */
   .how-grid { display: grid; grid-template-columns: 5fr 7fr; gap: 60px; margin-top: 56px; align-items: start; }
   .how-steps .step { min-height: 62vh; display: flex; flex-direction: column; justify-content: center; }
   .how-steps .step p:first-child { font-size: clamp(26px, 2.4vw, 34px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; max-width: 16ch; }
-  .how-steps .step p:last-child { color: var(--muted); margin-top: 14px; max-width: 38ch; }
+  .how-steps .step p:last-child { color: var(--ink); margin-top: 14px; max-width: 38ch; }
   .how-steps .step { color: var(--muted); }
   .how-steps .step.active { color: var(--ink); }
-  .how-steps .step.active p:last-child { color: var(--muted); }
   .how-stage { position: sticky; top: 12vh; background: var(--surface); border-radius: var(--radius); padding: 56px; min-height: 480px; display: flex; align-items: center; justify-content: center; }
   .how-state { display: none; width: 100%; max-width: 420px; }
   .how-state.on { display: block; }
-  .field { background: var(--bg); border-radius: 16px; padding: 22px 24px; font-size: 20px; color: var(--muted); font-weight: 600; }
+  .field { background: var(--bg); border-radius: 16px; padding: 22px 24px; font-size: 19px; color: var(--muted); font-weight: 600; }
   .field.filled { color: var(--ink); }
-  .confirm { margin-top: 16px; background: var(--surface-2); border-radius: 16px; padding: 20px 24px; font-weight: 600; }
+  .confirm { margin-top: 16px; background: var(--surface-2); border-radius: 16px; padding: 20px 24px; font-weight: 600; font-size: 19px; }
   .confirm b { color: var(--bright); }
 
-  /* Feature bands */
+  .photoband { margin-top: 80px; }
+  .photoband img { width: 100%; height: clamp(320px, 44vw, 560px); object-fit: cover; border-radius: var(--radius); display: block; }
+  .photoband p { color: var(--muted); margin-top: 16px; font-size: var(--step-small); font-weight: 600; }
+
   .bands { margin-top: 20px; }
   .band { padding: 44px var(--margin); }
   .band-inner { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: center; }
@@ -140,47 +141,45 @@
   .band .toggle::after { width: 30px; height: 30px; top: 5px; left: 5px; }
   .band .toggle[aria-pressed="true"]::after { left: 37px; }
 
-  /* Stats slider */
   .stats-field { background: var(--surface); border-radius: var(--radius); margin-top: 56px; padding: 70px 56px 80px; }
   .stats-field h3 { font-size: clamp(28px, 3vw, 42px); font-weight: 800; letter-spacing: -0.02em; }
   .slider-row { display: flex; align-items: center; gap: 26px; margin-top: 40px; max-width: 560px; }
   input[type="range"] { flex: 1; height: 44px; accent-color: var(--bright); }
-  .slider-val { font-weight: 800; font-size: 22px; min-width: 110px; text-align: right; font-variant-numeric: tabular-nums; }
+  .slider-val { font-weight: 800; font-size: 19px; min-width: 110px; text-align: right; font-variant-numeric: tabular-nums; }
   .figure { font-size: clamp(120px, 17vw, 280px); font-weight: 800; letter-spacing: -0.04em; line-height: 0.9; margin-top: 60px; font-variant-numeric: tabular-nums; }
   .figure small { font-size: 0.22em; font-weight: 600; letter-spacing: 0; color: var(--muted); }
-  .working { color: var(--muted); margin-top: 26px; max-width: 46ch; }
+  .working { color: var(--ink); margin-top: 26px; max-width: 46ch; }
 
-  /* CTA */
-  .cta { text-align: left; }
+  .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
   .cta h2 { font-size: clamp(56px, 8vw, 130px); font-weight: 800; letter-spacing: -0.04em; line-height: 0.95; }
-  .cta .btn { margin-top: 44px; font-size: 24px; padding: 22px 64px; }
+  .cta .btn { margin-top: 44px; font-size: 22px; padding: 22px 64px; }
   .cta .meta { margin-top: 26px; color: var(--muted); font-weight: 600; }
-  .cta .links { margin-top: 14px; display: flex; gap: 28px; font-weight: 600; }
+  .cta .links { margin-top: 14px; display: flex; gap: 28px; font-weight: 600; flex-wrap: wrap; }
+  .cta-photo img { width: 100%; height: clamp(380px, 40vw, 620px); object-fit: cover; object-position: top; border-radius: var(--radius); display: block; }
 
-  /* Footer: designed close */
   footer { padding: 130px 0 60px; }
   footer .giant { font-size: clamp(64px, 12.5vw, 220px); font-weight: 800; letter-spacing: -0.05em; line-height: 0.9; }
   footer .giant span { color: var(--bright); }
   footer .foot-row { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 50px; color: var(--muted); font-weight: 600; }
   footer .foot-row a:hover { color: var(--ink); }
+  footer .credits { margin-top: 26px; color: var(--ink); font-size: var(--step-small); max-width: 90ch; }
 
-  /* Motion layer */
-  .mask > span { transform: translateY(110%); }
-  .mask.go > span { transform: none; transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1); }
-  .rv { opacity: 0; transform: translateY(28px); }
-  .rv.in { opacity: 1; transform: none; transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); }
+  /* Scroll reveals: enhancement only, content is visible without JS */
+  .js .rv { opacity: 0; transform: translateY(28px); }
+  .js .rv.in { opacity: 1; transform: none; transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
-    .mask > span { transform: none; }
-    .rv { opacity: 1; transform: none; }
-    .rv.in { transition: none; }
-    .mask.go > span { transition: none; }
+    .mask > span { animation: none; }
+    .hero .lede, .hero-actions, .hero .meta, .widget-stage { animation: none; }
+    .js .rv { opacity: 1; transform: none; }
+    .js .rv.in { transition: none; }
   }
 
   @media (max-width: 900px) {
     .nav-links { display: none; }
-    .hero { grid-template-columns: 1fr; padding: 40px 0 80px; }
-    .hero h1 { font-size: 15vw; }
+    .hero { padding: 40px 0 80px; }
+    .hero h1 { font-size: 8.6vw; }
+    .hero-row { grid-template-columns: 1fr; }
     .demo-panel { grid-template-columns: 1fr; }
     .demo-left { padding: 32px 20px; }
     .demo-right { padding: 28px 24px; }
@@ -188,6 +187,7 @@
     .how-stage { position: sticky; top: 0; min-height: 0; padding: 28px 20px; }
     .how-steps .step { min-height: 52vh; }
     .how-steps .step p:first-child { font-size: 24px; }
+    .cta-grid { grid-template-columns: 1fr; }
     section.block { padding: 70px 0; }
     .stats-field { padding: 44px 26px 54px; }
   }
@@ -207,33 +207,35 @@
 </nav>
 
 <header class="wrap hero">
-  <div>
-    <h1>
-      <span class="mask"><span>Your GitHub graph,</span></span>
-      <span class="mask"><span>on your home screen.</span></span>
-    </h1>
-    <p class="lede rv">GH-widgets puts your contribution graph on your Android home screen. Free, no sign-in, just your username.</p>
-    <div class="hero-actions rv">
-      <a class="btn" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download free</a>
-      <a class="ghost-link" href="https://github.com/mrduhlol/github-widget">Source on GitHub</a>
-    </div>
-    <p class="meta rv">Android 8.0+ · v3.1.1 · about 11 MB</p>
-  </div>
-  <div class="widget-stage rv">
-    <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
-      <div class="w-name" data-part="name">@mrduhlol</div>
-      <div class="w-graph" data-part="graph"></div>
-      <div class="w-bignum" data-part="bignum" hidden>1,248</div>
-      <div class="w-stats" data-part="stats">
-        <div data-stat="total"><b>1,248</b>total</div>
-        <div data-stat="streak"><b>23</b>streak</div>
-        <div data-stat="today"><b>31</b>today</div>
+  <h1>
+    <span class="mask"><span>Your GitHub graph,</span></span>
+    <span class="mask"><span>on your home screen.</span></span>
+  </h1>
+  <div class="hero-row">
+    <div>
+      <p class="lede">GH-widgets puts your contribution graph on your Android home screen. Free, no sign-in, just your username.</p>
+      <div class="hero-actions">
+        <a class="btn" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download free</a>
+        <a class="ghost-link" href="https://github.com/mrduhlol/github-widget">Source on GitHub</a>
       </div>
+      <p class="meta">Android 8.0+ · v3.1.1 · about 11 MB</p>
     </div>
-    <div class="chips" role="group" aria-label="Widget style">
-      <button class="chip" data-hero-style="classic" aria-pressed="true">Classic</button>
-      <button class="chip" data-hero-style="graph" aria-pressed="false">Graph only</button>
-      <button class="chip" data-hero-style="numbers" aria-pressed="false">Numbers</button>
+    <div class="widget-stage">
+      <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
+        <div class="w-name" data-part="name">@mrduhlol</div>
+        <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
+        <div class="w-bignum" data-part="bignum" hidden>1,248</div>
+        <div class="w-stats" data-part="stats">
+          <div data-stat="total"><b>1,248</b>total</div>
+          <div data-stat="streak"><b>23</b>streak</div>
+          <div data-stat="today"><b>31</b>today</div>
+        </div>
+      </div>
+      <div class="chips" role="group" aria-label="Widget style">
+        <button class="chip" data-hero-style="classic" aria-pressed="true">Classic</button>
+        <button class="chip" data-hero-style="graph" aria-pressed="false">Graph only</button>
+        <button class="chip" data-hero-style="numbers" aria-pressed="false">Numbers</button>
+      </div>
     </div>
   </div>
 </header>
@@ -245,7 +247,7 @@
     <div class="demo-left">
       <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
         <div class="w-name" data-part="name">@mrduhlol</div>
-        <div class="w-graph" data-part="graph"></div>
+        <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
         <div class="w-bignum" data-part="bignum" hidden>1,248</div>
         <div class="w-stats" data-part="stats">
           <div data-stat="total"><b>1,248</b>total</div>
@@ -302,7 +304,7 @@
       </div>
     </div>
     <div class="how-stage rv">
-      <div class="how-state" data-how-state="1">
+      <div class="how-state on" data-how-state="1">
         <div class="field">github.com/…</div>
       </div>
       <div class="how-state" data-how-state="2">
@@ -312,7 +314,7 @@
       <div class="how-state" data-how-state="3">
         <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
           <div class="w-name" data-part="name">@mrduhlol</div>
-          <div class="w-graph" data-part="graph"></div>
+          <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
           <div class="w-stats" data-part="stats">
             <div><b>1,248</b>total</div>
             <div><b>23</b>streak</div>
@@ -321,6 +323,10 @@
         </div>
       </div>
     </div>
+  </div>
+  <div class="photoband rv">
+    <img src="assets/coffee-android-tablet-phone-location.webp" width="1024" height="683" alt="A phone and a tablet resting on a desk next to a coffee" />
+    <p>Works wherever your phone is.</p>
   </div>
 </section>
 
@@ -374,13 +380,20 @@
 </section>
 
 <section class="wrap block cta" id="download">
-  <h2 class="rv">Get GH-widgets.</h2>
-  <div class="rv"><a class="btn" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download free APK</a></div>
-  <p class="meta rv">Android 8.0 or newer · v3.1.1 · about 11 MB · signed release</p>
-  <div class="links rv">
-    <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/releases">All releases</a>
-    <a class="ghost-link" href="https://github.com/mrduhlol/github-widget">Source on GitHub</a>
-    <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/issues">Report a bug</a>
+  <div class="cta-grid">
+    <div>
+      <h2 class="rv">Get GH-widgets.</h2>
+      <div class="rv"><a class="btn" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download free APK</a></div>
+      <p class="meta rv">Android 8.0 or newer · v3.1.1 · about 11 MB · signed release</p>
+      <div class="links rv">
+        <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/releases">All releases</a>
+        <a class="ghost-link" href="https://github.com/mrduhlol/github-widget">Source on GitHub</a>
+        <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/issues">Report a bug</a>
+      </div>
+    </div>
+    <div class="cta-photo rv">
+      <img src="assets/hand-holding-smartphone.jpg" width="1024" height="1365" alt="A hand holding an Android phone" />
+    </div>
   </div>
 </section>
 
@@ -390,11 +403,11 @@
     <span>Free. No sign-in. Just your username.</span>
     <span>v3.1.1 · MIT licensed · Made from a contribution graph</span>
   </div>
+  <p class="credits">Pictures: <a href="https://www.rawpixel.com/image/6113567/photo-image-phone-public-domain-logo">“Coffee Android Tablet Phone, location”</a>, <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>, via rawpixel; <a href="https://commons.wikimedia.org/w/index.php?curid=104077917">“Hand holding Smartphone”</a> by Mictlancihuatl, <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>, via Wikimedia Commons. Product interface fragments are drawn in code from the app itself.</p>
 </footer>
 
 <script>
 (function () {
-  // Deterministic seeded graph fill (same data every visit).
   function mulberry32(seed) {
     return function () {
       seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
@@ -422,16 +435,6 @@
     var big = widget.querySelector("[data-part='bignum']");
     if (big) big.style.color = pal[4];
   }
-  function buildGraphs(scope) {
-    scope.querySelectorAll("[data-part='graph']").forEach(function (g) {
-      if (g.children.length) return;
-      for (var i = 0; i < 16 * 7; i++) {
-        var d = document.createElement("div");
-        d.className = "w-cell";
-        g.appendChild(d);
-      }
-    });
-  }
   function applyStyle(widget, style) {
     widget.dataset.style = style;
     var showGraph = style !== "numbers";
@@ -445,7 +448,6 @@
     paint(widget);
   }
   document.querySelectorAll("[data-widget]").forEach(function (w) {
-    buildGraphs(w);
     applyStyle(w, w.dataset.style || "classic");
   });
 
@@ -453,7 +455,6 @@
     group.querySelectorAll("[aria-pressed]").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
     btn.setAttribute("aria-pressed", "true");
   }
-  // Hero chips
   var heroWidget = document.querySelector("header [data-widget]");
   document.querySelectorAll("[data-hero-style]").forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -461,7 +462,6 @@
       applyStyle(heroWidget, btn.dataset.heroStyle);
     });
   });
-  // Demo panel controls
   var demoWidget = document.querySelector(".demo-panel [data-widget]");
   document.querySelectorAll("[data-demo-style]").forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -491,7 +491,6 @@
     });
   });
 
-  // Feature bands
   document.querySelectorAll(".band .toggle").forEach(function (btn) {
     function flip() {
       var on = btn.getAttribute("aria-pressed") !== "true";
@@ -504,7 +503,6 @@
     });
   });
 
-  // Stats slider: weeks fall out of the width.
   var width = document.getElementById("width");
   var widthVal = document.getElementById("width-val");
   var weeks = document.getElementById("weeks");
@@ -516,7 +514,6 @@
   width.addEventListener("input", calc);
   calc();
 
-  // How-it-works pinned states
   var states = Array.prototype.slice.call(document.querySelectorAll("[data-how-state]"));
   var steps = Array.prototype.slice.call(document.querySelectorAll(".how-steps .step"));
   function setHow(n) {
@@ -531,15 +528,7 @@
       });
     }, { rootMargin: "-40% 0px -40% 0px" });
     steps.forEach(function (s) { stepObs.observe(s); });
-  }
 
-  // Entrance motion
-  function reveal() {
-    document.querySelectorAll(".mask").forEach(function (m) { m.classList.add("go"); });
-    if (!("IntersectionObserver" in window)) {
-      document.querySelectorAll(".rv").forEach(function (el) { el.classList.add("in"); });
-      return;
-    }
     var obs = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
         if (en.isIntersecting) { en.target.classList.add("in"); obs.unobserve(en.target); }
@@ -550,7 +539,6 @@
       obs.observe(el);
     });
   }
-  reveal();
 })();
 </script>
 </body>
