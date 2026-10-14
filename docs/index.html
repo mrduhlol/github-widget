@@ -113,6 +113,7 @@
   .hero h1,.sec-head,.band p.sentence,.cta h2,footer .giant,.step-card .step-k { text-wrap: balance; }
 
   .demo-panel { background: var(--surface); border-radius: var(--radius); margin-top: 56px; display: grid; grid-template-columns: 62fr 38fr; overflow: hidden; }
+  .demo-panel > * { min-width: 0; }
   .demo-left { padding: 56px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
   .demo-left .widget { width: 100%; max-width: 520px; }
   .demo-right { padding: 48px 40px; display: flex; flex-direction: column; gap: 6px; }
@@ -133,6 +134,10 @@
   .step-card { background: var(--surface); border-radius: var(--radius); padding: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
   .step-card .step-k { font-size: clamp(26px, 2.4vw, 34px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
   .step-card .step-k + p { color: var(--ink); margin-top: 14px; max-width: 38ch; }
+  .field { background: var(--bg); border-radius: 16px; padding: 22px 24px; font-size: 19px; color: var(--muted); font-weight: 600; }
+  .field.filled { color: var(--ink); }
+  input.field { width: 100%; font: inherit; color: var(--ink); border: 0; }
+  input.field::placeholder { color: var(--muted); }
   .confirm b { color: var(--bright); }
 
   .photoband { margin-top: 80px; }
@@ -149,17 +154,12 @@
   .band.on { background: var(--surface); }
   .band.on p.sentence { color: var(--ink); }
 
-  .band .toggle { width: 72px; height: 40px; }
-  .band .toggle::after { width: 30px; height: 30px; top: 5px; left: 5px; }
-  .band .toggle[aria-pressed="true"]::after { left: 37px; }
+  .band .disc { width: 46px; height: 46px; border-radius: 50%; background: var(--surface-2); border: 0; cursor: pointer; position: relative; flex: none; transition: background-color 150ms; }
+  .band .disc::after { content: ""; position: absolute; left: 15px; top: 12px; width: 12px; height: 12px; border-right: 3px solid var(--muted); border-bottom: 3px solid var(--muted); transform: rotate(45deg); transition: transform 180ms cubic-bezier(0.32,0.72,0,1), border-color 150ms; }
+  .band .disc[aria-pressed="true"] { background: var(--accent); }
+  .band .disc[aria-pressed="true"]::after { transform: rotate(225deg); border-color: #fff; }
 
-  .stats-field { background: var(--surface); border-radius: var(--radius); margin-top: 56px; padding: 70px 56px 80px; }
-  .stats-field h3 { font-size: clamp(28px, 3vw, 42px); font-weight: 800; letter-spacing: -0.02em; }
-  .widths { display: grid; gap: 30px; margin-top: 44px; max-width: 640px; }
-  .wrow p { font-size: 19px; }
-  .wrow p b { font-weight: 800; }
-  .wbar { height: 18px; border-radius: 999px; background: var(--surface-2); margin-top: 12px; overflow: hidden; }
-  .wbar span { display: block; height: 100%; background: var(--bright); border-radius: 999px; }
+
   .working { color: var(--ink); margin-top: 26px; max-width: 46ch; }
 
   .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
@@ -187,21 +187,24 @@
     .rv { animation: none; }
     .widget.pop { animation: none; }
     .band .consequence { transition: none; }
+    .band .disc,.band .disc::after { transition: none; }
   }
 
   @media (max-width: 900px) {
     .nav-links { display: none; }
-    .hero { padding: 40px 0 80px; }
+    .hero { padding-top: 40px; padding-bottom: 80px; }
     .hero h1 { font-size: 8.4vw; }
     .hero-row { grid-template-columns: 1fr; }
     .hero-actions { flex-direction: column; align-items: flex-start; }
     .demo-panel { grid-template-columns: 1fr; }
     .demo-left { padding: 32px 20px; }
     .demo-right { padding: 28px 24px; }
+    .widget { padding: 22px 20px; }
+    .widget .w-graph { grid-template-rows: repeat(7, 12px); }
+    .widget .w-cell { width: 12px; height: 12px; }
     .cta-grid { grid-template-columns: 1fr; }
     .step-card { grid-template-columns: 1fr; padding: 32px 24px; }
     section.block { padding-top: 70px; padding-bottom: 70px; }
-    .stats-field { padding: 44px 26px 54px; }
   }
 </style>
 </head>
@@ -232,6 +235,7 @@
         <a class="ghost-link" href="https://github.com/mrduhlol/github-widget">Source on GitHub</a>
       </div>
       <p class="meta">Android 8.0+ · v3.1.1 · about 11 MB</p>
+      <p class="meta">Installs from the GitHub releases page — allow unknown apps once. <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/releases">All releases</a></p>
     </div>
     <div class="widget-stage">
       <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
@@ -243,11 +247,6 @@
           <div data-stat="streak"><b>23</b>streak</div>
           <div data-stat="today"><b>31</b>today</div>
         </div>
-      </div>
-      <div class="chips" role="group" aria-label="Widget style">
-        <button class="chip" data-hero-style="classic" aria-pressed="true">Classic</button>
-        <button class="chip" data-hero-style="graph" aria-pressed="false">Graph only</button>
-        <button class="chip" data-hero-style="numbers" aria-pressed="false">Numbers</button>
       </div>
     </div>
   </div>
@@ -303,7 +302,7 @@
   <div class="steps">
     <div class="step-card rv">
       <div><p class="step-k">Type your username.</p><p>Paste your profile link if that is easier. Nothing else is asked.</p></div>
-      <div class="field">github.com/…</div>
+      <input class="field" id="try-user" maxlength="39" value="" placeholder="github.com/…" aria-label="Your GitHub username" />
     </div>
     <div class="step-card rv">
       <div><p class="step-k">Confirm it is you.</p><p>Your photo and graph show up so you know it found the right person.</p></div>
@@ -334,46 +333,39 @@
     <div class="band on">
       <div class="band-inner">
         <div><p class="sentence">No sign-in, no token.</p><p class="consequence"><span>Your username is the only thing the app ever asks for.</span></p></div>
-        <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
+        <button class="disc" aria-pressed="true" aria-label="Toggle section"></button>
       </div>
     </div>
     <div class="band on">
       <div class="band-inner">
         <div><p class="sentence">Works offline.</p><p class="consequence"><span>The last graph stays on screen and refreshes every 1 to 12 hours, your call.</span></p></div>
-        <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
+        <button class="disc" aria-pressed="true" aria-label="Toggle section"></button>
       </div>
     </div>
     <div class="band on">
       <div class="band-inner">
         <div><p class="sentence">Nine palettes, plus your own color.</p><p class="consequence"><span>Match wallpaper follows your phone on Android 12 and newer.</span></p></div>
-        <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
+        <button class="disc" aria-pressed="true" aria-label="Toggle section"></button>
       </div>
     </div>
     <div class="band on">
       <div class="band-inner">
         <div><p class="sentence">Fits any size.</p><p class="consequence"><span>The graph fills the widget. Make it wider to see more weeks.</span></p></div>
-        <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
+        <button class="disc" aria-pressed="true" aria-label="Toggle section"></button>
       </div>
     </div>
     <div class="band on">
       <div class="band-inner">
         <div><p class="sentence">Stats worth glancing at.</p><p class="consequence"><span>Streaks, best day, weekly and monthly charts, plain-language insights.</span></p></div>
-        <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
+        <button class="disc" aria-pressed="true" aria-label="Toggle section"></button>
       </div>
     </div>
-  </div>
-</section>
-
-<section class="wrap block">
-  <h2 class="sec-head rv">Wide enough for history.</h2>
-  <div class="stats-field rv">
-    <h3>The wider it gets, the more it shows.</h3>
-    <div class="widths">
-      <div class="wrow"><p><b>3 weeks</b> — a small widget at 180 dp</p><div class="wbar"><span style="width:25%"></span></div></div>
-      <div class="wrow"><p><b>7 weeks</b> — the classic size at 320 dp</p><div class="wbar"><span style="width:58%"></span></div></div>
-      <div class="wrow"><p><b>12 weeks</b> — wide on a tablet at 480 dp</p><div class="wbar"><span style="width:100%"></span></div></div>
+    <div class="band on">
+      <div class="band-inner">
+        <div><p class="sentence">Resizes from phone to tablet.</p><p class="consequence"><span>Wider shows more weeks — 3 at 180 dp, 7 at 320, 12 at 480.</span></p></div>
+        <button class="disc" aria-pressed="true" aria-label="Toggle section"></button>
+      </div>
     </div>
-    <p class="working">Each week of graph needs about 33 pixels after padding, so the visible weeks fall straight out of the width you give it.</p>
   </div>
 </section>
 
@@ -383,6 +375,7 @@
       <h2 class="rv">Get GH-widgets.</h2>
       <div class="rv"><a class="btn" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download free APK</a></div>
       <p class="meta rv">Android 8.0 or newer · v3.1.1 · about 11 MB · signed release</p>
+      <p class="meta rv">Allow unknown apps once when Android asks — that is the whole install.</p>
       <div class="links rv">
         <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/releases">All releases</a>
         <a class="ghost-link" href="https://github.com/mrduhlol/github-widget">Source on GitHub</a>
@@ -454,13 +447,6 @@
     group.querySelectorAll("[aria-pressed]").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
     btn.setAttribute("aria-pressed", "true");
   }
-  var heroWidget = document.querySelector("header [data-widget]");
-  document.querySelectorAll("[data-hero-style]").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      press(btn.parentElement, btn);
-      applyStyle(heroWidget, btn.dataset.heroStyle);
-    });
-  });
   var demoWidget = document.querySelector(".demo-panel [data-widget]");
   document.querySelectorAll("[data-demo-style]").forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -489,8 +475,16 @@
       }
     });
   });
+  var tryUser = document.getElementById("try-user");
+  var stepName = document.querySelector(".step-card [data-widget] [data-part='name']");
+  if (tryUser && stepName) {
+    tryUser.addEventListener("input", function () {
+      var v = tryUser.value.trim().replace(/^@/, "");
+      stepName.textContent = "@" + (v || "mrduhlol");
+    });
+  }
 
-  document.querySelectorAll(".band .toggle").forEach(function (btn) {
+  document.querySelectorAll(".band .disc").forEach(function (btn) {
     function flip() {
       var on = btn.getAttribute("aria-pressed") !== "true";
       btn.setAttribute("aria-pressed", String(on));
