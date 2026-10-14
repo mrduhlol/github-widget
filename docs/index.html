@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>GH-widgets — Your GitHub graph, on your home screen</title>
 <meta name="description" content="GH-widgets puts your GitHub contribution graph on your Android home screen. Free, no sign-in, just your username." />
+<meta name="theme-color" content="#0d1117" />
+<meta property="og:title" content="GH-widgets — Your GitHub graph, on your home screen" />
+<meta property="og:description" content="Free Android widget. No sign-in, just your username." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&display=swap" rel="stylesheet" />
@@ -36,6 +41,8 @@
   ::selection { background: var(--bright); color: #0d1117; }
   a { color: inherit; }
   :focus-visible { outline: 3px solid var(--bright); outline-offset: 3px; }
+  .skip { position: absolute; left: -9999px; top: 0; background: var(--bright); color: #0d1117; font-weight: 800; padding: 12px 24px; border-radius: 0 0 12px 0; z-index: 99; }
+  .skip:focus { left: 0; }
 
   .wrap { padding-left: var(--margin); padding-right: var(--margin); max-width: 1440px; margin: 0 auto; }
 
@@ -44,14 +51,22 @@
   .wordmark span { color: var(--bright); }
   .nav-links { display: flex; gap: 34px; }
   .nav-links a { text-decoration: none; color: var(--muted); font-weight: 600; font-size: 17px; }
+  @media (hover: hover) and (pointer: fine) {
   .nav-links a:hover { color: var(--ink); }
+  .btn:hover { background: #2ea043; }
+  .ghost-link:hover { color: var(--ink); }
+  footer .foot-row a:hover { color: var(--ink); }
+  }
+
   .btn {
     display: inline-block; background: var(--accent); color: var(--accent-ink);
     font-weight: 800; text-decoration: none; border: 0; cursor: pointer;
     padding: 18px 46px; border-radius: 999px; font-size: 19px; min-height: 44px;
   }
-  .btn:hover { background: #2ea043; }
+
   .btn:active { transform: scale(0.97); }
+  .btn,.chip,.dot,.toggle { transition: transform 140ms cubic-bezier(0.23,1,0.32,1), background-color 150ms cubic-bezier(0.23,1,0.32,1), border-color 150ms; }
+  .chip:active,.dot:active { transform: scale(0.97); }
   .btn.small { padding: 12px 30px; font-size: 17px; }
 
   .hero { padding-top: 60px; padding-bottom: 110px; }
@@ -69,7 +84,7 @@
   .hero-actions { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; animation: fadeup 0.7s ease 0.45s both; }
   .hero .meta { margin-top: 26px; color: var(--muted); font-size: var(--step-small); font-weight: 600; animation: fadeup 0.7s ease 0.55s both; }
   .ghost-link { color: var(--muted); font-weight: 600; }
-  .ghost-link:hover { color: var(--ink); }
+
   @keyframes fadeup { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
 
   .widget-stage { background: var(--surface); border-radius: var(--radius); padding: 48px 40px; animation: fadeup 0.8s ease 0.6s both; }
@@ -95,6 +110,7 @@
   section.block { padding-top: 110px; padding-bottom: 110px; }
   .sec-head { font-size: var(--step-head); font-weight: 800; letter-spacing: -0.03em; line-height: 1; max-width: 20ch; }
   .sec-sub { color: var(--ink); font-size: var(--step-lead); margin-top: 18px; max-width: 52ch; }
+  .hero h1,.sec-head,.band p.sentence,.cta h2,footer .giant,.step-card .step-k { text-wrap: balance; }
 
   .demo-panel { background: var(--surface); border-radius: var(--radius); margin-top: 56px; display: grid; grid-template-columns: 62fr 38fr; overflow: hidden; }
   .demo-left { padding: 56px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
@@ -103,7 +119,7 @@
   .ctl { display: flex; align-items: center; justify-content: space-between; min-height: 52px; font-weight: 600; font-size: 16px; }
   .ctl .row-label { color: var(--muted); }
   .toggle { position: relative; width: 58px; height: 32px; border-radius: 999px; background: var(--surface-2); border: 0; cursor: pointer; flex: none; }
-  .toggle::after { content: ""; position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: var(--muted); }
+  .toggle::after { content: ""; position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: var(--muted); transition: left 180ms cubic-bezier(0.32,0.72,0,1), background-color 180ms; }
   .toggle[aria-pressed="true"] { background: var(--accent); }
   .toggle[aria-pressed="true"]::after { left: 30px; background: #fff; }
   .demo-note { margin-top: 22px; color: var(--muted); font-size: var(--step-small); }
@@ -120,17 +136,19 @@
   .confirm b { color: var(--bright); }
 
   .photoband { margin-top: 80px; }
-  .photoband img { width: 100%; height: clamp(320px, 44vw, 560px); object-fit: cover; border-radius: var(--radius); display: block; }
+  .photoband img { width: 100%; height: clamp(320px, 44vw, 560px); object-fit: cover; border-radius: var(--radius); display: block; filter: saturate(.85) brightness(.92); }
   .photoband p { color: var(--muted); margin-top: 16px; font-size: var(--step-small); font-weight: 600; }
 
   .bands { margin-top: 20px; }
   .band { padding: 44px var(--margin); }
   .band-inner { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: center; }
   .band p.sentence { font-size: clamp(28px, 3.2vw, 54px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; color: var(--muted); }
-  .band .consequence { display: none; font-size: 17px; font-weight: 400; color: var(--ink); margin-top: 12px; max-width: 60ch; }
+  .band .consequence { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 220ms cubic-bezier(0.23,1,0.32,1), opacity 200ms; font-size: 17px; font-weight: 400; color: var(--ink); max-width: 60ch; }
+  .band .consequence > span { overflow: hidden; min-height: 0; }
+  .band.on .consequence { grid-template-rows: 1fr; opacity: 1; }
   .band.on { background: var(--surface); }
   .band.on p.sentence { color: var(--ink); }
-  .band.on .consequence { display: block; }
+
   .band .toggle { width: 72px; height: 40px; }
   .band .toggle::after { width: 30px; height: 30px; top: 5px; left: 5px; }
   .band .toggle[aria-pressed="true"]::after { left: 37px; }
@@ -155,7 +173,7 @@
   footer .giant { font-size: clamp(64px, 12.5vw, 220px); font-weight: 800; letter-spacing: -0.05em; line-height: 0.9; }
   footer .giant span { color: var(--bright); }
   footer .foot-row { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 50px; color: var(--muted); font-weight: 600; }
-  footer .foot-row a:hover { color: var(--ink); }
+
   footer .credits { margin-top: 26px; color: var(--ink); font-size: var(--step-small); max-width: 60ch; }
 
   /* Scroll entrances: pure CSS view-timeline, no JS needed */
@@ -168,6 +186,7 @@
     .hero .lede, .hero-actions, .hero .meta, .widget-stage { animation: none; }
     .rv { animation: none; }
     .widget.pop { animation: none; }
+    .band .consequence { transition: none; }
   }
 
   @media (max-width: 900px) {
@@ -187,6 +206,7 @@
 </style>
 </head>
 <body>
+<a class="skip" href="#widget">Skip to content</a>
 
 <nav>
   <a class="wordmark" href="#">GH<span>-</span>widgets</a>
@@ -303,8 +323,8 @@
     </div>
   </div>
   <div class="photoband rv">
-    <img src="assets/coffee-android-tablet-phone-location.webp" width="1024" height="683" alt="A phone and a tablet resting on a desk next to a coffee" />
-    <p>Works wherever your phone is.</p>
+    <img src="assets/coffee-android-tablet-phone-location.webp" width="1024" height="683" alt="A phone and a tablet resting on a desk next to a coffee" loading="lazy" decoding="async" />
+    <p>On the home screen in under a minute.</p>
   </div>
 </section>
 
@@ -313,31 +333,31 @@
   <div class="bands">
     <div class="band on">
       <div class="band-inner">
-        <div><p class="sentence">No sign-in, no token.</p><p class="consequence">Your username is the only thing the app ever asks for.</p></div>
+        <div><p class="sentence">No sign-in, no token.</p><p class="consequence"><span>Your username is the only thing the app ever asks for.</span></p></div>
         <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
       </div>
     </div>
     <div class="band on">
       <div class="band-inner">
-        <div><p class="sentence">Works offline.</p><p class="consequence">The last graph stays on screen and refreshes every 1 to 12 hours, your call.</p></div>
+        <div><p class="sentence">Works offline.</p><p class="consequence"><span>The last graph stays on screen and refreshes every 1 to 12 hours, your call.</span></p></div>
         <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
       </div>
     </div>
     <div class="band on">
       <div class="band-inner">
-        <div><p class="sentence">Nine palettes, plus your own color.</p><p class="consequence">Match wallpaper follows your phone on Android 12 and newer.</p></div>
+        <div><p class="sentence">Nine palettes, plus your own color.</p><p class="consequence"><span>Match wallpaper follows your phone on Android 12 and newer.</span></p></div>
         <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
       </div>
     </div>
     <div class="band on">
       <div class="band-inner">
-        <div><p class="sentence">Fits any size.</p><p class="consequence">The graph fills the widget. Make it wider to see more weeks.</p></div>
+        <div><p class="sentence">Fits any size.</p><p class="consequence"><span>The graph fills the widget. Make it wider to see more weeks.</span></p></div>
         <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
       </div>
     </div>
     <div class="band on">
       <div class="band-inner">
-        <div><p class="sentence">Stats worth glancing at.</p><p class="consequence">Streaks, best day, weekly and monthly charts, plain-language insights.</p></div>
+        <div><p class="sentence">Stats worth glancing at.</p><p class="consequence"><span>Streaks, best day, weekly and monthly charts, plain-language insights.</span></p></div>
         <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
       </div>
     </div>
@@ -370,7 +390,7 @@
       </div>
     </div>
     <div class="cta-photo rv">
-      <img src="assets/hand-holding-smartphone.jpg" width="1024" height="1365" alt="A hand holding an Android phone" />
+      <img src="assets/hand-holding-smartphone.jpg" width="1024" height="1365" alt="A hand holding an Android phone" loading="lazy" decoding="async" />
     </div>
   </div>
 </section>
