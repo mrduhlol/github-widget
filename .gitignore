@@ -17,4 +17,4 @@ node_modules/
 
 # Skill working files (inspector output, downloaded staging assets)
 .taste-skill/
-assets/
+/assets/
