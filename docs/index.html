@@ -46,7 +46,6 @@
   ::selection { background: var(--acc); color: var(--acc-ink); }
   a { color: inherit; }
   :focus-visible { outline: 3px solid var(--acc); outline-offset: 3px; }
-  caret-color: var(--acc);
 
   .wrap { padding-left: var(--margin); padding-right: var(--margin); max-width: 1440px; margin: 0 auto; }
   .micro { font-family: var(--mono); font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
@@ -156,7 +155,7 @@
   .step-card .step-k + p { color: var(--ink); margin-top: 12px; font-size: 17px; }
   .field { background: var(--bg); border: 1px solid var(--line); padding: 18px 20px; font-size: 18px; color: var(--muted); font-weight: 600; font-family: var(--mono); }
   .field.filled { color: var(--ink); }
-  input.field { width: 100%; font: inherit; color: var(--ink); }
+  input.field { width: 100%; font: inherit; color: var(--ink); caret-color: var(--acc); }
   input.field::placeholder { color: var(--muted); }
   .confirm { margin-top: 12px; border: 1px solid var(--line); padding: 16px 20px; font-weight: 600; font-size: 17px; }
   .confirm b { color: var(--acc); }
