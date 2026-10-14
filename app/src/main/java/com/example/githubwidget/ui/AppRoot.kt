@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Settings
@@ -34,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.example.githubwidget.data.AppUpdate
 import com.example.githubwidget.data.AppUpdateInfo
 import com.example.githubwidget.data.Repository
@@ -136,7 +138,7 @@ fun AppRoot() {
                     } catch (_: ActivityNotFoundException) {
                         // No browser installed; nothing sensible to do.
                     }
-                }) {
+                }, modifier = Modifier.heightIn(min = 48.dp)) {
                     Text("Download", style = MaterialTheme.typography.labelLarge)
                 }
             },
@@ -144,7 +146,7 @@ fun AppRoot() {
                 TextButton(onClick = {
                     showAutoDialog = false
                     AppUpdate.markPrompted(context, info.latestVersion)
-                }) {
+                }, modifier = Modifier.heightIn(min = 48.dp)) {
                     Text("Later", style = MaterialTheme.typography.labelLarge, color = AppTheme.colors.textSecondary)
                 }
             },

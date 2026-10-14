@@ -1,5 +1,6 @@
 package com.example.githubwidget.ui.components
 
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -57,12 +58,14 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.githubwidget.data.Repository
 import com.example.githubwidget.data.UserData
 import com.example.githubwidget.design.WidgetDesign
 import com.example.githubwidget.ui.theme.AppTheme
+import com.example.githubwidget.ui.theme.GhTheme
 import com.example.githubwidget.widget.WidgetRenderer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -449,4 +452,28 @@ fun WallpaperBackdrop(modifier: Modifier = Modifier, content: @Composable () -> 
 fun selectionBorder(selected: Boolean): Dp {
     val w by animateDpAsState(if (selected) 2.dp else 1.dp, label = "border")
     return w
+}
+
+// ------------------------------------------------------------------ previews
+
+@Preview(name = "Components · Light", showBackground = true)
+@Preview(name = "Components · Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ComponentsPreview() {
+    GhTheme {
+        Column(
+            Modifier.background(AppTheme.colors.canvas).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            ScreenHeader("Title", subtitle = "Subtitle explains this screen")
+            SectionCard(title = "Group") {
+                NavRow(title = "Row", subtitle = "Description", icon = AppIcons.Graph, onClick = {})
+            }
+            PrimaryButton("Primary action", onClick = {})
+            SecondaryButton("Secondary", onClick = {})
+            SegmentedChoice(listOf("One", "Two", "Three"), "Two", { it }, {})
+            ToggleRow("Toggle", checked = true, onCheckedChange = {})
+            Avatar(null, "mrduhlol", 52.dp)
+        }
+    }
 }

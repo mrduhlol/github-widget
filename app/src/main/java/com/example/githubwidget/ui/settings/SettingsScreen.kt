@@ -472,7 +472,7 @@ private fun ConfirmDialog(
         title = { Text(title, style = MaterialTheme.typography.headlineSmall, color = AppTheme.colors.textPrimary) },
         text = { Text(body, style = MaterialTheme.typography.bodyMedium, color = AppTheme.colors.textSecondary) },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            TextButton(onClick = onConfirm, modifier = Modifier.heightIn(min = 48.dp)) {
                 Text(
                     confirm,
                     style = MaterialTheme.typography.labelLarge,
@@ -481,7 +481,7 @@ private fun ConfirmDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = 48.dp)) {
                 Text("Cancel", style = MaterialTheme.typography.labelLarge, color = AppTheme.colors.textSecondary)
             }
         },
