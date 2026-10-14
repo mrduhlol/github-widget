@@ -52,31 +52,18 @@ jobs:
           name: GH-widgets
           path: app/build/outputs/apk/debug/GH-widget*.apk
 
-      # Tagged releases (v*) are what users install: build + sign them with the
-      # persistent release key so every version carries the same signature and
-      # installs cleanly over the previous one. Requires repo secrets:
-      # SIGNING_KEYSTORE_BASE64, SIGNING_KEY_ALIAS,
-      # SIGNING_KEYSTORE_PASSWORD, SIGNING_KEY_PASSWORD.
+      # Tagged releases (v*) are what users install: assembleRelease signs them
+      # with the persistent repo keystore (see app/build.gradle.kts), so every
+      # version carries the same signature and installs cleanly over the
+      # previous one instead of "conflicts with an existing package".
       - name: Build release APK
         if: startsWith(github.ref, 'refs/tags/v')
         run: ./gradlew assembleRelease --stacktrace
 
-      - name: Sign release APK
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: r0adkll/sign-android-release@v1
-        with:
-          releaseDirectory: app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
-          alias: ${{ secrets.SIGNING_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
-        env:
-          BUILD_TOOLS_VERSION: 34.0.0
-
       - name: Rename signed release APK
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          SIGNED=$(ls app/build/outputs/apk/release/*signed*.apk | head -n 1)
+          SIGNED=$(ls app/build/outputs/apk/release/app-release*.apk | head -n 1)
           mv "$SIGNED" "app/build/outputs/apk/release/GH-widget.v${VERSION}.apk"
           # Stable filename: README and the in-app updater link to this.
           cp "app/build/outputs/apk/release/GH-widget.v${VERSION}.apk" app/build/outputs/apk/release/GH-widget.apk

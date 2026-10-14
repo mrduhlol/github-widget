@@ -16,8 +16,25 @@ android {
         versionName = "3.1.3"
     }
 
+    // Repo keystore (PKCS12): every release APK gets the same signature,
+    // so updates install over the old version instead of conflicting.
+    // Anyone with repo access can sign as this app — accepted tradeoff
+    // for a sideloaded app; back up keystore/release.p12 regardless.
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("keystore/release.p12")
+            storeType = "PKCS12"
+            storePassword = "gh-widgets-release"
+            keyAlias = "ghwidgets"
+            keyPassword = "gh-widgets-release"
+        }
+    }
+
     buildTypes {
         release {
+            // Persistent repo keystore so every release carries the same
+            // signature and installs cleanly over the previous version.
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
