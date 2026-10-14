@@ -64,7 +64,7 @@
   .mask:nth-child(2) > span { animation-delay: 0.14s; }
   @keyframes rise { from { transform: translateY(110%); } to { transform: none; } }
   .hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; margin-top: 56px; }
-  .hero-row > *, .how-grid > *, .cta-grid > * { min-width: 0; }
+  .hero-row > *, .step-card > *, .cta-grid > * { min-width: 0; }
   .hero .lede { font-size: var(--step-lead); color: var(--ink); max-width: 34ch; margin-bottom: 40px; animation: fadeup 0.7s ease 0.35s both; }
   .hero-actions { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; animation: fadeup 0.7s ease 0.45s both; }
   .hero .meta { margin-top: 26px; color: var(--muted); font-size: var(--step-small); font-weight: 600; animation: fadeup 0.7s ease 0.55s both; }
@@ -89,6 +89,8 @@
   .dots { display: flex; gap: 12px; margin-top: 18px; align-items: center; }
   .dot { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; padding: 0; }
   .dot[aria-pressed="true"] { border-color: var(--ink); }
+  .widget.pop { animation: pop 0.35s ease; }
+  @keyframes pop { from { opacity: 0.25; transform: scale(0.985); } to { opacity: 1; transform: none; } }
 
   section.block { padding-top: 110px; padding-bottom: 110px; }
   .sec-head { font-size: var(--step-head); font-weight: 800; letter-spacing: -0.03em; line-height: 1; max-width: 20ch; }
@@ -111,18 +113,10 @@
   .clip-block video { width: 100%; border-radius: var(--radius); display: block; background: #000; }
   .clip-block p { color: var(--muted); margin-top: 16px; font-size: var(--step-small); font-weight: 600; }
 
-  .how-grid { display: grid; grid-template-columns: 5fr 7fr; gap: 60px; margin-top: 56px; align-items: start; }
-  .how-steps .step { min-height: 62vh; display: flex; flex-direction: column; justify-content: center; }
-  .how-steps .step p:first-child { font-size: clamp(26px, 2.4vw, 34px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; max-width: 16ch; }
-  .how-steps .step p:last-child { color: var(--ink); margin-top: 14px; max-width: 38ch; }
-  .how-steps .step { color: var(--muted); }
-  .how-steps .step.active { color: var(--ink); }
-  .how-stage { position: sticky; top: 12vh; background: var(--surface); border-radius: var(--radius); padding: 56px; min-height: 480px; display: flex; align-items: center; justify-content: center; }
-  .how-state { display: none; width: 100%; max-width: 420px; }
-  .how-state.on { display: block; }
-  .field { background: var(--bg); border-radius: 16px; padding: 22px 24px; font-size: 19px; color: var(--muted); font-weight: 600; }
-  .field.filled { color: var(--ink); }
-  .confirm { margin-top: 16px; background: var(--surface-2); border-radius: 16px; padding: 20px 24px; font-weight: 600; font-size: 19px; }
+  .steps { display: grid; gap: 28px; margin-top: 56px; }
+  .step-card { background: var(--surface); border-radius: var(--radius); padding: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+  .step-card .step-k { font-size: clamp(26px, 2.4vw, 34px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+  .step-card .step-k + p { color: var(--ink); margin-top: 14px; max-width: 38ch; }
   .confirm b { color: var(--bright); }
 
   .photoband { margin-top: 80px; }
@@ -143,11 +137,11 @@
 
   .stats-field { background: var(--surface); border-radius: var(--radius); margin-top: 56px; padding: 70px 56px 80px; }
   .stats-field h3 { font-size: clamp(28px, 3vw, 42px); font-weight: 800; letter-spacing: -0.02em; }
-  .slider-row { display: flex; align-items: center; gap: 26px; margin-top: 40px; max-width: 560px; }
-  input[type="range"] { flex: 1; height: 44px; accent-color: var(--bright); }
-  .slider-val { font-weight: 800; font-size: 19px; min-width: 110px; text-align: right; font-variant-numeric: tabular-nums; }
-  .figure { font-size: clamp(120px, 17vw, 280px); font-weight: 800; letter-spacing: -0.04em; line-height: 0.9; margin-top: 60px; font-variant-numeric: tabular-nums; }
-  .figure small { font-size: 0.22em; font-weight: 600; letter-spacing: 0; color: var(--muted); }
+  .widths { display: grid; gap: 30px; margin-top: 44px; max-width: 640px; }
+  .wrow p { font-size: 19px; }
+  .wrow p b { font-weight: 800; }
+  .wbar { height: 18px; border-radius: 999px; background: var(--surface-2); margin-top: 12px; overflow: hidden; }
+  .wbar span { display: block; height: 100%; background: var(--bright); border-radius: 999px; }
   .working { color: var(--ink); margin-top: 26px; max-width: 46ch; }
 
   .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
@@ -173,6 +167,7 @@
     .mask > span { animation: none; }
     .hero .lede, .hero-actions, .hero .meta, .widget-stage { animation: none; }
     .rv { animation: none; }
+    .widget.pop { animation: none; }
   }
 
   @media (max-width: 900px) {
@@ -184,11 +179,8 @@
     .demo-panel { grid-template-columns: 1fr; }
     .demo-left { padding: 32px 20px; }
     .demo-right { padding: 28px 24px; }
-    .how-grid { grid-template-columns: 1fr; }
-    .how-stage { position: sticky; top: 0; min-height: 0; padding: 28px 20px; }
-    .how-steps .step { min-height: 52vh; }
-    .how-steps .step p:first-child { font-size: 24px; }
     .cta-grid { grid-template-columns: 1fr; }
+    .step-card { grid-template-columns: 1fr; padding: 32px 24px; }
     section.block { padding-top: 70px; padding-bottom: 70px; }
     .stats-field { padding: 44px 26px 54px; }
   }
@@ -283,44 +275,29 @@
   </div>
   <div class="clip-block rv">
     <video src="assets/promo.mp4" muted loop playsinline autoplay preload="metadata"></video>
-    <p>The widget, live — a 24 second tour.</p>
   </div>
 </section>
 
 <section class="wrap block" id="setup">
   <h2 class="sec-head rv">Set up in under a minute.</h2>
-  <div class="how-grid">
-    <div class="how-steps">
-      <div class="step" data-how="1">
-        <p>Type your username.</p>
-        <p>Paste your profile link if that is easier. Nothing else is asked.</p>
-      </div>
-      <div class="step" data-how="2">
-        <p>Confirm it is you.</p>
-        <p>Your photo and graph show up so you know it found the right person.</p>
-      </div>
-      <div class="step" data-how="3">
-        <p>Add it to your home screen.</p>
-        <p>Your phone asks where to put it. Change colors anytime after.</p>
-      </div>
+  <div class="steps">
+    <div class="step-card rv">
+      <div><p class="step-k">Type your username.</p><p>Paste your profile link if that is easier. Nothing else is asked.</p></div>
+      <div class="field">github.com/…</div>
     </div>
-    <div class="how-stage rv">
-      <div class="how-state on" data-how-state="1">
-        <div class="field">github.com/…</div>
-      </div>
-      <div class="how-state" data-how-state="2">
-        <div class="field filled">mrduhlol</div>
-        <div class="confirm">That is you — <b>1,248 contributions</b> this year.</div>
-      </div>
-      <div class="how-state" data-how-state="3">
-        <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
-          <div class="w-name" data-part="name">@mrduhlol</div>
-          <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
-          <div class="w-stats" data-part="stats">
-            <div><b>1,248</b>total</div>
-            <div><b>23</b>streak</div>
-            <div><b>31</b>today</div>
-          </div>
+    <div class="step-card rv">
+      <div><p class="step-k">Confirm it is you.</p><p>Your photo and graph show up so you know it found the right person.</p></div>
+      <div><div class="field filled">mrduhlol</div><div class="confirm">That is you — <b>1,248 contributions</b> this year.</div></div>
+    </div>
+    <div class="step-card rv">
+      <div><p class="step-k">Add it to your home screen.</p><p>Your phone asks where to put it. Change colors anytime after.</p></div>
+      <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
+        <div class="w-name" data-part="name">@mrduhlol</div>
+        <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
+        <div class="w-stats" data-part="stats">
+          <div><b>1,248</b>total</div>
+          <div><b>23</b>streak</div>
+          <div><b>31</b>today</div>
         </div>
       </div>
     </div>
@@ -346,22 +323,22 @@
         <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
       </div>
     </div>
-    <div class="band">
+    <div class="band on">
       <div class="band-inner">
         <div><p class="sentence">Nine palettes, plus your own color.</p><p class="consequence">Match wallpaper follows your phone on Android 12 and newer.</p></div>
-        <button class="toggle" aria-pressed="false" aria-label="Toggle detail"></button>
+        <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
       </div>
     </div>
-    <div class="band">
+    <div class="band on">
       <div class="band-inner">
         <div><p class="sentence">Fits any size.</p><p class="consequence">The graph fills the widget. Make it wider to see more weeks.</p></div>
-        <button class="toggle" aria-pressed="false" aria-label="Toggle detail"></button>
+        <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
       </div>
     </div>
-    <div class="band">
+    <div class="band on">
       <div class="band-inner">
         <div><p class="sentence">Stats worth glancing at.</p><p class="consequence">Streaks, best day, weekly and monthly charts, plain-language insights.</p></div>
-        <button class="toggle" aria-pressed="false" aria-label="Toggle detail"></button>
+        <button class="toggle" aria-pressed="true" aria-label="Toggle detail"></button>
       </div>
     </div>
   </div>
@@ -370,12 +347,12 @@
 <section class="wrap block">
   <h2 class="sec-head rv">Wide enough for history.</h2>
   <div class="stats-field rv">
-    <h3>How wide is your widget?</h3>
-    <div class="slider-row">
-      <input type="range" id="width" min="180" max="560" step="10" value="320" aria-label="Widget width in density pixels" />
-      <span class="slider-val"><span id="width-val">320</span> dp</span>
+    <h3>The wider it gets, the more it shows.</h3>
+    <div class="widths">
+      <div class="wrow"><p><b>3 weeks</b> — a small widget at 180 dp</p><div class="wbar"><span style="width:25%"></span></div></div>
+      <div class="wrow"><p><b>7 weeks</b> — the classic size at 320 dp</p><div class="wbar"><span style="width:58%"></span></div></div>
+      <div class="wrow"><p><b>12 weeks</b> — wide on a tablet at 480 dp</p><div class="wbar"><span style="width:100%"></span></div></div>
     </div>
-    <div class="figure"><span id="weeks">7</span><small> weeks</small></div>
     <p class="working">Each week of graph needs about 33 pixels after padding, so the visible weeks fall straight out of the width you give it.</p>
   </div>
 </section>
@@ -438,14 +415,15 @@
   }
   function applyStyle(widget, style) {
     widget.dataset.style = style;
+    widget.classList.remove("pop"); void widget.offsetWidth; widget.classList.add("pop");
     var showGraph = style !== "numbers";
     var showStats = style === "classic";
     var showBig = style === "numbers";
     var showName = widget.dataset.showName !== "0";
-    widget.querySelector("[data-part='graph']").style.display = showGraph ? "" : "none";
-    widget.querySelector("[data-part='stats']").style.display = showStats ? "" : "none";
-    widget.querySelector("[data-part='bignum']").hidden = !showBig;
-    widget.querySelector("[data-part='name']").style.display = showName && style !== "numbers" ? "" : "none";
+    var g = widget.querySelector("[data-part='graph']"); if (g) g.style.display = showGraph ? "" : "none";
+    var st = widget.querySelector("[data-part='stats']"); if (st) st.style.display = showStats ? "" : "none";
+    var bn = widget.querySelector("[data-part='bignum']"); if (bn) bn.hidden = !showBig;
+    var nm = widget.querySelector("[data-part='name']"); if (nm) nm.style.display = showName && style !== "numbers" ? "" : "none";
     paint(widget);
   }
   document.querySelectorAll("[data-widget]").forEach(function (w) {
@@ -504,32 +482,9 @@
     });
   });
 
-  var width = document.getElementById("width");
-  var widthVal = document.getElementById("width-val");
-  var weeks = document.getElementById("weeks");
-  function calc() {
-    var w = Number(width.value);
-    widthVal.textContent = String(w);
-    weeks.textContent = String(Math.max(2, Math.floor((w - 72) / 33)));
-  }
-  width.addEventListener("input", calc);
-  calc();
 
-  var states = Array.prototype.slice.call(document.querySelectorAll("[data-how-state]"));
-  var steps = Array.prototype.slice.call(document.querySelectorAll(".how-steps .step"));
-  function setHow(n) {
-    states.forEach(function (s) { s.classList.toggle("on", s.dataset.howState === String(n)); });
-    steps.forEach(function (s) { s.classList.toggle("active", s.dataset.how === String(n)); });
-  }
-  setHow(1);
-  if ("IntersectionObserver" in window) {
-    var stepObs = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (en.isIntersecting) setHow(Number(en.target.dataset.how));
-      });
-    }, { rootMargin: "-40% 0px -40% 0px" });
-    steps.forEach(function (s) { stepObs.observe(s); });
-  }
+
+
 })();
 </script>
 </body>
