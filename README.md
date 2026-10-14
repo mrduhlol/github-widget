@@ -51,4 +51,5 @@ Your GitHub contribution graph, live on your Android home screen. Pick a look in
 
 - Kotlin + Jetpack Compose (Material 3); WorkManager for background refresh
 - The widget is a single bitmap from `widget/WidgetRenderer.kt` — the in-app preview uses the same renderer
+- `site/` is the showcase website: plain HTML, CSS and JS, no build step. Serve it with any static server (`python3 -m http.server -d site`). `site/assets/js/widget.js` ports the widget renderer to the browser, so the live demo matches the app
 - `./gradlew testDebugUnitTest` renders sample widgets to `app/build/widget-renders/` (Robolectric) for visual review without a device

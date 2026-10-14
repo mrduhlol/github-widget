@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GH Widgets: your GitHub graph on your Android home screen</title>
+  <meta name="description" content="A live GitHub contribution graph widget for Android. Type a username, pick a look, done. No sign-in, no token." />
+  <meta name="theme-color" content="#0A0D12" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#F4F6F8" media="(prefers-color-scheme: light)" />
+  <meta property="og:title" content="GH Widgets" />
+  <meta property="og:description" content="Your GitHub contribution graph, live on your Android home screen." />
+  <meta property="og:image" content="assets/screens/12-home.webp" />
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preload" href="assets/fonts/SpaceGrotesk-Variable.ttf" as="font" type="font/ttf" crossorigin />
+  <link rel="preload" href="assets/fonts/Figtree-Variable.ttf" as="font" type="font/ttf" crossorigin />
+  <link rel="stylesheet" href="assets/vendor/phosphor/light/style.css" />
+  <link rel="stylesheet" href="assets/vendor/phosphor/fill/style.css" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <script>
+    // Pick the theme before first paint so there's no flash.
+    (function () {
+      var saved = localStorage.getItem("ghw-theme");
+      var dark = saved ? saved === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+    })();
+  </script>
+  <script type="module" src="assets/js/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="nav-wrap">
+    <nav class="nav" aria-label="Main">
+      <a class="brand" href="#top" aria-label="GH Widgets home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span>GH Widgets</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#studio">Studio</a></li>
+        <li><a href="#stats">Stats</a></li>
+        <li><a href="#screens">Screens</a></li>
+        <li><a href="#setup">Setup</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch to light mode">
+          <i class="ph-light ph-sun" data-when="dark"></i>
+          <i class="ph-light ph-moon" data-when="light"></i>
+        </button>
+        <a class="btn btn-primary btn-sm" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">
+          Download APK
+        </a>
+        <button class="icon-btn menu-btn" id="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="menu">
+          <span></span><span></span>
+        </button>
+      </div>
+    </nav>
+    <div class="menu" id="menu" hidden>
+      <a href="#studio">Studio</a>
+      <a href="#stats">Stats</a>
+      <a href="#screens">Screens</a>
+      <a href="#setup">Setup</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="hero" id="top">
+      <div class="hero-bg" aria-hidden="true"><canvas id="hero-field"></canvas></div>
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow" data-enter>Android widget, free and open source</p>
+          <h1 data-enter>Your GitHub year, on your home&nbsp;screen.</h1>
+          <p class="lede" data-enter>A live contribution graph widget. Type a username, pick a look, done. No sign-in, no token.</p>
+          <div class="cta-row" data-enter>
+            <a class="btn btn-primary" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">
+              Download APK
+              <span class="btn-icon"><i class="ph-light ph-arrow-down"></i></span>
+            </a>
+            <a class="btn btn-ghost" href="#studio">
+              Try it live
+              <span class="btn-icon"><i class="ph-light ph-sliders-horizontal"></i></span>
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-visual" data-enter>
+          <figure class="phone">
+            <div class="phone-screen">
+              <img src="assets/screens/12-home.webp" data-dark="assets/screens/12-home.webp" data-light="assets/screens/13-home-light.webp"
+                   alt="An Android home screen with the GH Widgets contribution graph for mrduhlol" width="1080" height="2400" fetchpriority="high" />
+            </div>
+          </figure>
+          <div class="float-widget float-a" aria-hidden="true"><canvas data-widget="hero-numbers"></canvas></div>
+          <div class="float-widget float-b" aria-hidden="true"><canvas data-widget="hero-graph"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIVE PROFILE -->
+    <section class="live" id="live" aria-labelledby="live-title">
+      <div class="container">
+        <div class="live-head reveal">
+          <div class="who">
+            <img class="avatar" id="live-avatar" src="assets/data/mrduhlol-avatar.png" alt="" width="56" height="56" />
+            <div>
+              <h2 id="live-title"><span id="live-name">Abhishek A</span>'s last twelve months</h2>
+              <p class="muted">
+                <a href="https://github.com/mrduhlol" class="link">@mrduhlol</a>
+                <span class="sync" id="sync-state">Loading from GitHub</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="heatmap-shell reveal">
+          <div class="heatmap-core">
+            <div class="heatmap-scroll"><canvas id="heatmap" role="img" aria-label="Contribution graph for the last year"></canvas></div>
+            <div class="heat-tip" id="heat-tip" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <dl class="stat-row reveal">
+          <div class="stat stat-hero"><dt>Contributions</dt><dd data-count="total">0</dd></div>
+          <div class="stat"><dt>Longest streak</dt><dd><span data-count="longestStreak">0</span><small> days</small></dd></div>
+          <div class="stat"><dt>Current streak</dt><dd><span data-count="currentStreak">0</span><small> days</small></dd></div>
+          <div class="stat"><dt>Best day</dt><dd><span data-count="best">0</span><small id="best-date"></small></dd></div>
+          <div class="stat"><dt>Active days</dt><dd><span data-count="activeDays">0</span><small id="tracked"></small></dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- STUDIO -->
+    <section class="studio" id="studio" aria-labelledby="studio-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <h2 id="studio-title">Make it yours. Every option is live.</h2>
+          <p class="muted">This is the same drawing code as the widget, running on mrduhlol's real data. Drag the corner to resize.</p>
+        </div>
+
+        <div class="studio-grid">
+          <form class="controls reveal" id="controls" aria-label="Widget design">
+            <fieldset class="group">
+              <legend>Style</legend>
+              <div class="seg" role="radiogroup" data-key="layout">
+                <button type="button" data-value="CLASSIC" aria-pressed="true"><i class="ph-light ph-layout"></i>Classic</button>
+                <button type="button" data-value="GRAPH"><i class="ph-light ph-grid-four"></i>Graph only</button>
+                <button type="button" data-value="NUMBERS"><i class="ph-light ph-hash"></i>Numbers</button>
+              </div>
+            </fieldset>
+
+            <fieldset class="group">
+              <legend>Colors</legend>
+              <div class="swatches" id="swatches"></div>
+            </fieldset>
+
+            <fieldset class="group">
+              <legend>Background</legend>
+              <div class="seg seg-4" data-key="background">
+                <button type="button" data-value="AUTO" aria-pressed="true">Auto</button>
+                <button type="button" data-value="DARK">Dark</button>
+                <button type="button" data-value="LIGHT">Light</button>
+                <button type="button" data-value="BLACK">Black</button>
+              </div>
+              <label class="slider">
+                <span>See-through <output id="opacity-out">0%</output></span>
+                <input type="range" id="opacity" min="0" max="100" step="5" value="100" />
+              </label>
+            </fieldset>
+
+            <details class="group more" open>
+              <summary>Graph and text <i class="ph-light ph-caret-down"></i></summary>
+              <div class="more-body">
+                <div class="row-2">
+                  <div>
+                    <span class="mini-label" id="cells-label">Cells</span>
+                    <div class="seg seg-sm" data-key="cellShape" aria-labelledby="cells-label">
+                      <button type="button" data-value="SQUARE">Square</button>
+                      <button type="button" data-value="ROUNDED" aria-pressed="true">Rounded</button>
+                      <button type="button" data-value="CIRCLE">Circle</button>
+                    </div>
+                  </div>
+                  <div>
+                    <span class="mini-label" id="corners-label">Corners</span>
+                    <div class="seg seg-sm" data-key="corners" aria-labelledby="corners-label">
+                      <button type="button" data-value="SUBTLE">Subtle</button>
+                      <button type="button" data-value="ROUND" aria-pressed="true">Round</button>
+                      <button type="button" data-value="EXTRA">Extra</button>
+                    </div>
+                  </div>
+                </div>
+                <span class="mini-label" id="range-label">History</span>
+                <div class="seg seg-sm seg-4" data-key="range" aria-labelledby="range-label">
+                  <button type="button" data-value="AUTO" aria-pressed="true">Fit</button>
+                  <button type="button" data-value="MONTH_3">3 months</button>
+                  <button type="button" data-value="MONTH_6">6 months</button>
+                  <button type="button" data-value="YEAR">1 year</button>
+                </div>
+                <label class="select">
+                  <span class="mini-label">Font</span>
+                  <select id="font"></select>
+                </label>
+                <div class="toggles">
+                  <label><input type="checkbox" data-toggle="showName" checked /><span>Name</span></label>
+                  <label><input type="checkbox" data-toggle="showAvatar" checked /><span>Photo</span></label>
+                  <label><input type="checkbox" data-toggle="showTotal" checked /><span>Total</span></label>
+                  <label><input type="checkbox" data-toggle="showStreak" checked /><span>Streak</span></label>
+                  <label><input type="checkbox" data-toggle="showToday" checked /><span>Today</span></label>
+                  <label><input type="checkbox" data-toggle="showMonths" checked /><span>Months</span></label>
+                  <label><input type="checkbox" data-toggle="weekStartsMonday" /><span>Monday first</span></label>
+                </div>
+              </div>
+            </details>
+            <button type="button" class="reset" id="reset"><i class="ph-light ph-arrow-counter-clockwise"></i>Reset</button>
+          </form>
+
+          <div class="stage reveal" id="stage">
+            <div class="wallpapers" role="radiogroup" aria-label="Wallpaper">
+              <button type="button" data-wall="aurora" aria-pressed="true" aria-label="Aurora wallpaper"></button>
+              <button type="button" data-wall="dune" aria-label="Dune wallpaper"></button>
+              <button type="button" data-wall="slate" aria-label="Slate wallpaper"></button>
+              <button type="button" data-wall="paper" aria-label="Paper wallpaper"></button>
+            </div>
+            <div class="stage-inner" data-wall="aurora">
+              <div class="resizable" id="resizable" style="--w: 352px; --h: 168px">
+                <canvas id="studio-canvas" aria-label="Live widget preview"></canvas>
+                <button class="handle" id="handle" type="button" aria-label="Resize widget. Use arrow keys."><i class="ph-light ph-arrows-out-simple"></i></button>
+              </div>
+            </div>
+            <div class="stage-foot">
+              <span id="size-readout">4 x 2</span>
+              <div class="presets" aria-label="Widget size">
+                <button type="button" data-size="2x2">2x2</button>
+                <button type="button" data-size="4x1">4x1</button>
+                <button type="button" data-size="4x2">4x2</button>
+                <button type="button" data-size="4x3">4x3</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats" id="stats" aria-labelledby="stats-title">
+      <div class="container">
+        <p class="eyebrow reveal">The Stats tab</p>
+        <h2 id="stats-title" class="reveal">More than squares.</h2>
+        <div class="bento">
+          <article class="tile tile-insight reveal">
+            <h3>Last 30 days</h3>
+            <p class="big-num" data-count="last30">0</p>
+            <p class="insight" id="insight"></p>
+          </article>
+          <article class="tile tile-months reveal">
+            <h3>Month by month</h3>
+            <div class="bars" id="month-bars"></div>
+          </article>
+          <article class="tile tile-week reveal">
+            <h3>Busiest weekdays</h3>
+            <div class="bars bars-week" id="week-bars"></div>
+            <p class="muted small" id="busiest"></p>
+          </article>
+          <article class="tile tile-share reveal">
+            <div class="share-copy">
+              <h3>Share your year</h3>
+              <p class="muted">One tap turns the year into a clean image. This one is generated in your browser from mrduhlol's data.</p>
+              <button type="button" class="btn btn-primary" id="share-btn">
+                Save image
+                <span class="btn-icon"><i class="ph-light ph-download-simple"></i></span>
+              </button>
+            </div>
+            <div class="share-frame"><canvas id="share-canvas" aria-label="Share image preview"></canvas></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREENS -->
+    <section class="screens" id="screens" aria-labelledby="screens-title">
+      <div class="container screens-head">
+        <h2 id="screens-title" class="reveal">The app, screen by screen.</h2>
+        <div class="rail-nav">
+          <button class="icon-btn" type="button" data-rail="-1" aria-label="Previous screenshots"><i class="ph-light ph-arrow-left"></i></button>
+          <button class="icon-btn" type="button" data-rail="1" aria-label="Next screenshots"><i class="ph-light ph-arrow-right"></i></button>
+        </div>
+      </div>
+      <div class="rail" id="rail" tabindex="0" aria-label="App screenshots"></div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features" aria-labelledby="features-title">
+      <div class="container features-grid">
+        <div class="features-side">
+          <h2 id="features-title" class="reveal">Small app. Careful details.</h2>
+          <p class="muted reveal">About 5.6 MB. Android 8 and up. Nothing to sign into.</p>
+        </div>
+        <ul class="feature-list">
+          <li class="reveal"><i class="ph-light ph-wifi-slash"></i><div><h3>Works offline</h3><p>The last graph stays on screen and refreshes on its own, every 1 to 12 hours.</p></div></li>
+          <li class="reveal"><i class="ph-light ph-paint-brush"></i><div><h3>Match your wallpaper</h3><p>On Android 12 and newer, the graph can take its color from your wallpaper.</p></div></li>
+          <li class="reveal"><i class="ph-light ph-arrows-out"></i><div><h3>Fits any size</h3><p>The graph fills the widget. Make it wider to see more weeks; small sizes drop text first.</p></div></li>
+          <li class="reveal"><i class="ph-light ph-eye"></i><div><h3>What you see is what you get</h3><p>The in-app preview is drawn by the same code as the widget itself.</p></div></li>
+          <li class="reveal"><i class="ph-light ph-lock-simple-open"></i><div><h3>No account, no token</h3><p>It reads your public contribution graph. Just type your username or paste your profile link.</p></div></li>
+          <li class="reveal"><i class="ph-light ph-hand-tap"></i><div><h3>Tap to refresh</h3><p>Tap the widget to open the app and pull the latest data right away.</p></div></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SETUP -->
+    <section class="setup" id="setup" aria-labelledby="setup-title">
+      <div class="container setup-grid">
+        <div>
+          <h2 id="setup-title" class="reveal">On your home screen in under a minute.</h2>
+          <ol class="steps reveal" id="steps">
+            <li><button type="button" aria-pressed="true" data-shot="02-username.webp">
+              <span class="step-num">1</span><span><strong>Type your username</strong><span class="muted">Or paste your profile link. We'll show your photo so you can confirm it's you.</span></span>
+            </button></li>
+            <li><button type="button" data-shot="04-pin-dialog.webp">
+              <span class="step-num">2</span><span><strong>Add to home screen</strong><span class="muted">One tap. Your phone asks where to put it.</span></span>
+            </button></li>
+            <li><button type="button" data-shot="05-widget-tab.webp">
+              <span class="step-num">3</span><span><strong>Change it anytime</strong><span class="muted">Colors and style live in the Widget tab. The widget updates instantly.</span></span>
+            </button></li>
+          </ol>
+          <div class="install-note reveal">
+            <i class="ph-light ph-info"></i>
+            <p>Installing from the APK? Open the downloaded file and allow <strong>Install unknown apps</strong> when Android asks.</p>
+          </div>
+        </div>
+        <figure class="phone phone-sm reveal">
+          <div class="phone-screen"><img id="step-shot" src="assets/screens/02-username.webp" alt="Setup screen in GH Widgets" width="1080" height="2400" loading="lazy" /></div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="final" aria-labelledby="final-title">
+      <div class="container">
+        <div class="final-card reveal">
+          <canvas class="final-field" id="final-field" aria-hidden="true"></canvas>
+          <h2 id="final-title">Put your year where you'll see it.</h2>
+          <p>Free. Open source. No sign-in.</p>
+          <a class="btn btn-primary btn-lg" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">
+            Download APK
+            <span class="btn-icon"><i class="ph-light ph-arrow-down"></i></span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>GH Widgets</span></a>
+      <p class="muted small">Contribution data from the public GitHub graph. Not affiliated with GitHub.</p>
+      <a class="link" href="https://github.com/mrduhlol/github-widget"><i class="ph-light ph-github-logo"></i> Source on GitHub</a>
+    </div>
+  </footer>
+</body>
+</html>
