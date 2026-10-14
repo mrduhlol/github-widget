@@ -5,205 +5,233 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>GH-widgets — Your GitHub graph, on your home screen</title>
 <meta name="description" content="GH-widgets puts your GitHub contribution graph on your Android home screen. Free, no sign-in, just your username." />
-<meta name="theme-color" content="#0d1117" />
+<meta name="theme-color" content="#060a07" />
 <meta property="og:title" content="GH-widgets — Your GitHub graph, on your home screen" />
 <meta property="og:description" content="Free Android widget. No sign-in, just your username." />
 <meta property="og:type" content="website" />
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Schibsted+Grotesk:wght@400;600;800&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --surface-2: #1c2128;
-    --ink: #f0f6fc;
-    --muted: #8b949e;
-    --accent: #238636;
-    --accent-ink: #ffffff;
-    --bright: #39d353;
+    --bg: #060a07;
+    --panel: #0b110c;
+    --panel2: #0e1510;
+    --line: #1e2c20;
+    --ink: #e9f5ea;
+    --muted: #7f917f;
+    --faint: #55644f;
+    --acc: #3dff6e;
+    --acc-ink: #031207;
+    --acc-btn: #2be05c;
+    --org: #ff5a1f;
+    --amb: #ffb224;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --disp: "Anton", "Arial Narrow", sans-serif;
+    --body: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
     --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
     --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
     --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
     --step-head: clamp(2rem, 1.3rem + 3.2vw, 4rem);
     --margin: clamp(16px, 4vw, 64px);
-    --radius: 28px;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
     background: var(--bg); color: var(--ink);
-    font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--body);
     font-size: var(--step-body); line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
-  ::selection { background: var(--bright); color: #0d1117; }
+  ::selection { background: var(--acc); color: var(--acc-ink); }
   a { color: inherit; }
-  :focus-visible { outline: 3px solid var(--bright); outline-offset: 3px; }
-  .skip { position: absolute; left: -9999px; top: 0; background: var(--bright); color: #0d1117; font-weight: 800; padding: 12px 24px; border-radius: 0 0 12px 0; z-index: 99; }
-  .skip:focus { left: 0; }
+  :focus-visible { outline: 3px solid var(--acc); outline-offset: 3px; }
+  caret-color: var(--acc);
 
   .wrap { padding-left: var(--margin); padding-right: var(--margin); max-width: 1440px; margin: 0 auto; }
+  .micro { font-family: var(--mono); font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 
-  nav { display: flex; align-items: center; justify-content: space-between; padding: 28px var(--margin); max-width: 1440px; margin: 0 auto; }
-  .wordmark { font-weight: 800; font-size: 22px; letter-spacing: -0.02em; text-decoration: none; }
-  .wordmark span { color: var(--bright); }
-  .nav-links { display: flex; gap: 34px; }
-  .nav-links a { text-decoration: none; color: var(--muted); font-weight: 600; font-size: 17px; }
-  @media (hover: hover) and (pointer: fine) {
-  .nav-links a:hover { color: var(--ink); }
-  .btn:hover { background: #1e7e34; }
-  .ghost-link:hover { color: var(--ink); }
-  footer .foot-row a:hover { color: var(--ink); }
-  }
+  .skip { position: absolute; left: -9999px; top: 0; background: var(--acc); color: var(--acc-ink); font-weight: 800; padding: 12px 24px; z-index: 99; }
+  .skip:focus { left: 0; }
 
+  /* Status bar */
+  .topbar { border-bottom: 1px solid var(--line); }
+  .topbar-inner { display: flex; align-items: center; gap: 34px; padding-top: 18px; padding-bottom: 18px; }
+  .wordmark { font-family: var(--disp); font-size: 26px; letter-spacing: 0.01em; color: var(--acc); text-decoration: none; }
+  .wordmark span { color: var(--ink); }
+  .nav-links { display: flex; gap: 28px; margin-left: 12px; }
+  .nav-links a { font-family: var(--mono); font-size: 13px; letter-spacing: 0.14em; text-decoration: none; color: var(--muted); }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+  .pillchip { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; color: var(--amb); border: 1px solid var(--line); padding: 8px 14px; white-space: nowrap; }
   .btn {
-    display: inline-block; background: var(--accent); color: var(--accent-ink);
+    display: inline-block; background: var(--acc); color: var(--acc-ink);
     font-weight: 800; text-decoration: none; border: 0; cursor: pointer;
-    padding: 18px 46px; border-radius: 999px; font-size: 19px; min-height: 44px;
+    padding: 18px 46px; border-radius: 2px; font-size: 19px; min-height: 44px;
+    font-family: var(--body);
   }
+  .btn.small { padding: 12px 26px; font-size: 16px; font-family: var(--mono); letter-spacing: 0.08em; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .btn,.chip,.dot,.toggle,.band .disc { transition: transform 140ms cubic-bezier(0.23,1,0.32,1), background-color 150ms cubic-bezier(0.23,1,0.32,1), border-color 150ms; }
+  .btn:active,.chip:active,.dot:active { transform: scale(0.97); }
 
-  .btn:active { transform: scale(0.97); }
-  .btn,.chip,.dot,.toggle { transition: transform 140ms cubic-bezier(0.23,1,0.32,1), background-color 150ms cubic-bezier(0.23,1,0.32,1), border-color 150ms; }
-  .chip:active,.dot:active { transform: scale(0.97); }
-  .btn.small { padding: 12px 30px; font-size: 17px; }
-
-  .hero { padding-top: 60px; padding-bottom: 110px; }
+  /* Hero */
+  .hero { padding-top: 64px; padding-bottom: 0; }
   .hero h1 {
-    font-size: clamp(54px, 7.2vw, 108px); font-weight: 800;
-    letter-spacing: -0.04em; line-height: 0.98;
+    font-family: var(--disp); font-weight: 400;
+    font-size: clamp(58px, 9vw, 148px); line-height: 0.94; letter-spacing: 0.005em;
+    text-transform: uppercase;
   }
+  .hero h1 .l2 { color: var(--acc); }
   .mask { display: block; overflow: hidden; }
   .mask > span { display: block; animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
   .mask:nth-child(2) > span { animation-delay: 0.14s; }
   @keyframes rise { from { transform: translateY(110%); } to { transform: none; } }
-  .hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; margin-top: 56px; }
-  .hero-row > *, .step-card > *, .cta-grid > * { min-width: 0; }
-  .hero .lede { font-size: var(--step-lead); color: var(--ink); max-width: 34ch; margin-bottom: 40px; animation: fadeup 0.7s ease 0.35s both; }
-  .hero-actions { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; animation: fadeup 0.7s ease 0.45s both; }
-  .hero .meta { margin-top: 26px; color: var(--muted); font-size: var(--step-small); font-weight: 600; animation: fadeup 0.7s ease 0.55s both; }
+  .hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; margin-top: 48px; }
+  .hero-row > *, .steps > *, .demo-panel > * { min-width: 0; }
+  .hero .lede { font-size: var(--step-lead); color: var(--ink); max-width: 34ch; margin-bottom: 36px; animation: fadeup 0.7s ease 0.35s both; }
+  .hero-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; animation: fadeup 0.7s ease 0.45s both; }
+  .hero .meta { margin-top: 22px; animation: fadeup 0.7s ease 0.55s both; }
   .ghost-link { color: var(--muted); font-weight: 600; }
-
   @keyframes fadeup { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
 
-  .widget-stage { background: var(--surface); border-radius: var(--radius); padding: 48px 40px; animation: fadeup 0.8s ease 0.6s both; }
-  .widget { background: var(--bg); border-radius: 20px; padding: 30px 28px; min-height: 300px; }
+  .statstrip { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); margin-top: 56px; }
+  .statstrip > div { padding: 18px 22px; border-left: 1px solid var(--line); }
+  .statstrip > div:first-child { border-left: 0; }
+  .statstrip .k { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; color: var(--muted); }
+  .statstrip .v { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--acc); margin-top: 6px; font-variant-numeric: tabular-nums; }
+
+  /* Terminal panel + live widget */
+  .term { border: 1px solid var(--line); background: var(--panel); animation: fadeup 0.8s ease 0.6s both; }
+  .term-head { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); padding: 12px 20px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; color: var(--muted); }
+  .term-head .live { width: 8px; height: 8px; background: var(--acc); }
+  .term-head .right { margin-left: auto; color: var(--faint); }
+  .term-body { padding: 36px 32px; }
+  .widget { background: var(--bg); border: 1px solid var(--line); padding: 28px 26px; min-height: 280px; }
   .widget .w-name { font-weight: 800; font-size: 24px; margin-bottom: 18px; }
   .widget .w-graph { display: grid; grid-template-rows: repeat(7, 15px); grid-auto-flow: column; gap: 4px; margin-bottom: 20px; }
-  .widget .w-cell { width: 15px; height: 15px; border-radius: 4px; }
-  .widget .w-stats { display: flex; gap: 34px; color: var(--muted); font-size: 14px; font-weight: 600; }
-  .widget .w-stats b { display: block; color: var(--ink); font-size: 26px; font-weight: 800; }
-  .widget .w-bignum { font-size: 84px; font-weight: 800; color: var(--bright); letter-spacing: -0.03em; line-height: 1; }
-  .chips { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
-  .chip {
-    background: var(--surface-2); color: var(--ink); border: 0; cursor: pointer;
-    border-radius: 999px; padding: 12px 26px; font: inherit; font-weight: 600; font-size: 16px; min-height: 44px;
-  }
-  .chip[aria-pressed="true"] { background: var(--bright); color: #0d1117; font-weight: 800; }
-  .dots { display: flex; gap: 12px; margin-top: 18px; align-items: center; }
-  .dot { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; padding: 0; }
-  .dot[aria-pressed="true"] { border-color: var(--ink); }
+  .widget .w-cell { width: 15px; height: 15px; border-radius: 3px; }
+  .widget .w-stats { display: flex; gap: 34px; color: var(--muted); font-size: 14px; font-weight: 600; font-family: var(--mono); }
+  .widget .w-stats b { display: block; color: var(--ink); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .widget .w-bignum { font-family: var(--disp); font-size: 84px; color: var(--acc); line-height: 1; }
   .widget.pop { animation: pop 0.35s ease; }
   @keyframes pop { from { opacity: 0.25; transform: scale(0.985); } to { opacity: 1; transform: none; } }
+  .chips { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  .chip {
+    background: transparent; color: var(--ink); border: 1px solid var(--line); cursor: pointer;
+    border-radius: 2px; padding: 12px 24px; font-family: var(--mono); font-size: 13px; letter-spacing: 0.1em; min-height: 44px;
+  }
+  .chip[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); color: var(--acc-ink); font-weight: 700; }
+  .dots { display: flex; gap: 10px; margin-top: 16px; align-items: center; }
+  .dot { width: 32px; height: 32px; border-radius: 2px; border: 1px solid var(--line); cursor: pointer; padding: 0; }
+  .dot[aria-pressed="true"] { outline: 2px solid var(--ink); outline-offset: 2px; }
 
   section.block { padding-top: 110px; padding-bottom: 110px; }
-  .sec-head { font-size: var(--step-head); font-weight: 800; letter-spacing: -0.03em; line-height: 1; max-width: 20ch; }
+  .sec-head { font-family: var(--disp); font-weight: 400; font-size: clamp(44px, 6vw, 96px); line-height: 0.95; text-transform: uppercase; max-width: 22ch; }
   .sec-sub { color: var(--ink); font-size: var(--step-lead); margin-top: 18px; max-width: 52ch; }
   .hero h1,.sec-head,.band p.sentence,.cta h2,footer .giant,.step-card .step-k { text-wrap: balance; }
 
-  .demo-panel { background: var(--surface); border-radius: var(--radius); margin-top: 56px; display: grid; grid-template-columns: 62fr 38fr; overflow: hidden; }
-  .demo-panel > * { min-width: 0; }
-  .demo-left { padding: 56px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
+  .demo-panel { margin-top: 48px; }
+  .demo-grid { display: grid; grid-template-columns: 62fr 38fr; }
+  .demo-left { padding: 48px; border-right: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
   .demo-left .widget { width: 100%; max-width: 520px; }
-  .demo-right { padding: 48px 40px; display: flex; flex-direction: column; gap: 6px; }
-  .ctl { display: flex; align-items: center; justify-content: space-between; min-height: 52px; font-weight: 600; font-size: 16px; }
-  .ctl .row-label { color: var(--muted); }
-  .toggle { position: relative; width: 58px; height: 32px; border-radius: 999px; background: var(--surface-2); border: 0; cursor: pointer; flex: none; }
-  .toggle::after { content: ""; position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: var(--muted); transition: left 180ms cubic-bezier(0.32,0.72,0,1), background-color 180ms; }
-  .toggle[aria-pressed="true"] { background: var(--accent); }
-  .toggle[aria-pressed="true"]::after { left: 30px; background: #fff; }
-  .demo-note { margin-top: 22px; color: var(--muted); font-size: var(--step-small); }
-  .demo-link { margin-top: 8px; font-weight: 600; color: var(--bright); }
+  .demo-right { padding: 40px 36px; display: flex; flex-direction: column; gap: 6px; }
+  .ctl { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 52px; }
+  .ctl .row-label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; color: var(--muted); }
+  .toggle { position: relative; width: 58px; height: 30px; border-radius: 2px; background: var(--panel2); background: var(--panel2); background: #101812; border: 1px solid var(--line); cursor: pointer; flex: none; }
+  .toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 2px; background: var(--muted); transition: left 180ms cubic-bezier(0.32,0.72,0,1), background-color 180ms; }
+  .toggle[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); }
+  .toggle[aria-pressed="true"]::after { left: 31px; background: var(--acc-ink); }
+  .demo-note { margin-top: 22px; color: var(--muted); font-size: var(--step-small); font-family: var(--mono); letter-spacing: 0.02em; }
+  .demo-link { margin-top: 8px; font-weight: 600; color: var(--acc); font-family: var(--mono); font-size: 14px; letter-spacing: 0.06em; }
 
-  .clip-block { margin-top: 70px; }
-  .clip-block video { width: 100%; border-radius: var(--radius); display: block; background: #000; }
-  .clip-block p { color: var(--muted); margin-top: 16px; font-size: var(--step-small); font-weight: 600; }
+  .clip-block { margin-top: 64px; }
+  .clip-block video { width: 100%; display: block; background: #000; border-left: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 
-  .steps { display: grid; gap: 28px; margin-top: 56px; }
-  .step-card { background: var(--surface); border-radius: var(--radius); padding: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
-  .step-card .step-k { font-size: clamp(26px, 2.4vw, 34px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
-  .step-card .step-k + p { color: var(--ink); margin-top: 14px; max-width: 38ch; }
-  .field { background: var(--bg); border-radius: 16px; padding: 22px 24px; font-size: 19px; color: var(--muted); font-weight: 600; }
+  /* Setup cells */
+  .steps { display: grid; grid-template-columns: 1fr 1fr 1fr; border: 1px solid var(--line); margin-top: 48px; }
+  .step-card { padding: 40px 36px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 26px; }
+  .step-card:first-child { border-left: 0; }
+  .step-card .idx { font-family: var(--mono); font-size: 13px; letter-spacing: 0.14em; color: var(--acc); }
+  .step-card .step-k { font-family: var(--disp); font-size: 30px; line-height: 1; text-transform: uppercase; margin-top: 12px; }
+  .step-card .step-k + p { color: var(--ink); margin-top: 12px; font-size: 17px; }
+  .field { background: var(--bg); border: 1px solid var(--line); padding: 18px 20px; font-size: 18px; color: var(--muted); font-weight: 600; font-family: var(--mono); }
   .field.filled { color: var(--ink); }
-  input.field { width: 100%; font: inherit; color: var(--ink); border: 0; }
+  input.field { width: 100%; font: inherit; color: var(--ink); }
   input.field::placeholder { color: var(--muted); }
-  .confirm b { color: var(--bright); }
+  .confirm { margin-top: 12px; border: 1px solid var(--line); padding: 16px 20px; font-weight: 600; font-size: 17px; }
+  .confirm b { color: var(--acc); }
 
-  .photoband { margin-top: 80px; }
-  .photoband img { width: 100%; height: clamp(320px, 44vw, 560px); object-fit: cover; border-radius: var(--radius); display: block; filter: saturate(.85) brightness(.92); }
-  .photoband p { color: var(--muted); margin-top: 16px; font-size: var(--step-small); font-weight: 600; }
-
-  .bands { margin-top: 20px; }
-  .band { padding: 44px var(--margin); }
+  /* Feature rows */
+  .bands { margin-top: 48px; border-top: 1px solid var(--line); }
+  .band { padding: 34px var(--margin); border-bottom: 1px solid var(--line); }
+  .band.on { background: var(--panel); }
   .band-inner { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: center; }
-  .band p.sentence { font-size: clamp(28px, 3.2vw, 54px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; color: var(--muted); }
-  .band .consequence { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 220ms cubic-bezier(0.23,1,0.32,1), opacity 200ms; font-size: 17px; font-weight: 400; color: var(--ink); max-width: 60ch; }
+  .band p.sentence { font-family: var(--disp); font-size: clamp(26px, 3.4vw, 52px); line-height: 1; text-transform: uppercase; color: var(--muted); }
+  .band.on p.sentence { color: var(--ink); }
+  .band .consequence { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 220ms cubic-bezier(0.23,1,0.32,1), opacity 200ms; font-size: 17px; color: var(--ink); max-width: 60ch; }
   .band .consequence > span { overflow: hidden; min-height: 0; }
   .band.on .consequence { grid-template-rows: 1fr; opacity: 1; }
-  .band.on { background: var(--surface); }
-  .band.on p.sentence { color: var(--ink); }
+  .band .disc { width: 46px; height: 46px; border-radius: 2px; background: transparent; border: 1px solid var(--line); color: var(--acc); font-family: var(--mono); font-size: 24px; font-weight: 700; cursor: pointer; flex: none; line-height: 1; }
+  .band .disc[aria-pressed="false"]::after { content: "+"; }
+  .band .disc[aria-pressed="true"]::after { content: "–"; }
 
-  .band .disc { width: 46px; height: 46px; border-radius: 50%; background: var(--surface-2); border: 0; cursor: pointer; position: relative; flex: none; transition: background-color 150ms; }
-  .band .disc::after { content: ""; position: absolute; left: 15px; top: 12px; width: 12px; height: 12px; border-right: 3px solid var(--muted); border-bottom: 3px solid var(--muted); transform: rotate(45deg); transition: transform 180ms cubic-bezier(0.32,0.72,0,1), border-color 150ms; }
-  .band .disc[aria-pressed="true"] { background: var(--accent); }
-  .band .disc[aria-pressed="true"]::after { transform: rotate(225deg); border-color: #fff; }
-
-
-  .working { color: var(--ink); margin-top: 26px; max-width: 46ch; }
-
-  .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
-  .cta h2 { font-size: clamp(56px, 8vw, 130px); font-weight: 800; letter-spacing: -0.04em; line-height: 0.95; }
-  .cta .btn { margin-top: 44px; font-size: 22px; padding: 22px 64px; }
-  .cta .meta { margin-top: 26px; color: var(--muted); font-weight: 600; }
+  /* CTA */
+  .cta-panel { border: 1px solid var(--line); background: var(--panel); margin-top: 48px; }
+  .cta-panel .term-body { padding: 64px 56px; }
+  .cta h2 { font-family: var(--disp); font-weight: 400; font-size: clamp(56px, 8vw, 130px); line-height: 0.94; text-transform: uppercase; }
+  .cta h2 .l2 { color: var(--acc); }
+  .cta .btn { margin-top: 40px; font-size: 22px; padding: 22px 64px; }
+  .cta .meta { margin-top: 24px; }
   .cta .links { margin-top: 14px; display: flex; gap: 28px; font-weight: 600; flex-wrap: wrap; }
-  .cta-photo img { width: 100%; height: clamp(380px, 40vw, 620px); object-fit: cover; object-position: top; border-radius: var(--radius); display: block; }
 
-  footer { padding: 130px 0 60px; }
-  footer .giant { font-size: clamp(64px, 12.5vw, 220px); font-weight: 800; letter-spacing: -0.05em; line-height: 0.9; }
-  footer .giant span { color: var(--bright); }
-  footer .foot-row { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 50px; color: var(--muted); font-weight: 600; }
+  footer { padding: 110px 0 56px; border-top: 1px solid var(--line); margin-top: 40px; }
+  footer .giant { font-family: var(--disp); font-weight: 400; font-size: clamp(64px, 12.5vw, 220px); line-height: 0.9; text-transform: uppercase; }
+  footer .giant span { color: var(--acc); }
+  footer .foot-row { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 44px; font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; color: var(--muted); }
+  footer .foot-row a:hover { color: var(--ink); }
 
-  footer .credits { margin-top: 26px; color: var(--ink); font-size: var(--step-small); max-width: 60ch; }
-
-  /* Scroll entrances: pure CSS view-timeline, no JS needed */
+  /* Scroll entrances */
   .rv { animation: rv-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-timeline: view(); animation-range: entry 5% cover 28%; }
   @keyframes rv-in { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
   @supports not (animation-timeline: view()) { .rv { animation: none; } }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     .mask > span { animation: none; }
-    .hero .lede, .hero-actions, .hero .meta, .widget-stage { animation: none; }
+    .hero .lede, .hero-actions, .hero .meta, .term { animation: none; }
     .rv { animation: none; }
     .widget.pop { animation: none; }
     .band .consequence { transition: none; }
     .band .disc,.band .disc::after { transition: none; }
   }
+  @media (hover: hover) and (pointer: fine) {
+  .nav-links a:hover { color: var(--ink); }
+  .btn:hover { background: var(--acc-btn); }
+  .ghost-link:hover { color: var(--ink); }
+  footer .foot-row a:hover { color: var(--ink); }
+  .chip:hover { border-color: var(--acc); }
+  }
 
   @media (max-width: 900px) {
     .nav-links { display: none; }
-    .hero { padding-top: 40px; padding-bottom: 80px; }
-    .hero h1 { font-size: 8.4vw; }
-    .hero-row { grid-template-columns: 1fr; }
+    .pillchip { display: none; }
+    .hero { padding-top: 40px; padding-bottom: 0; }
+    .hero h1 { font-size: 15.5vw; }
+    .hero-row { grid-template-columns: 1fr; margin-top: 40px; }
     .hero-actions { flex-direction: column; align-items: flex-start; }
-    .demo-panel { grid-template-columns: 1fr; }
-    .demo-left { padding: 32px 20px; }
-    .demo-right { padding: 28px 24px; }
+    .statstrip { grid-template-columns: 1fr 1fr; }
+    .statstrip > div:nth-child(3) { border-left: 0; }
+    .statstrip > div { border-top: 1px solid var(--line); }
+    .statstrip > div:nth-child(-n+2) { border-top: 0; }
+    .demo-grid { grid-template-columns: 1fr; }
+    .demo-left { border-right: 0; border-bottom: 1px solid var(--line); padding: 28px 20px; }
+    .demo-right { padding: 24px 20px; }
     .widget { padding: 22px 20px; }
     .widget .w-graph { grid-template-rows: repeat(7, 12px); }
     .widget .w-cell { width: 12px; height: 12px; }
-    .cta-grid { grid-template-columns: 1fr; }
-    .step-card { grid-template-columns: 1fr; padding: 32px 24px; }
+    .steps { grid-template-columns: 1fr; }
+    .step-card { border-left: 0; border-top: 1px solid var(--line); padding: 32px 24px; }
+    .step-card:first-child { border-top: 0; }
     section.block { padding-top: 70px; padding-bottom: 70px; }
   }
 </style>
@@ -211,108 +239,127 @@
 <body>
 <a class="skip" href="#widget">Skip to content</a>
 
-<nav>
-  <a class="wordmark" href="#">GH<span>-</span>widgets</a>
+<div class="topbar"><div class="wrap topbar-inner">
+  <a class="wordmark" href="#">GH<span>-</span>WIDGETS</a>
   <div class="nav-links">
     <a href="#widget">Widget</a>
     <a href="#setup">Setup</a>
     <a href="#features">Features</a>
     <a href="#download">Download</a>
   </div>
-  <a class="btn small" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download</a>
-</nav>
+  <div class="topbar-right">
+    <span class="pillchip">Figures are demo</span>
+    <a class="btn small" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download</a>
+  </div>
+</div></div>
 
 <header class="wrap hero">
-  <h1>
+  <p class="micro rv">Free Android widget · No sign-in</p>
+  <h1 style="margin-top:22px">
     <span class="mask"><span>Your GitHub graph,</span></span>
-    <span class="mask"><span>on your home screen.</span></span>
+    <span class="mask"><span class="l2">on your home screen.</span></span>
   </h1>
   <div class="hero-row">
     <div>
       <p class="lede">GH-widgets puts your contribution graph on your Android home screen. Free, no sign-in, just your username.</p>
       <div class="hero-actions">
         <a class="btn" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download free</a>
-        <a class="ghost-link" href="https://github.com/mrduhlol/github-widget">Source on GitHub</a>
+        <a class="btn ghost" href="https://github.com/mrduhlol/github-widget">Source</a>
       </div>
-      <p class="meta">Android 8.0+ · v3.1.1 · about 11 MB</p>
-      <p class="meta">Installs from the GitHub releases page — allow unknown apps once. <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/releases">All releases</a></p>
+      <p class="micro" style="margin-top:26px">Installs from GitHub releases — allow unknown apps once. <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/releases">All releases</a></p>
     </div>
-    <div class="widget-stage">
-      <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
-        <div class="w-name" data-part="name">@mrduhlol</div>
-        <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
-        <div class="w-bignum" data-part="bignum" hidden>1,248</div>
-        <div class="w-stats" data-part="stats">
-          <div data-stat="total"><b>1,248</b>total</div>
-          <div data-stat="streak"><b>23</b>streak</div>
-          <div data-stat="today"><b>31</b>today</div>
+    <div class="term">
+      <div class="term-head"><span class="live"></span>GH-WIDGET · LIVE<span class="right">SIM</span></div>
+      <div class="term-body">
+        <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
+          <div class="w-name" data-part="name">@mrduhlol</div>
+          <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
+          <div class="w-bignum" data-part="bignum" hidden>1,248</div>
+          <div class="w-stats" data-part="stats">
+            <div data-stat="total"><b>1,248</b>total</div>
+            <div data-stat="streak"><b>23</b>streak</div>
+            <div data-stat="today"><b>31</b>today</div>
+          </div>
         </div>
       </div>
     </div>
+  </div>
+  <div class="statstrip rv">
+    <div><div class="k">Version</div><div class="v">v3.1.1</div></div>
+    <div><div class="k">Size</div><div class="v">~11 MB</div></div>
+    <div><div class="k">Android</div><div class="v">8.0+</div></div>
+    <div><div class="k">License</div><div class="v">MIT</div></div>
   </div>
 </header>
 
 <section class="wrap block" id="widget">
   <h2 class="sec-head rv">Try the widget.</h2>
   <p class="sec-sub rv">This is the real layout at real size. Flip the switches and it answers at once.</p>
-  <div class="demo-panel rv">
-    <div class="demo-left">
-      <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
-        <div class="w-name" data-part="name">@mrduhlol</div>
-        <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
-        <div class="w-bignum" data-part="bignum" hidden>1,248</div>
-        <div class="w-stats" data-part="stats">
-          <div data-stat="total"><b>1,248</b>total</div>
-          <div data-stat="streak"><b>23</b>streak</div>
-          <div data-stat="today"><b>31</b>today</div>
+  <div class="term rv" style="margin-top:48px">
+    <div class="term-head"><span class="live"></span>CONFIGURE · LIVE<span class="right">3 STYLES / 9 PALETTES</span></div>
+    <div class="demo-grid">
+      <div class="demo-left">
+        <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
+          <div class="w-name" data-part="name">@mrduhlol</div>
+          <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
+          <div class="w-bignum" data-part="bignum" hidden>1,248</div>
+          <div class="w-stats" data-part="stats">
+            <div data-stat="total"><b>1,248</b>total</div>
+            <div data-stat="streak"><b>23</b>streak</div>
+            <div data-stat="today"><b>31</b>today</div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="demo-right">
-      <div class="ctl"><span class="row-label">Style</span>
-        <span class="chips" style="margin-top:0" role="group" aria-label="Widget style">
-          <button class="chip" data-demo-style="classic" aria-pressed="true">Classic</button>
-          <button class="chip" data-demo-style="graph" aria-pressed="false">Graph</button>
-          <button class="chip" data-demo-style="numbers" aria-pressed="false">Nums</button>
-        </span>
+      <div class="demo-right">
+        <div class="ctl"><span class="row-label">Style</span>
+          <span class="chips" style="margin-top:0" role="group" aria-label="Widget style">
+            <button class="chip" data-demo-style="classic" aria-pressed="true">Classic</button>
+            <button class="chip" data-demo-style="graph" aria-pressed="false">Graph</button>
+            <button class="chip" data-demo-style="numbers" aria-pressed="false">Nums</button>
+          </span>
+        </div>
+        <div class="ctl"><span class="row-label">Palette</span>
+          <span class="dots" role="group" aria-label="Palette">
+            <button class="dot" data-demo-palette="green" aria-pressed="true" aria-label="Classic green" style="background:#3dff6e"></button>
+            <button class="dot" data-demo-palette="blue" aria-pressed="false" aria-label="Ocean blue" style="background:#58a6ff"></button>
+            <button class="dot" data-demo-palette="amber" aria-pressed="false" aria-label="Amber" style="background:#d29922"></button>
+            <button class="dot" data-demo-palette="rose" aria-pressed="false" aria-label="Rose" style="background:#f778ba"></button>
+          </span>
+        </div>
+        <div class="ctl"><span class="row-label">Name</span><button class="toggle" data-demo-toggle="name" aria-pressed="true" aria-label="Show name"></button></div>
+        <div class="ctl"><span class="row-label">Total</span><button class="toggle" data-demo-toggle="total" aria-pressed="true" aria-label="Show total"></button></div>
+        <div class="ctl"><span class="row-label">Streak</span><button class="toggle" data-demo-toggle="streak" aria-pressed="true" aria-label="Show streak"></button></div>
+        <div class="ctl"><span class="row-label">Today</span><button class="toggle" data-demo-toggle="today" aria-pressed="false" aria-label="Show today"></button></div>
+        <p class="demo-note">Nine palettes ship in the app, plus Match wallpaper and your own custom color.</p>
+        <a class="demo-link" href="#download">Get this on your phone</a>
       </div>
-      <div class="ctl"><span class="row-label">Palette</span>
-        <span class="dots" role="group" aria-label="Palette">
-          <button class="dot" data-demo-palette="green" aria-pressed="true" aria-label="Classic green" style="background:#39d353"></button>
-          <button class="dot" data-demo-palette="blue" aria-pressed="false" aria-label="Ocean blue" style="background:#58a6ff"></button>
-          <button class="dot" data-demo-palette="amber" aria-pressed="false" aria-label="Amber" style="background:#d29922"></button>
-          <button class="dot" data-demo-palette="rose" aria-pressed="false" aria-label="Rose" style="background:#f778ba"></button>
-        </span>
-      </div>
-      <div class="ctl"><span class="row-label">Name</span><button class="toggle" data-demo-toggle="name" aria-pressed="true" aria-label="Show name"></button></div>
-      <div class="ctl"><span class="row-label">Total</span><button class="toggle" data-demo-toggle="total" aria-pressed="true" aria-label="Show total"></button></div>
-      <div class="ctl"><span class="row-label">Streak</span><button class="toggle" data-demo-toggle="streak" aria-pressed="true" aria-label="Show streak"></button></div>
-      <div class="ctl"><span class="row-label">Today</span><button class="toggle" data-demo-toggle="today" aria-pressed="false" aria-label="Show today"></button></div>
-      <p class="demo-note">Nine palettes ship in the app, plus Match wallpaper and your own custom color.</p>
-      <a class="demo-link" href="#download">Get this on your phone</a>
     </div>
   </div>
-  <div class="clip-block rv">
-    <video src="assets/promo.mp4" muted loop playsinline autoplay preload="metadata"></video>
+  <div class="term rv" style="margin-top:48px">
+    <div class="term-head"><span class="live"></span>PROMO.MP4 · 24S · SILENT</div>
+    <video src="assets/promo.mp4" muted loop playsinline autoplay preload="metadata" style="display:block;width:100%;background:#000"></video>
   </div>
 </section>
 
 <section class="wrap block" id="setup">
   <h2 class="sec-head rv">Set up in under a minute.</h2>
-  <div class="steps">
-    <div class="step-card rv">
+  <div class="steps rv">
+    <div class="step-card">
+      <div class="idx">01</div>
       <div><p class="step-k">Type your username.</p><p>Paste your profile link if that is easier. Nothing else is asked.</p></div>
       <input class="field" id="try-user" maxlength="39" value="" placeholder="github.com/…" aria-label="Your GitHub username" />
     </div>
-    <div class="step-card rv">
+    <div class="step-card">
+      <div class="idx">02</div>
       <div><p class="step-k">Confirm it is you.</p><p>Your photo and graph show up so you know it found the right person.</p></div>
       <div><div class="field filled">mrduhlol</div><div class="confirm">That is you — <b>1,248 contributions</b> this year.</div></div>
     </div>
-    <div class="step-card rv">
+    <div class="step-card">
+      <div class="idx">03</div>
       <div><p class="step-k">Add it to your home screen.</p><p>Your phone asks where to put it. Change colors anytime after.</p></div>
       <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
         <div class="w-name" data-part="name">@mrduhlol</div>
-        <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#39d353"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#161b22"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
+        <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
         <div class="w-stats" data-part="stats">
           <div><b>1,248</b>total</div>
           <div><b>23</b>streak</div>
@@ -320,10 +367,6 @@
         </div>
       </div>
     </div>
-  </div>
-  <div class="photoband rv">
-    <img src="assets/coffee-android-tablet-phone-location.webp" width="1024" height="683" alt="A phone and a tablet resting on a desk next to a coffee" loading="lazy" decoding="async" />
-    <p>On the home screen in under a minute.</p>
   </div>
 </section>
 
@@ -370,31 +413,28 @@
 </section>
 
 <section class="wrap block cta" id="download">
-  <div class="cta-grid">
-    <div>
-      <h2 class="rv">Get GH-widgets.</h2>
-      <div class="rv"><a class="btn" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download free APK</a></div>
-      <p class="meta rv">Android 8.0+ · v3.1.1 · about 11 MB · signed release</p>
-      <p class="meta rv">Allow unknown apps once when Android asks — that is the whole install.</p>
-      <div class="links rv">
+  <div class="term rv">
+    <div class="term-head"><span class="live"></span>INSTALL<span class="right">APK · SIGNED</span></div>
+    <div class="term-body" style="padding:64px 56px">
+      <h2><span class="mask"><span>Get GH-widgets.</span></span></h2>
+      <div><a class="btn" style="margin-top:40px" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download free APK</a></div>
+      <p class="micro" style="margin-top:24px">Android 8.0+ · v3.1.1 · about 11 MB · signed release</p>
+      <p class="micro" style="margin-top:10px">Allow unknown apps once when Android asks — that is the whole install.</p>
+      <div class="links" style="margin-top:14px;display:flex;gap:28px;font-weight:600;flex-wrap:wrap">
         <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/releases">All releases</a>
         <a class="ghost-link" href="https://github.com/mrduhlol/github-widget">Source on GitHub</a>
         <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/issues">Report a bug</a>
       </div>
     </div>
-    <div class="cta-photo rv">
-      <img src="assets/person-looking-at-smartphone-in-the-dark.jpg" width="1920" height="1280" alt="A person looking at a glowing smartphone in the dark" loading="lazy" decoding="async" />
-    </div>
   </div>
 </section>
 
 <footer class="wrap">
-  <div class="giant rv">GH<span>-</span>widgets</div>
+  <div class="giant rv">GH<span>-</span>WIDGETS</div>
   <div class="foot-row">
     <span>Free. No sign-in. Just your username.</span>
     <span>v3.1.1 · MIT licensed · Made from a contribution graph</span>
   </div>
-  <p class="credits">Pictures: <a href="https://www.rawpixel.com/image/6113567/photo-image-phone-public-domain-logo">“Coffee Android Tablet Phone, location”</a>, <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>, via rawpixel; <a href="https://commons.wikimedia.org/wiki/File:Person_looking_at_smartphone_in_the_dark_(2).jpg">“Person looking at smartphone in the dark (2)”</a> by Japanexperterna.se from Japan, <a href="https://creativecommons.org/licenses/by-sa/2.0">CC BY-SA 2.0</a>, via Wikimedia Commons. Product interface fragments are drawn in code from the app itself.</p>
 </footer>
 
 <script>
@@ -408,10 +448,10 @@
     };
   }
   var palettes = {
-    green: ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"],
-    blue:  ["#161b22", "#0c2d6b", "#0a4db3", "#1f6feb", "#58a6ff"],
-    amber: ["#161b22", "#5a3a00", "#9e6a03", "#d29922", "#e3b341"],
-    rose:  ["#161b22", "#5e1042", "#a60f6c", "#e2599b", "#f778ba"]
+    green: ["#152219", "#0e4429", "#006d32", "#26a641", "#3dff6e"],
+    blue:  ["#152219", "#0c2d6b", "#0a4db3", "#1f6feb", "#58a6ff"],
+    amber: ["#152219", "#5a3a00", "#9e6a03", "#d29922", "#e3b341"],
+    rose:  ["#152219", "#5e1042", "#a60f6c", "#e2599b", "#f778ba"]
   };
   function paint(widget) {
     var pal = palettes[widget.dataset.palette] || palettes.green;
@@ -429,16 +469,13 @@
   function applyStyle(widget, style) {
     widget.dataset.style = style;
     widget.classList.remove("pop"); void widget.offsetWidth; widget.classList.add("pop");
-    var showGraph = style !== "numbers";
-    var showStats = style === "classic";
-    var showBig = style === "numbers";
-    var showName = widget.dataset.showName !== "0";
-    var g = widget.querySelector("[data-part='graph']"); if (g) g.style.display = showGraph ? "" : "none";
-    var st = widget.querySelector("[data-part='stats']"); if (st) st.style.display = showStats ? "" : "none";
-    var bn = widget.querySelector("[data-part='bignum']"); if (bn) bn.hidden = !showBig;
-    var nm = widget.querySelector("[data-part='name']"); if (nm) nm.style.display = showName && style !== "numbers" ? "" : "none";
+    var g = widget.querySelector("[data-part='graph']"); if (g) g.style.display = showGraph(style) ? "" : "none";
+    var st = widget.querySelector("[data-part='stats']"); if (st) st.style.display = style === "classic" ? "" : "none";
+    var bn = widget.querySelector("[data-part='bignum']"); if (bn) bn.hidden = style !== "numbers";
+    var nm = widget.querySelector("[data-part='name']"); if (nm) nm.style.display = widget.dataset.showName !== "0" && style !== "numbers" ? "" : "none";
     paint(widget);
   }
+  function showGraph(style) { return style !== "numbers"; }
   document.querySelectorAll("[data-widget]").forEach(function (w) {
     applyStyle(w, w.dataset.style || "classic");
   });
@@ -447,7 +484,7 @@
     group.querySelectorAll("[aria-pressed]").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
     btn.setAttribute("aria-pressed", "true");
   }
-  var demoWidget = document.querySelector(".demo-panel [data-widget]");
+  var demoWidget = document.querySelector(".demo-grid [data-widget]");
   document.querySelectorAll("[data-demo-style]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       press(btn.parentElement, btn);
@@ -475,14 +512,6 @@
       }
     });
   });
-  var tryUser = document.getElementById("try-user");
-  var stepName = document.querySelector(".step-card [data-widget] [data-part='name']");
-  if (tryUser && stepName) {
-    tryUser.addEventListener("input", function () {
-      var v = tryUser.value.trim().replace(/^@/, "");
-      stepName.textContent = "@" + (v || "mrduhlol");
-    });
-  }
 
   document.querySelectorAll(".band .disc").forEach(function (btn) {
     function flip() {
@@ -496,9 +525,14 @@
     });
   });
 
-
-
-
+  var tryUser = document.getElementById("try-user");
+  var stepName = document.querySelector(".step-card [data-widget] [data-part='name']");
+  if (tryUser && stepName) {
+    tryUser.addEventListener("input", function () {
+      var v = tryUser.value.trim().replace(/^@/, "");
+      stepName.textContent = "@" + (v || "mrduhlol");
+    });
+  }
 })();
 </script>
 </body>
