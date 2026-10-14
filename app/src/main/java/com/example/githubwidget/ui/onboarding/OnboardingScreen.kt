@@ -21,6 +21,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -69,6 +70,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -84,6 +87,7 @@ import com.example.githubwidget.data.Lookup
 import com.example.githubwidget.data.Repository
 import com.example.githubwidget.data.SampleData
 import com.example.githubwidget.ui.components.AddWidgetHelpSheet
+import com.example.githubwidget.ui.components.AppIcons
 import com.example.githubwidget.ui.components.Avatar
 import com.example.githubwidget.ui.components.PrimaryButton
 import com.example.githubwidget.ui.components.SecondaryButton
@@ -91,6 +95,7 @@ import com.example.githubwidget.ui.components.WallpaperBackdrop
 import com.example.githubwidget.ui.components.WidgetPinning
 import com.example.githubwidget.ui.components.WidgetPreview
 import com.example.githubwidget.ui.theme.AppTheme
+import com.example.githubwidget.ui.theme.GhTheme
 import com.example.githubwidget.widget.WidgetUpdater
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -122,14 +127,16 @@ fun OnboardingScreen(changingAccount: Boolean, onDone: () -> Unit, onCancel: () 
     }
     BackHandler(enabled = canGoBack, onBack = goBack)
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(AppTheme.colors.canvas)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .imePadding(),
-    ) {
+    // The tour always wears its dark-purple look, like the mascot art.
+    GhTheme(dark = true) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .background(Brush.verticalGradient(listOf(Color(0xFF2B0F4E), Color(0xFF140725))))
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .imePadding(),
+        ) {
         TopBar(
             count = steps.size,
             index = index,
@@ -167,6 +174,7 @@ fun OnboardingScreen(changingAccount: Boolean, onDone: () -> Unit, onCancel: () 
                     )
                 } ?: Box(Modifier.fillMaxSize())
             }
+        }
         }
     }
 }
@@ -259,23 +267,26 @@ private fun WelcomeStep(onNext: () -> Unit) {
         centered = true,
         content = {
             Spacer(Modifier.height(8.dp))
-            WallpaperBackdrop(Modifier.padding(vertical = 8.dp)) {
-                WidgetPreview(
-                    design = design,
-                    data = SampleData.userData,
-                    avatar = null,
-                    widthDp = 340f,
-                    heightDp = 170f,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 18.dp)
-                        .graphicsLayer {
-                            translationY = offset * density
-                            rotationZ = tilt
-                        },
+            Box(
+                Modifier
+                    .size(148.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f))
+                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), CircleShape)
+                    .graphicsLayer {
+                        translationY = offset * density
+                        rotationZ = tilt
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    AppIcons.Octocat,
+                    contentDescription = "GitHub Octocat",
+                    tint = Color.White,
+                    modifier = Modifier.size(84.dp),
                 )
             }
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(28.dp))
             Text(
                 "Your GitHub activity, on your home screen",
                 style = MaterialTheme.typography.headlineMedium,
@@ -290,6 +301,19 @@ private fun WelcomeStep(onNext: () -> Unit) {
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 8.dp),
             )
+            Spacer(Modifier.height(20.dp))
+            WallpaperBackdrop(Modifier.padding(vertical = 8.dp)) {
+                WidgetPreview(
+                    design = design,
+                    data = SampleData.userData,
+                    avatar = null,
+                    widthDp = 340f,
+                    heightDp = 170f,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 18.dp),
+                )
+            }
             Spacer(Modifier.height(16.dp))
         },
         actions = {
