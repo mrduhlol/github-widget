@@ -12,7 +12,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Schibsted+Grotesk:wght@400;600;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Schibsted+Grotesk:wght@400;600;800&family=Inter:wght@400;700;800&family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;800&family=Outfit:wght@400;800&family=Figtree:wght@400;800&family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet" />
 <style>
   :root {
     --bg: #060a07;
@@ -117,6 +117,12 @@
   .widget .w-stats { display: flex; gap: 34px; color: var(--muted); font-size: 14px; font-weight: 600; font-family: var(--mono); }
   .widget .w-stats b { display: block; color: var(--ink); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .widget .w-bignum { font-family: var(--disp); font-size: 84px; color: var(--acc); line-height: 1; }
+  .widget[data-style="numbers"] { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 28px; align-items: center; }
+  .widget[data-style="numbers"] .w-graph { grid-column: 2; grid-row: 1 / span 2; margin-bottom: 0; min-width: 0; grid-template-rows: repeat(7, 11px); }
+  .widget[data-style="numbers"] .w-cell { width: 11px; height: 11px; }
+  .widget[data-style="numbers"] [data-stat="total"] { display: none; }
+  .widget[data-style="numbers"] .w-stats { flex-direction: column; gap: 12px; }
+  .widget[data-style="numbers"] .w-bignum { font-size: 72px; }
   .widget.pop { animation: pop 0.35s ease; }
   @keyframes pop { from { opacity: 0.25; transform: scale(0.985); } to { opacity: 1; transform: none; } }
   .chips { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
@@ -128,6 +134,11 @@
   .dots { display: flex; gap: 10px; margin-top: 16px; align-items: center; }
   .dot { width: 32px; height: 32px; border-radius: 2px; border: 1px solid var(--line); cursor: pointer; padding: 0; }
   .dot[aria-pressed="true"] { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .widget { --wfont: inherit; }
+  .widget .w-name, .widget .w-stats, .widget .w-bignum { font-family: var(--wfont); }
+  .widget[data-shape="square"] .w-cell { border-radius: 2px; }
+  .widget[data-shape="circle"] .w-cell { border-radius: 50%; }
+  .fontsel { background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 2px; font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; padding: 12px 12px; min-height: 44px; max-width: 230px; }
 
   section.block { padding-top: 110px; padding-bottom: 110px; }
   .sec-head { font-family: var(--disp); font-weight: 400; font-size: clamp(44px, 6vw, 96px); line-height: 0.95; text-transform: uppercase; max-width: 22ch; }
@@ -188,7 +199,9 @@
   .cta .meta { margin-top: 24px; }
   .cta .links { margin-top: 14px; display: flex; gap: 28px; font-weight: 600; flex-wrap: wrap; }
 
-  footer { padding: 110px 0 56px; border-top: 1px solid var(--line); margin-top: 40px; }
+  footer { padding: 110px 0 56px; border-top: 1px solid var(--line); margin-top: 40px; position: relative; overflow: hidden; }
+  .watermark { position: absolute; right: -12px; bottom: -30px; font-family: var(--disp); font-size: clamp(120px, 22vw, 340px); line-height: 0.8; text-transform: uppercase; color: transparent; -webkit-text-stroke: 1px #24402a; pointer-events: none; white-space: nowrap; z-index: 0; }
+  footer .giant, footer .foot-row { position: relative; z-index: 1; }
   footer .giant { font-family: var(--disp); font-weight: 400; font-size: clamp(64px, 12.5vw, 220px); line-height: 0.9; text-transform: uppercase; }
   footer .giant span { color: var(--acc); }
   footer .foot-row { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 44px; font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; color: var(--muted); }
@@ -232,6 +245,9 @@
     .demo-right { padding: 24px 20px; }
     .widget { padding: 22px 20px; }
     .widget .w-graph { grid-template-rows: repeat(7, 12px); }
+    .widget[data-style="numbers"] { grid-template-columns: 1fr; }
+    .widget[data-style="numbers"] .w-graph { grid-column: 1; grid-row: auto; }
+    .widget[data-style="numbers"] .w-stats { flex-direction: row; }
     .widget .w-cell { width: 12px; height: 12px; }
     .steps { grid-template-columns: 1fr; }
     .step-card { border-left: 0; border-top: 1px solid var(--line); padding: 32px 24px; }
@@ -303,7 +319,7 @@
     <div class="term-head"><span class="live"></span><span data-decode>CONFIGURE · LIVE</span><span class="right">3 STYLES / 9 PALETTES</span></div>
     <div class="demo-grid">
       <div class="demo-left">
-        <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
+        <div class="widget" data-ui data-widget data-style="classic" data-palette="green" data-shape="rounded">
           <div class="w-name" data-part="name">@mrduhlol</div>
           <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
           <div class="w-bignum" data-part="bignum" hidden>1,248</div>
@@ -319,7 +335,7 @@
           <span class="chips" style="margin-top:0" role="group" aria-label="Widget style">
             <button class="chip" data-demo-style="classic" aria-pressed="true">Classic</button>
             <button class="chip" data-demo-style="graph" aria-pressed="false">Graph</button>
-            <button class="chip" data-demo-style="numbers" aria-pressed="false">Nums</button>
+            <button class="chip" data-demo-style="numbers" aria-pressed="false">Numbers</button>
           </span>
         </div>
         <div class="ctl"><span class="row-label">Palette</span>
@@ -330,7 +346,9 @@
             <button class="dot" data-demo-palette="rose" aria-pressed="false" aria-label="Rose" style="background:#f778ba"></button>
           </span>
         </div>
-        <div class="ctl"><span class="row-label">Name</span><button class="toggle" data-demo-toggle="name" aria-pressed="true" aria-label="Show name"></button></div>
+        <div class="ctl"><span class="row-label">Font</span><select class="fontsel" id="demo-font" aria-label="Number font"><option value="SYSTEM">System</option><option value="INTER">Inter</option><option value="SPACE_GROTESK">Space Grotesk</option><option value="MANROPE">Manrope</option><option value="OUTFIT">Outfit</option><option value="FIGTREE">Figtree</option><option value="PLUS_JAKARTA">Plus Jakarta</option></select></div>
+      <div class="ctl"><span class="row-label">Shape</span><span class="chips" style="margin-top:0" role="group" aria-label="Cell shape"><button class="chip" data-demo-shape="square" aria-pressed="false">Square</button><button class="chip" data-demo-shape="rounded" aria-pressed="true">Rounded</button><button class="chip" data-demo-shape="circle" aria-pressed="false">Circle</button></span></div>
+      <div class="ctl"><span class="row-label">Name</span><button class="toggle" data-demo-toggle="name" aria-pressed="true" aria-label="Show name"></button></div>
         <div class="ctl"><span class="row-label">Total</span><button class="toggle" data-demo-toggle="total" aria-pressed="true" aria-label="Show total"></button></div>
         <div class="ctl"><span class="row-label">Streak</span><button class="toggle" data-demo-toggle="streak" aria-pressed="true" aria-label="Show streak"></button></div>
         <div class="ctl"><span class="row-label">Today</span><button class="toggle" data-demo-toggle="today" aria-pressed="false" aria-label="Show today"></button></div>
@@ -340,7 +358,6 @@
     </div>
   </div>
   <div class="term rv" style="margin-top:48px">
-    <div class="term-head"><span class="live"></span>PROMO.MP4 · 24S · SILENT</div>
     <video src="assets/promo.mp4" muted loop playsinline autoplay preload="metadata" style="display:block;width:100%;background:#000"></video>
   </div>
 </section>
@@ -434,6 +451,7 @@
 </section>
 
 <footer class="wrap">
+  <div class="watermark" aria-hidden="true">mrduhlol</div>
   <div class="giant rv">GH<span>-</span>WIDGETS</div>
   <div class="foot-row">
     <span>Free. No sign-in. Just your username.</span>
@@ -473,13 +491,12 @@
   function applyStyle(widget, style) {
     widget.dataset.style = style;
     widget.classList.remove("pop"); void widget.offsetWidth; widget.classList.add("pop");
-    var g = widget.querySelector("[data-part='graph']"); if (g) g.style.display = showGraph(style) ? "" : "none";
-    var st = widget.querySelector("[data-part='stats']"); if (st) st.style.display = style === "classic" ? "" : "none";
+    var g = widget.querySelector("[data-part='graph']"); if (g) g.style.display = "";
+    var st = widget.querySelector("[data-part='stats']"); if (st) st.style.display = (style === "classic" || style === "numbers") ? "" : "none";
     var bn = widget.querySelector("[data-part='bignum']"); if (bn) bn.hidden = style !== "numbers";
     var nm = widget.querySelector("[data-part='name']"); if (nm) nm.style.display = widget.dataset.showName !== "0" && style !== "numbers" ? "" : "none";
     paint(widget);
   }
-  function showGraph(style) { return style !== "numbers"; }
   document.querySelectorAll("[data-widget]").forEach(function (w) {
     applyStyle(w, w.dataset.style || "classic");
   });
@@ -493,6 +510,19 @@
     btn.addEventListener("click", function () {
       press(btn.parentElement, btn);
       applyStyle(demoWidget, btn.dataset.demoStyle);
+    });
+  });
+  var fontStacks = {SYSTEM: "ui-sans-serif,system-ui,sans-serif", INTER: "'Inter',sans-serif", SPACE_GROTESK: "'Space Grotesk',sans-serif", MANROPE: "'Manrope',sans-serif", OUTFIT: "'Outfit',sans-serif", FIGTREE: "'Figtree',sans-serif", PLUS_JAKARTA: "'Plus Jakarta Sans',sans-serif"};
+  var demoFont = document.getElementById("demo-font");
+  if (demoFont) {
+    demoFont.addEventListener("change", function () {
+      demoWidget.style.setProperty("--wfont", fontStacks[demoFont.value] || fontStacks.SYSTEM);
+    });
+  }
+  document.querySelectorAll("[data-demo-shape]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      press(btn.parentElement, btn);
+      demoWidget.dataset.shape = btn.dataset.demoShape;
     });
   });
   document.querySelectorAll("[data-demo-palette]").forEach(function (btn) {
