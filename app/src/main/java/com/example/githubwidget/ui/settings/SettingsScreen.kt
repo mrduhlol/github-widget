@@ -14,6 +14,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -71,7 +72,7 @@ import com.example.githubwidget.ui.components.Hairline
 import com.example.githubwidget.ui.components.NavRow
 import com.example.githubwidget.ui.components.ScreenHeader
 import com.example.githubwidget.ui.components.SecondaryButton
-import com.example.githubwidget.ui.components.SectionCard
+import com.example.githubwidget.ui.components.SectionLabel
 import com.example.githubwidget.ui.components.SegmentedChoice
 import com.example.githubwidget.ui.components.WidgetPinning
 import com.example.githubwidget.ui.theme.AppTheme
@@ -115,8 +116,11 @@ fun SettingsScreen(onChangeAccount: () -> Unit) {
 
         // -------------------------------------------------- account
         item {
-            SectionCard(title = "Account") {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            SettingsGroup("Account") {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                ) {
                     Avatar(avatar, displayName, 52.dp)
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
@@ -138,20 +142,29 @@ fun SettingsScreen(onChangeAccount: () -> Unit) {
                     Spacer(Modifier.width(12.dp))
                     SecondaryButton("Change", onChangeAccount)
                 }
-                Spacer(Modifier.height(12.dp))
                 Hairline()
-                Spacer(Modifier.height(4.dp))
                 NavRow(
                     title = "View profile on GitHub",
                     icon = Icons.Rounded.AccountCircle,
+                    flatIcon = true,
                     onClick = { openUrl(context, "https://github.com/$login") },
+                )
+                Hairline()
+                NavRow(
+                    title = "Sign out",
+                    icon = Icons.AutoMirrored.Rounded.ExitToApp,
+                    iconTint = AppTheme.colors.danger,
+                    titleColor = AppTheme.colors.danger,
+                    flatIcon = true,
+                    onClick = { confirmSignOut = true },
+                    trailing = {},
                 )
             }
         }
 
         // -------------------------------------------------- updates
         item {
-            SectionCard(title = "Updates") {
+            SettingsGroup("Updates") {
                 Text("Refresh every", style = MaterialTheme.typography.titleSmall, color = AppTheme.colors.textPrimary)
                 Spacer(Modifier.height(10.dp))
                 SegmentedChoice(
@@ -166,14 +179,14 @@ fun SettingsScreen(onChangeAccount: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = AppTheme.colors.textSecondary,
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
                 Hairline()
-                Spacer(Modifier.height(4.dp))
                 val loading = refreshState is RefreshState.Loading
                 val failed = refreshState as? RefreshState.Failed
                 NavRow(
                     title = "Refresh now",
                     icon = Icons.Rounded.Refresh,
+                    flatIcon = true,
                     subtitle = when {
                         loading -> "Updating…"
                         failed != null -> failed.message
@@ -197,34 +210,36 @@ fun SettingsScreen(onChangeAccount: () -> Unit) {
 
         // -------------------------------------------------- widget
         item {
-            SectionCard(title = "Widget", contentPadding = 10.dp) {
+            SettingsGroup("Widget") {
                 NavRow(
                     title = "Add widget to home screen",
                     icon = Icons.Rounded.Add,
+                    flatIcon = true,
                     onClick = { if (!WidgetPinning.request(context)) showHelp = true },
-                    modifier = Modifier.padding(horizontal = 4.dp),
                 )
+                Hairline()
                 NavRow(
                     title = "How to add the widget",
                     icon = Icons.Rounded.Info,
+                    flatIcon = true,
                     onClick = { showHelp = true },
-                    modifier = Modifier.padding(horizontal = 4.dp),
                 )
+                Hairline()
                 NavRow(
                     title = "Reset widget design",
                     subtitle = "Go back to the original look",
                     icon = Icons.Rounded.Edit,
+                    flatIcon = true,
                     onClick = { confirmReset = true },
-                    modifier = Modifier.padding(horizontal = 4.dp),
                 )
             }
         }
 
         // -------------------------------------------------- help
         item {
-            SectionCard(title = "Help", contentPadding = 10.dp) {
+            SettingsGroup("Help") {
                 FAQS.forEachIndexed { i, (q, a) ->
-                    if (i > 0) Hairline(Modifier.padding(horizontal = 8.dp))
+                    if (i > 0) Hairline()
                     FaqItem(q, a)
                 }
             }
@@ -232,8 +247,11 @@ fun SettingsScreen(onChangeAccount: () -> Unit) {
 
         // -------------------------------------------------- about
         item {
-            SectionCard(title = "About") {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            SettingsGroup("About") {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                ) {
                     Icon(AppIcons.Graph, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(10.dp))
                     Text(
@@ -250,43 +268,30 @@ fun SettingsScreen(onChangeAccount: () -> Unit) {
                         )
                     }
                 }
-                Spacer(Modifier.height(10.dp))
                 Text(
                     "Data comes from GitHub's public contribution graph. No sign-in, no password, " +
                         "nothing leaves your phone except your username.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = AppTheme.colors.textSecondary,
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
                 Hairline()
-                Spacer(Modifier.height(4.dp))
                 UpdateCheckRow(version)
+                Hairline()
                 NavRow(
                     title = "Project page",
                     subtitle = "Source code and feedback",
                     icon = Icons.Rounded.Favorite,
+                    flatIcon = true,
                     onClick = { openUrl(context, PROJECT_URL) },
                 )
+                Hairline()
                 NavRow(
                     title = "@mrduhlol",
                     subtitle = "Developer on GitHub",
                     icon = Icons.Rounded.AccountCircle,
+                    flatIcon = true,
                     onClick = { openUrl(context, "https://github.com/mrduhlol") },
-                )
-            }
-        }
-
-        // -------------------------------------------------- sign out
-        item {
-            SectionCard(contentPadding = 10.dp) {
-                NavRow(
-                    title = "Sign out",
-                    icon = Icons.AutoMirrored.Rounded.ExitToApp,
-                    iconTint = AppTheme.colors.danger,
-                    titleColor = AppTheme.colors.danger,
-                    onClick = { confirmSignOut = true },
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                    trailing = {},
                 )
             }
         }
@@ -346,6 +351,7 @@ private fun UpdateCheckRow(currentVersion: String?) {
             else -> "Tap to check"
         },
         icon = AppIcons.Download,
+        flatIcon = true,
         onClick = {
             if (checking) return@NavRow
             checking = true
@@ -402,6 +408,20 @@ private fun UpdateCheckRow(currentVersion: String?) {
     }
 }
 
+// ------------------------------------------------------------------ groups
+
+/** One UI-style group: small section label over full-width rows separated by hairlines. */
+@Composable
+private fun SettingsGroup(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(Modifier.fillMaxWidth()) {
+        SectionLabel(title, Modifier.padding(start = 4.dp, bottom = 4.dp))
+        Column(Modifier.fillMaxWidth(), content = content)
+    }
+}
+
 // ------------------------------------------------------------------ help
 
 private val FAQS = listOf(
@@ -427,7 +447,7 @@ private fun FaqItem(question: String, answer: String) {
                 .heightIn(min = 52.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .clickable(role = Role.Button, onClickLabel = if (open) "Hide answer" else "Show answer") { open = !open }
-                .padding(horizontal = 8.dp, vertical = 12.dp),
+                .padding(horizontal = 4.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -448,7 +468,7 @@ private fun FaqItem(question: String, answer: String) {
                 answer,
                 style = MaterialTheme.typography.bodyMedium,
                 color = AppTheme.colors.textSecondary,
-                modifier = Modifier.padding(start = 8.dp, end = 32.dp, bottom = 14.dp),
+                modifier = Modifier.padding(start = 4.dp, end = 32.dp, bottom = 14.dp),
             )
         }
     }

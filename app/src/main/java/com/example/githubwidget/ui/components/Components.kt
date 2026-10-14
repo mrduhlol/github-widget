@@ -319,6 +319,8 @@ fun NavRow(
     iconTint: Color = AppTheme.colors.textSecondary,
     titleColor: Color = AppTheme.colors.textPrimary,
     trailing: (@Composable RowScope.() -> Unit)? = null,
+    /** Plain 24dp icon with no container, like the system Settings list. */
+    flatIcon: Boolean = false,
 ) {
     Row(
         modifier
@@ -329,11 +331,15 @@ fun NavRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
-            Box(
-                Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(AppTheme.colors.raised),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(icon, null, Modifier.size(20.dp), tint = iconTint)
+            if (flatIcon) {
+                Icon(icon, null, Modifier.size(24.dp), tint = iconTint)
+            } else {
+                Box(
+                    Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(AppTheme.colors.raised),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(icon, null, Modifier.size(20.dp), tint = iconTint)
+                }
             }
             Spacer(Modifier.width(14.dp))
         }
