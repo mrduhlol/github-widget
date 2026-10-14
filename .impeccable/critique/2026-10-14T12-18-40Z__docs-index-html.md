@@ -10,6 +10,7 @@ target_fingerprint: "sha256:03f7e139a26c3ae10922143f0b657f45b0f32c937ff21d94086f
 target_path: /home/abhishek/github-widget/docs/index.html
 timestamp: 2026-10-14T12-18-40Z
 slug: docs-index-html
+closed: true
 ---
 # Critique: docs/index.html (GH-widgets showcase)
 
