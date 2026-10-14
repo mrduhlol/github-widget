@@ -114,7 +114,7 @@
   .widget .w-user { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
   .widget .w-user img { width: 44px; height: 44px; border-radius: 50%; display: block; background: var(--panel2); }
   .widget .w-nametext { font-weight: 800; font-size: 24px; }
-  .widget .w-graph { display: grid; grid-template-rows: repeat(7, var(--cell, 15px)); grid-auto-flow: column; column-gap: var(--gap, 4px); row-gap: 4px; margin-bottom: 20px; }
+  .widget .w-graph { display: grid; grid-template-rows: repeat(7, var(--cell, 15px)); grid-auto-flow: column; column-gap: var(--gap, 5px); row-gap: 4px; margin-bottom: 20px; }
   .widget .w-cell { width: var(--cell, 15px); height: var(--cell, 15px); border-radius: 3px; }
   .widget .w-stats { display: flex; gap: 34px; color: var(--muted); font-size: 14px; font-weight: 600; font-family: var(--mono); }
   .widget .w-stats b { display: block; color: var(--ink); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -351,7 +351,7 @@
         </div>
         <div class="ctl"><span class="row-label">Font</span><select class="fontsel" id="demo-font" aria-label="Number font"><option value="SYSTEM">System</option><option value="INTER">Inter</option><option value="SPACE_GROTESK">Space Grotesk</option><option value="MANROPE">Manrope</option><option value="OUTFIT">Outfit</option><option value="FIGTREE">Figtree</option><option value="PLUS_JAKARTA">Plus Jakarta</option></select></div>
       <div class="ctl"><span class="row-label">Shape</span><span class="chips" style="margin-top:0" role="group" aria-label="Cell shape"><button class="chip" data-demo-shape="square" aria-pressed="false">Square</button><button class="chip" data-demo-shape="rounded" aria-pressed="true">Rounded</button><button class="chip" data-demo-shape="circle" aria-pressed="false">Circle</button></span></div>
-      <div class="ctl"><span class="row-label">Cell gap</span><span class="range-row"><input type="range" id="demo-gap" min="2" max="8" step="1" value="4" aria-label="Gap between cells in pixels" /><b id="demo-gap-val">4px</b></span></div>
+      <div class="ctl"><span class="row-label">Cell gap</span><span class="range-row"><input type="range" id="demo-gap" min="2" max="8" step="1" value="5" aria-label="Gap between cells in pixels" /><b id="demo-gap-val">5px</b></span></div>
       <div class="ctl"><span class="row-label">Name</span><button class="toggle" data-demo-toggle="name" aria-pressed="true" aria-label="Show name"></button></div>
         <div class="ctl"><span class="row-label">Total</span><button class="toggle" data-demo-toggle="total" aria-pressed="true" aria-label="Show total"></button></div>
         <div class="ctl"><span class="row-label">Streak</span><button class="toggle" data-demo-toggle="streak" aria-pressed="true" aria-label="Show streak"></button></div>
