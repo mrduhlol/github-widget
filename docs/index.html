@@ -80,18 +80,22 @@
     font-size: clamp(58px, 9vw, 148px); line-height: 0.94; letter-spacing: 0.005em;
     text-transform: uppercase;
   }
-  .hero h1 .l2 { color: var(--acc); }
+
   .mask { display: block; overflow: hidden; }
-  .mask > span { display: block; animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-  .mask:nth-child(2) > span { animation-delay: 0.14s; }
+  .mask .w { display: inline-block; overflow: hidden; vertical-align: top; }
+  .mask .w > span { display: inline-block; animation: rise 0.85s cubic-bezier(0.23, 1, 0.32, 1) both; animation-delay: var(--d, 0s); padding-right: 0.24em; }
+  .mask .w:last-child > span { padding-right: 0; }
+  .mask.green .w > span { color: var(--acc); }
+  .mask.static .w > span { animation: none; }
   @keyframes rise { from { transform: translateY(110%); } to { transform: none; } }
   .hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; margin-top: 48px; }
   .hero-row > *, .steps > *, .demo-panel > * { min-width: 0; }
-  .hero .lede { font-size: var(--step-lead); color: var(--ink); max-width: 34ch; margin-bottom: 36px; animation: fadeup 0.7s ease 0.35s both; }
-  .hero-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; animation: fadeup 0.7s ease 0.45s both; }
-  .hero .meta { margin-top: 22px; animation: fadeup 0.7s ease 0.55s both; }
+  .hero .lede { font-size: var(--step-lead); color: var(--ink); max-width: 34ch; margin-bottom: 36px; animation: fadeup 0.7s cubic-bezier(0.23,1,0.32,1) 0.55s both; }
+  .hero-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; animation: fadeup 0.7s cubic-bezier(0.23,1,0.32,1) 0.65s both; }
+  .hero .term { animation: fadeup 0.8s cubic-bezier(0.23,1,0.32,1) 0.7s both; }
+  .hero .meta { margin-top: 22px; animation: fadeup 0.7s cubic-bezier(0.23,1,0.32,1) 0.75s both; }
   .ghost-link { color: var(--muted); font-weight: 600; }
-  @keyframes fadeup { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+  @keyframes fadeup { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 
   .statstrip { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); margin-top: 56px; }
   .statstrip > div { padding: 18px 22px; border-left: 1px solid var(--line); }
@@ -102,7 +106,8 @@
   /* Terminal panel + live widget */
   .term { border: 1px solid var(--line); background: var(--panel); animation: fadeup 0.8s ease 0.6s both; }
   .term-head { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); padding: 12px 20px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; color: var(--muted); }
-  .term-head .live { width: 8px; height: 8px; background: var(--acc); }
+  .term-head .live { width: 8px; height: 8px; background: var(--acc); animation: blink 1.4s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0.15; } }
   .term-head .right { margin-left: auto; color: var(--muted); }
   .term-body { padding: 36px 32px; }
   .widget { background: var(--bg); border: 1px solid var(--line); padding: 28px 26px; min-height: 280px; }
@@ -190,13 +195,14 @@
   footer .foot-row a:hover { color: var(--ink); }
 
   /* Scroll entrances */
-  .rv { animation: rv-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-timeline: view(); animation-range: entry 5% cover 28%; }
+  .rv { animation: rv-in 0.65s cubic-bezier(0.23, 1, 0.32, 1) both; animation-timeline: view(); animation-range: entry 5% cover 28%; }
   @keyframes rv-in { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
   @supports not (animation-timeline: view()) { .rv { animation: none; } }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
-    .mask > span { animation: none; }
-    .hero .lede, .hero-actions, .hero .meta, .term { animation: none; }
+    .mask .w > span { animation: none; }
+    .term-head .live { animation: none; }
+    .hero .lede, .hero-actions, .hero .meta, .hero .term { animation: none; }
     .rv { animation: none; }
     .widget.pop { animation: none; }
     .band .consequence { transition: none; }
@@ -254,8 +260,8 @@
 <header class="wrap hero">
   <p class="micro rv">Free Android widget · No sign-in</p>
   <h1 style="margin-top:22px">
-    <span class="mask"><span>Your GitHub graph,</span></span>
-    <span class="mask"><span class="l2">on your home screen.</span></span>
+    <span class="mask"><span class="w" style="--d:.05s"><span>Your</span></span><span class="w" style="--d:.12s"><span>GitHub</span></span><span class="w" style="--d:.19s"><span>graph,</span></span></span>
+    <span class="mask green"><span class="w" style="--d:.32s"><span>on</span></span><span class="w" style="--d:.39s"><span>your</span></span><span class="w" style="--d:.46s"><span>home</span></span><span class="w" style="--d:.53s"><span>screen.</span></span></span>
   </h1>
   <div class="hero-row">
     <div>
@@ -267,7 +273,7 @@
       <p class="micro" style="margin-top:26px">Installs from GitHub releases — allow unknown apps once. <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/releases">All releases</a></p>
     </div>
     <div class="term">
-      <div class="term-head"><span class="live"></span>GH-WIDGET · LIVE<span class="right">SIM</span></div>
+      <div class="term-head"><span class="live"></span><span data-decode>GH-WIDGET · LIVE</span><span class="right">SIM</span></div>
       <div class="term-body">
         <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
           <div class="w-name" data-part="name">@mrduhlol</div>
@@ -294,7 +300,7 @@
   <h2 class="sec-head rv">Try the widget.</h2>
   <p class="sec-sub rv">This is the real layout at real size. Flip the switches and it answers at once.</p>
   <div class="term rv" style="margin-top:48px">
-    <div class="term-head"><span class="live"></span>CONFIGURE · LIVE<span class="right">3 STYLES / 9 PALETTES</span></div>
+    <div class="term-head"><span class="live"></span><span data-decode>CONFIGURE · LIVE</span><span class="right">3 STYLES / 9 PALETTES</span></div>
     <div class="demo-grid">
       <div class="demo-left">
         <div class="widget" data-ui data-widget data-style="classic" data-palette="green">
@@ -412,9 +418,9 @@
 
 <section class="wrap block cta" id="download">
   <div class="term rv">
-    <div class="term-head"><span class="live"></span>INSTALL<span class="right">APK · SIGNED</span></div>
+    <div class="term-head"><span class="live"></span><span data-decode>INSTALL</span><span class="right">APK · SIGNED</span></div>
     <div class="term-body" style="padding:64px 56px">
-      <h2><span class="mask"><span>Get GH-widgets.</span></span></h2>
+      <h2><span class="mask static"><span class="w"><span>Get</span></span><span class="w"><span>GH-widgets.</span></span></span></h2>
       <div><a class="btn" style="margin-top:40px" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download free APK</a></div>
       <p class="micro" style="margin-top:24px">Android 8.0+ · v3.1.1 · about 11 MB · signed release</p>
       <p class="micro" style="margin-top:10px">Allow unknown apps once when Android asks — that is the whole install.</p>
@@ -530,6 +536,38 @@
       var v = tryUser.value.trim().replace(/^@/, "");
       stepName.textContent = "@" + (v || "mrduhlol");
     });
+  }
+
+  var glyphs = "\u2588\u2593\u2592\u2591<>/\\|\u250001";
+  function seededRand(seed) {
+    return function () {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+  }
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function decode(el) {
+    var text = el.textContent;
+    var rand = seededRand(text.length * 7919 + 13);
+    var i = 0;
+    el.setAttribute("aria-label", text);
+    var timer = setInterval(function () {
+      i++;
+      var out = text.slice(0, i);
+      for (var k = i; k < text.length; k++) {
+        out += (text[k] === " " || text[k] === "\u00b7") ? text[k] : glyphs[Math.floor(rand() * glyphs.length)];
+      }
+      el.textContent = out;
+      if (i >= text.length) { clearInterval(timer); el.textContent = text; }
+    }, 45);
+  }
+  if (!reduceMotion && "IntersectionObserver" in window) {
+    var dObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { decode(en.target); dObs.unobserve(en.target); }
+      });
+    }, { threshold: 0.4 });
+    document.querySelectorAll("[data-decode]").forEach(function (el) { dObs.observe(el); });
   }
 })();
 </script>
