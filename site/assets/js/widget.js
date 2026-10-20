@@ -77,12 +77,14 @@ function generateRamp(accent, base, dark) {
 }
 
 export function colors(design, dark) {
-  const card = design.background === "BLACK" ? hex("#000000") : dark ? hex("#0D1117") : hex("#FFFFFF");
+  // Peggy card, border and text mirror Palettes.kt plus the widget-side
+  // overlay in WidgetRenderer.kt; graph levels stay on the palette ramps.
+  const card = design.background === "BLACK" ? hex("#000000") : dark ? hex("#1A2145") : hex("#FFFFFF");
   const see = design.opacity < 45;
   const empty = see && dark ? hex("#33FFFFFF")
     : see ? hex("#26000000")
-    : design.background === "BLACK" ? hex("#161B22")
-    : dark ? hex("#151B23") : hex("#EFF2F5");
+    : design.background === "BLACK" ? hex("#232B55")
+    : dark ? hex("#232B55") : hex("#F1F4FF");
   const p = design.paletteId === "custom"
     ? { id: "custom", accent: design.customColor }
     : PALETTES.find((x) => x.id === design.paletteId) || PALETTES[0];
@@ -91,9 +93,9 @@ export function colors(design, dark) {
   const ramp = hand && !see ? hand.map(hex) : generateRamp(accent, see ? card : empty, dark);
   return {
     card,
-    border: dark ? hex("#1FFFFFFF") : hex("#1A1F2328"),
-    textPrimary: dark ? hex("#F0F6FC") : hex("#1F2328"),
-    textSecondary: dark ? hex("#9198A1") : hex("#59636E"),
+    border: dark ? hex("#33D4DCF5") : hex("#6ED4DCF5"),
+    textPrimary: dark ? hex("#F2F4FF") : hex("#1A2340"),
+    textSecondary: dark ? hex("#A8B1D1") : hex("#5A6585"),
     accent: p.id === "github" && !dark ? hex("#1A7F37") : accent,
     levels: [empty, ...ramp],
     isDark: dark,
@@ -461,11 +463,13 @@ export function renderShareImage(canvas, design, user) {
   const W = 1080, H = 1350, pad = 72;
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext("2d");
-  const c = colors({ ...design, background: "DARK", opacity: 100 }, true);
+  const c = colors({ ...design, background: "LIGHT", opacity: 100 }, false);
   const st = stats(user.contributions);
   const family = (FONTS.find((f) => f.id === design.font) || FONTS[0]).family;
   const sys = "Roboto, 'Segoe UI', system-ui, sans-serif";
-  const WHITE = "#F0F6FC", GRAY = "#9198A1", DIM = "#656D76";
+  // Peggy-style light card, mirroring ShareImage.kt: periwinkle canvas,
+  // white tiles, navy text; the graph stays on the light GitHub ramp.
+  const WHITE = "#1A2340", GRAY = "#5A6585", DIM = "#8E97B5";
   const put = (s, x, y, size, color, weight = 400, fam = sys, spacing = 0) => {
     ctx.font = `${weight} ${size}px ${fam}`;
     ctx.letterSpacing = `${spacing}px`;
@@ -474,16 +478,16 @@ export function renderShareImage(canvas, design, user) {
     ctx.letterSpacing = "0px";
   };
   const tile = (x, y, w, h, r) => {
-    ctx.fillStyle = "#161B22"; roundRect(ctx, x, y, w, h, r);
-    ctx.strokeStyle = "#262C36"; ctx.lineWidth = 2;
+    ctx.fillStyle = "#FFFFFF"; roundRect(ctx, x, y, w, h, r);
+    ctx.strokeStyle = "#D4DCF5"; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.stroke();
   };
 
   const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, "#0D1117"); bg.addColorStop(1, "#05070A");
+  bg.addColorStop(0, "#E8EDFF"); bg.addColorStop(1, "#D5DEFF");
   ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
   const glow = ctx.createRadialGradient(W * 0.88, 40, 0, W * 0.88, 40, 760);
-  glow.addColorStop(0, rgba(withAlpha(c.accent, 64))); glow.addColorStop(1, "rgba(0,0,0,0)");
+  glow.addColorStop(0, rgba(withAlpha(c.accent, 40))); glow.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
 
   const login = user.profile?.login || user.contributions.username;
@@ -493,7 +497,7 @@ export function renderShareImage(canvas, design, user) {
   if (user.avatar) ctx.drawImage(user.avatar, pad, avTop, av, av);
   else { ctx.fillStyle = rgba(withAlpha(c.accent, 60)); ctx.fillRect(pad, avTop, av, av); }
   ctx.restore();
-  ctx.strokeStyle = "rgba(255,255,255,.2)"; ctx.lineWidth = 3;
+  ctx.strokeStyle = "rgba(255,255,255,.4)"; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.arc(pad + av / 2, avTop + av / 2, av / 2 - 1.5, 0, Math.PI * 2); ctx.stroke();
   put(name, pad + av + 32, avTop + 62, 54, WHITE, 700);
   put(`@${login}`, pad + av + 32, avTop + 110, 34, GRAY);
@@ -503,7 +507,7 @@ export function renderShareImage(canvas, design, user) {
 
   tile(pad, 640, W - 2 * pad, 232, 36);
   drawGraph(ctx, { x: pad + 36, y: 668, w: W - 2 * pad - 72, h: 176 }, user.contributions.days, {
-    levels: [hex("#21262D"), ...c.levels.slice(1)],
+    levels: c.levels, // levels[0] is already the light EMPTY square
     radiusFraction: CELL_SHAPES[design.cellShape],
     weekStartsMonday: design.weekStartsMonday,
     weeks: 53, maxCell: 40,

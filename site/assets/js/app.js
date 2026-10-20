@@ -335,10 +335,16 @@ function setupStudio(user) {
   // Resizing
   const bounds = () => {
     const r = stage.getBoundingClientRect();
+    // A degenerate viewport (transient 1x1 during capture or rotation, or a
+    // not-yet-laid-out stage) would clamp the widget to the floor here and
+    // it would never grow back. Skip those; the next real layout re-fits.
+    if (r.width <= 0 || r.height <= 0 || innerWidth < 100 || innerHeight < 100) return null;
     return { maxW: Math.max(140, r.width - 56), maxH: Math.max(90, r.height - 72) };
   };
   const setSize = (w, h) => {
-    const { maxW, maxH } = bounds();
+    const b = bounds();
+    if (!b) return;
+    const { maxW, maxH } = b;
     size = { w: Math.round(Math.min(maxW, Math.max(110, w))), h: Math.round(Math.min(maxH, Math.max(70, h))) };
     box.style.setProperty("--w", `${size.w}px`);
     box.style.setProperty("--h", `${size.h}px`);
@@ -369,6 +375,9 @@ function setupStudio(user) {
 
   syncControls();
   ensureFont(design.font).then(() => setSize(size.w, size.h));
+  // Track the stage's actual size: covers boot before the first real layout
+  // and viewport changes the window `resize` event reports late.
+  new ResizeObserver(() => setSize(size.w, size.h)).observe(stage);
   return () => setSize(size.w, size.h);
 }
 
