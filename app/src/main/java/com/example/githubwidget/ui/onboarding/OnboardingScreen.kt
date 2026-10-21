@@ -66,7 +66,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -233,37 +232,23 @@ private fun StepPage(
     actions: @Composable ColumnScope.() -> Unit,
     centered: Boolean = false,
 ) {
-    val fontScale = LocalDensity.current.fontScale
     BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        val scrollTogether = maxHeight < 420.dp || fontScale > 1.3f
-        if (scrollTogether) {
+        // Keep one composition tree as the IME changes the viewport. Swapping
+        // scrolling layouts here disposes the text field and drops its focus.
+        Column(
+            Modifier.widthIn(max = 560.dp).fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .heightIn(min = maxHeight)
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start,
+        ) {
+            content()
+            Spacer(Modifier.weight(1f).heightIn(min = 24.dp))
             Column(
-                Modifier.widthIn(max = 560.dp).fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start,
-            ) {
-                content()
-                Spacer(Modifier.height(24.dp))
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, content = actions)
-            }
-        } else {
-            Column(Modifier.widthIn(max = 560.dp).fillMaxWidth()) {
-                Column(
-                    Modifier.weight(1f).fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 24.dp, vertical = 16.dp),
-                    horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start,
-                    verticalArrangement = if (centered) Arrangement.Center else Arrangement.Top,
-                    content = content,
-                )
-                Column(
-                    Modifier.fillMaxWidth().padding(horizontal = 24.dp)
-                        .padding(top = 12.dp, bottom = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    content = actions,
-                )
-            }
+                Modifier.fillMaxWidth().padding(top = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                content = actions,
+            )
         }
     }
 }
