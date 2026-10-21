@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material3.Button
@@ -47,17 +46,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -82,7 +84,30 @@ fun ScreenHeader(
 ) {
     Row(modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.headlineMedium, color = AppTheme.colors.textPrimary)
+            // Peggy-style headline: lead word in primary + regular feel, rest bold navy/white.
+            val lead = title.substringBefore(' ', missingDelimiterValue = "")
+            val rest = title.substringAfter(' ', missingDelimiterValue = "")
+            if (rest.isEmpty()) {
+                Text(title, style = MaterialTheme.typography.headlineMedium, color = AppTheme.colors.textPrimary)
+            } else {
+                Text(
+                    buildAnnotatedString {
+                        withStyle(
+                            SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Normal,
+                            ),
+                        ) { append("$lead ") }
+                        withStyle(
+                            SpanStyle(
+                                color = AppTheme.colors.textPrimary,
+                                fontWeight = FontWeight.Bold,
+                            ),
+                        ) { append(rest) }
+                    },
+                    style = MaterialTheme.typography.headlineMedium,
+                )
+            }
             if (subtitle != null) {
                 Spacer(Modifier.height(4.dp))
                 Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = AppTheme.colors.textSecondary)
@@ -106,7 +131,7 @@ fun SectionCard(
             SectionLabel(title, Modifier.padding(start = 4.dp, bottom = 8.dp))
         }
         Surface(
-            shape = MaterialTheme.shapes.large,
+            shape = MaterialTheme.shapes.extraLarge,
             color = AppTheme.colors.card,
             border = BorderStroke(1.dp, AppTheme.colors.hairline),
         ) {
@@ -166,16 +191,16 @@ fun PrimaryButton(
         onClick = onClick,
         enabled = enabled && !loading,
         modifier = modifier.fillMaxWidth().heightIn(min = 56.dp),
-        shape = RoundedCornerShape(18.dp),
+        shape = CircleShape,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
             disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
-            disabledContentColor = Color.White.copy(alpha = 0.8f),
+            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
         ),
     ) {
         if (loading) {
-            CircularProgressIndicator(Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+            CircularProgressIndicator(Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
         } else {
             if (icon != null) {
                 Icon(icon, null, Modifier.size(20.dp))
@@ -198,7 +223,7 @@ fun SecondaryButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.heightIn(min = 52.dp),
-        shape = RoundedCornerShape(18.dp),
+        shape = CircleShape,
         border = BorderStroke(1.dp, AppTheme.colors.hairline),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = AppTheme.colors.card,
@@ -209,7 +234,7 @@ fun SecondaryButton(
             Icon(icon, null, Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
         }
-        Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
     }
 }
 
@@ -227,40 +252,44 @@ fun <T> SegmentedChoice(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(AppTheme.colors.raised)
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        options.forEach { option ->
-            val isSel = option == selected
-            val bg by animateColorAsState(if (isSel) AppTheme.colors.card else Color.Transparent, label = "seg")
-            val fg by animateColorAsState(
-                if (isSel) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary, label = "segText",
-            )
-            Box(
-                Modifier
-                    .weight(1f)
-                    .heightIn(min = 40.dp)
-                    .then(if (isSel) Modifier.shadow(1.dp, RoundedCornerShape(10.dp)) else Modifier)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(bg)
-                    .selectable(isSel, role = Role.RadioButton) { onSelect(option) }
-                    .padding(horizontal = 6.dp, vertical = 10.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    label(option),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (isSel) FontWeight.SemiBold else FontWeight.Medium,
-                    color = fg,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                )
+    val fontScale = LocalDensity.current.fontScale
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val columns = (maxWidth.value / (80f * fontScale)).toInt().coerceAtLeast(1)
+        Column(
+            Modifier.fillMaxWidth()
+                .clip(MaterialTheme.shapes.large)
+                .background(AppTheme.colors.raised)
+                .padding(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            options.chunked(columns).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    row.forEach { option ->
+                        val isSelected = option == selected
+                        val background by animateColorAsState(
+                            if (isSelected) AppTheme.colors.card else Color.Transparent, label = "segmentBackground",
+                        )
+                        val foreground by animateColorAsState(
+                            if (isSelected) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary, label = "segmentText",
+                        )
+                        Box(
+                            Modifier.weight(1f).heightIn(min = 48.dp)
+                                .clip(MaterialTheme.shapes.medium)
+                                .background(background)
+                                .selectable(isSelected, role = Role.RadioButton) { onSelect(option) }
+                                .padding(horizontal = 6.dp, vertical = 10.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                label(option),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                color = foreground,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -279,7 +308,8 @@ fun ToggleRow(
     Row(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(MaterialTheme.shapes.small)
+            .heightIn(min = 48.dp)
             .toggleable(checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange)
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -325,7 +355,7 @@ fun NavRow(
     Row(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(MaterialTheme.shapes.medium)
             .clickable(onClick = onClick)
             .padding(vertical = 12.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -335,7 +365,7 @@ fun NavRow(
                 Icon(icon, null, Modifier.size(24.dp), tint = iconTint)
             } else {
                 Box(
-                    Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(AppTheme.colors.raised),
+                    Modifier.size(36.dp).clip(MaterialTheme.shapes.small).background(AppTheme.colors.raised),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(icon, null, Modifier.size(20.dp), tint = iconTint)
@@ -436,16 +466,17 @@ fun WidgetPreview(
  */
 @Composable
 fun WallpaperBackdrop(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    val dark = AppTheme.colors.isDark
+    // Soft periwinkle wash built only from theme tokens: card melting into raised,
+    // with a faint primary glow so see-through widget backgrounds preview faithfully.
     val brush = androidx.compose.ui.graphics.Brush.linearGradient(
-        if (dark) listOf(Color(0xFF1B2A4A), Color(0xFF3B1F4F), Color(0xFF0F3B3A))
-        else listOf(Color(0xFFB8D4FF), Color(0xFFF5C6E8), Color(0xFFC4F1E0)),
+        listOf(AppTheme.colors.card, AppTheme.colors.raised),
     )
     Box(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
+            .clip(MaterialTheme.shapes.extraLarge)
             .background(brush)
+            .border(1.dp, AppTheme.colors.hairline, MaterialTheme.shapes.extraLarge)
             .padding(horizontal = 16.dp, vertical = 22.dp),
         contentAlignment = Alignment.Center,
     ) {

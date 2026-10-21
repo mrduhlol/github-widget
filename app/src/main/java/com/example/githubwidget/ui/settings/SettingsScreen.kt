@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ExitToApp
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
@@ -128,7 +127,7 @@ fun SettingsScreen(onChangeAccount: () -> Unit) {
                             displayName,
                             style = MaterialTheme.typography.titleMedium,
                             color = AppTheme.colors.textPrimary,
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
                         Text(
@@ -139,9 +138,9 @@ fun SettingsScreen(onChangeAccount: () -> Unit) {
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
-                    Spacer(Modifier.width(12.dp))
-                    SecondaryButton("Change", onChangeAccount)
                 }
+                SecondaryButton("Change account", onChangeAccount, Modifier.fillMaxWidth())
+                Spacer(Modifier.height(12.dp))
                 Hairline()
                 NavRow(
                     title = "View profile on GitHub",
@@ -390,11 +389,11 @@ private fun UpdateCheckRow(currentVersion: String?) {
     val info = available
     if (showDialog && info != null) {
         ConfirmDialog(
-            title = "Update available?",
+            title = "Update available",
             body = "Version ${info.latestVersion} is out" +
                 (if (currentVersion != null) " (you have $currentVersion)" else "") +
-                ". Download the APK and install it to update.",
-            confirm = "Download",
+                ". Download the complete new app APK. Install it over this version to keep your profile and settings.",
+            confirm = "Download full app",
             onConfirm = {
                 showDialog = false
                 AppUpdate.markPrompted(context, info.latestVersion)
@@ -410,7 +409,7 @@ private fun UpdateCheckRow(currentVersion: String?) {
 
 // ------------------------------------------------------------------ groups
 
-/** One UI-style group: small section label over full-width rows separated by hairlines. */
+/** One Peggy-style group: small section label over a white rounded card. */
 @Composable
 private fun SettingsGroup(
     title: String,
@@ -418,7 +417,13 @@ private fun SettingsGroup(
 ) {
     Column(Modifier.fillMaxWidth()) {
         SectionLabel(title, Modifier.padding(start = 4.dp, bottom = 4.dp))
-        Column(Modifier.fillMaxWidth(), content = content)
+        androidx.compose.material3.Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            color = AppTheme.colors.card,
+            border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.colors.hairline),
+        ) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 10.dp), content = content)
+        }
     }
 }
 
@@ -445,7 +450,7 @@ private fun FaqItem(question: String, answer: String) {
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = 52.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .clip(MaterialTheme.shapes.medium)
                 .clickable(role = Role.Button, onClickLabel = if (open) "Hide answer" else "Show answer") { open = !open }
                 .padding(horizontal = 4.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -488,7 +493,7 @@ private fun ConfirmDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppTheme.colors.card,
-        shape = MaterialTheme.shapes.large,
+        shape = MaterialTheme.shapes.extraLarge,
         title = { Text(title, style = MaterialTheme.typography.headlineSmall, color = AppTheme.colors.textPrimary) },
         text = { Text(body, style = MaterialTheme.typography.bodyMedium, color = AppTheme.colors.textSecondary) },
         confirmButton = {

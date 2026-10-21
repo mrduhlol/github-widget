@@ -47,11 +47,13 @@ object WidgetRenderer {
         dark: Boolean,
         placeholder: Placeholder = if (data == null) Placeholder.SIGNED_OUT else Placeholder.NONE,
         font: NumberFont = NumberFont.SYSTEM,
+        maxPixels: Int = MAX_PIXELS.toInt(),
     ): Bitmap {
         val density = context.resources.displayMetrics.density
         var scale = density
         val px = widthDp * heightDp * density * density
-        if (px > MAX_PIXELS) scale = density * sqrt(MAX_PIXELS / px)
+        val budget = maxPixels.coerceAtLeast(1).toFloat()
+        if (px > budget) scale = density * sqrt(budget / px)
         val w = (widthDp * scale).toInt().coerceAtLeast(1)
         val h = (heightDp * scale).toInt().coerceAtLeast(1)
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
@@ -60,7 +62,24 @@ object WidgetRenderer {
             Background.LIGHT -> false
             Background.DARK, Background.BLACK -> true
         }
-        val colors = Palettes.colors(context, design, isDark)
+        val base = Palettes.colors(context, design, isDark)
+        // Peggy convergence (widget side only): card + text follow the Peggy
+        // theme (light card #FFFFFF, dark card #1A2145, black stays #000000).
+        // Graph levels + accent stay on the Palettes ramps untouched.
+        val peggyCard = when {
+            design.background == Background.BLACK -> 0xFF000000.toInt()
+            isDark -> 0xFF1A2145.toInt()
+            else -> 0xFFFFFFFF.toInt()
+        }
+        val colors = base.copy(
+            card = peggyCard,
+            border = ColorUtils.setAlphaComponent(
+                0xFFD4DCF5.toInt(),
+                if (isDark) 51 else 110,
+            ),
+            textPrimary = if (isDark) 0xFFF2F4FF.toInt() else 0xFF1A2340.toInt(),
+            textSecondary = if (isDark) 0xFFA8B1D1.toInt() else 0xFF5A6585.toInt(),
+        )
         Painter(Canvas(bmp), scale, widthDp, heightDp, design, colors, context, font).draw(data, avatar, placeholder)
         return bmp
     }
@@ -182,10 +201,14 @@ object WidgetRenderer {
 
         fun drawNumbers(area: RectF, data: UserData) {
             val stats = Stats.from(data.contributions)
+            if (area.width() < dp(150f) && area.height() < dp(72f)) {
+                drawBigStats(area, stats, compact = true)
+                return
+            }
             val wide = area.width() > area.height() * 1.55f
             if (wide) {
                 val colW = (area.width() * 0.36f).coerceIn(dp(96f), dp(170f))
-                drawBigStats(RectF(area.left, area.top, area.left + colW, area.bottom), stats, compact = false)
+                drawBigStats(RectF(area.left, area.top, area.left + colW, area.bottom), stats, compact = area.height() < dp(100f))
                 val g = RectF(area.left + colW + dp(12f), area.top, area.right, area.bottom)
                 graph(g, data, roomForMonths(g.height()) && g.height() > dp(100f))
             } else {
@@ -206,7 +229,8 @@ object WidgetRenderer {
                 drawAvatar(avatar, data, left, cy - size / 2, size)
                 left += size + dp(8f)
             }
-            var right = r.right
+            // Keep clear of the refresh icon overlaid at top-end inside the card (20dp + margins).
+            var right = r.right - dp(28f)
             if (design.showTotal) {
                 val num = text(16f, colors.accent, bold = true)
                 val numStr = numbers.format(stats.total)
@@ -231,8 +255,8 @@ object WidgetRenderer {
         }
 
         fun drawFooter(r: RectF, stats: Stats, fetchedAt: Long) {
-            // Keep clear of the refresh button overlaid at bottom-end (24dp + 6dp margin).
-            val end = r.right - dp(34f)
+            // Refresh icon now lives inside the header (top-end), so the footer gets full width.
+            val end = r.right
             val parts = buildList {
                 if (design.showStreak) add(streakText(stats.currentStreak))
                 if (design.showToday) add(todayText(stats.today))
@@ -290,12 +314,15 @@ object WidgetRenderer {
             val small = medium(13f, colors.textPrimary)
 
             val showTotal = design.showTotal || (!design.showStreak && !design.showToday)
+            val showLabel = r.height() >= dp(40f)
             val lines = buildList {
-                if (design.showStreak) add(streakText(stats.currentStreak))
-                if (design.showToday) add(todayText(stats.today))
+                if (!showTotal || r.height() >= dp(72f)) {
+                    if (design.showStreak) add(streakText(stats.currentStreak))
+                    if (design.showToday) add(todayText(stats.today))
+                }
             }
             // Measure the block so it can be vertically centred.
-            val bigH = if (showTotal) big.textSize + dp(2f) + label.textSize else 0f
+            val bigH = if (showTotal) big.textSize + (if (showLabel) dp(2f) + label.textSize else 0f) else 0f
             val lineH = small.textSize * 1.45f
             val lineCount = if (compact) minOf(lines.size, 1) else lines.size
             val block = bigH + (if (showTotal && lines.isNotEmpty()) dp(10f) else 0f) + lineCount * lineH
@@ -303,9 +330,12 @@ object WidgetRenderer {
 
             if (showTotal) {
                 y += big.textSize * 0.9f
-                canvas.drawText(numbers.format(stats.total), r.left, y, big)
-                y += dp(2f) + label.textSize
-                canvas.drawText("contributions this year", r.left, y, label.fit(r.width(), "contributions this year"))
+                val total = numbers.format(stats.total)
+                canvas.drawText(total, r.left, y, big.fit(r.width(), total))
+                if (showLabel) {
+                    y += dp(2f) + label.textSize
+                    canvas.drawText("contributions this year", r.left, y, label.fit(r.width(), "contributions this year"))
+                }
                 y += dp(10f)
             }
             if (compact && lines.isNotEmpty()) {

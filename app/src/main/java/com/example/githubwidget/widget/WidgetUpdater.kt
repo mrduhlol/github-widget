@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import android.util.SizeF
 import android.widget.RemoteViews
 import com.example.githubwidget.ContributionWidgetProvider
@@ -20,6 +21,7 @@ object WidgetUpdater {
 
     private const val PREFS = "gh_widget_ids"
     private const val KEY_DRAWN = "drawn"
+    private data class RenderKey(val width: Float, val height: Float, val dark: Boolean, val pixelBudget: Int)
 
     fun widgetIds(context: Context): IntArray =
         AppWidgetManager.getInstance(context)
@@ -34,54 +36,136 @@ object WidgetUpdater {
         Repository.init(context)
         val mgr = AppWidgetManager.getInstance(context)
         // Widgets of the same size look identical, so each bitmap is drawn once per pass.
-        val drawn = HashMap<Triple<Float, Float, Boolean>, Bitmap>()
+        // Peggy card/text colors are applied inside WidgetRenderer; graph levels
+        // stay on the Palettes ramps.
+        val drawn = HashMap<RenderKey, Bitmap>()
         for (id in ids) {
             runCatching { mgr.updateAppWidget(id, build(context, mgr.getAppWidgetOptions(id), drawn)) }
         }
         markDrawn(context, ids)
     }
 
-    /**
-     * Live size of the widget in dp.
-     *
-     * On API 31+ the launcher reports the exact size via OPTION_APPWIDGET_SIZES
-     * (first entry is portrait). Below that, take each axis as max(MIN, MAX):
-     * some launchers (e.g. Samsung) report the resize bound in MIN — drawing
-     * at a bound size stretches or letterboxes the bitmap (fitXY). The live
-     * size is never smaller than a bound, so max() recovers it; when the
-     * launcher already tracks live size MIN == MAX and nothing changes.
-     */
+    /** Current orientation size for callers that need a single preview. */
     fun sizeDp(context: Context, options: Bundle?): SizeF {
-        if (options != null && android.os.Build.VERSION.SDK_INT >= 31) {
-            @Suppress("DEPRECATION")
-            val sizes: ArrayList<SizeF>? = if (android.os.Build.VERSION.SDK_INT >= 33) {
-                options.getParcelableArrayList(
-                    AppWidgetManager.OPTION_APPWIDGET_SIZES, SizeF::class.java,
-                )
-            } else {
-                options.getParcelableArrayList(AppWidgetManager.OPTION_APPWIDGET_SIZES)
-            }
-            if (!sizes.isNullOrEmpty()) {
-                val landscape =
-                    context.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-                val s = if (sizes.size == 1 || !landscape) sizes[0] else sizes[1]
-                if (s.width > 0 && s.height > 0) return s
-            }
+        val sizes = exactSizes(options)
+        if (sizes.isNotEmpty()) {
+            val fallback = legacySize(options, isLandscape(context))
+            // OPTION_APPWIDGET_SIZES is unordered; choose by bounds, never list position.
+            return sizes.minBy { kotlin.math.abs(it.width - fallback.width) + kotlin.math.abs(it.height - fallback.height) }
         }
-        if (options != null) {
-            val minW = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
-            val minH = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
-            val maxW = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH)
-            val maxH = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
-            val w = maxOf(minW, maxW)
-            val h = maxOf(minH, maxH)
-            if (w > 0 && h > 0) return SizeF(w.toFloat(), h.toFloat())
-        }
-        return SizeF(320f, 160f)
+        return legacySize(options, isLandscape(context))
     }
 
-    private fun build(context: Context, options: Bundle?, drawn: MutableMap<Triple<Float, Float, Boolean>, Bitmap>): RemoteViews {
-        val size = sizeDp(context, options)
+    private fun isLandscape(context: Context) =
+        context.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
+    /** Android 12+ supplies all sizes the host can use, including foldable states. */
+    internal fun exactSizes(options: Bundle?): List<SizeF> {
+        if (options == null || android.os.Build.VERSION.SDK_INT < 31) return emptyList()
+        @Suppress("DEPRECATION")
+        val sizes: ArrayList<SizeF>? = if (android.os.Build.VERSION.SDK_INT >= 33) {
+            options.getParcelableArrayList(AppWidgetManager.OPTION_APPWIDGET_SIZES, SizeF::class.java)
+        } else {
+            options.getParcelableArrayList(AppWidgetManager.OPTION_APPWIDGET_SIZES)
+        }
+        return sizes.orEmpty().filter {
+            it.width.isFinite() && it.height.isFinite() && it.width > 0 && it.height > 0
+        }.distinct().take(16) // RemoteViews supports at most 16 size variants.
+    }
+
+    /** Width and height bounds belong to opposite orientations, not one rectangle. */
+    internal fun legacySize(options: Bundle?, landscape: Boolean): SizeF {
+        fun positive(key: String, fallback: Float) =
+            options?.getInt(key)?.takeIf { it > 0 }?.toFloat() ?: fallback
+        val portraitW = positive(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 320f)
+        val landscapeH = positive(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 160f)
+        val landscapeW = positive(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, portraitW)
+        val portraitH = positive(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, landscapeH)
+        return if (landscape) SizeF(landscapeW, landscapeH) else SizeF(portraitW, portraitH)
+    }
+
+    /**
+     * Corrects a launcher that reports raw pixels instead of dp, then caps the
+     * result to the display. A widget cannot exceed its screen. Floors at 1dp
+     * so degenerate options cannot blank the drawing.
+     */
+    internal fun normalizeSizeToDisplay(
+        w: Float,
+        h: Float,
+        maxW: Float,
+        maxH: Float,
+        density: Float,
+    ): Pair<Float, Float> {
+        val safeDensity = density.takeIf { it.isFinite() && it > 0f } ?: 1f
+        val candidateW = if (w > maxW && w / safeDensity <= maxW) w / safeDensity else w
+        val candidateH = if (h > maxH && h / safeDensity <= maxH) h / safeDensity else h
+        return candidateW.coerceIn(1f, maxOf(1f, maxW)) to
+            candidateH.coerceIn(1f, maxOf(1f, maxH))
+    }
+
+    /** Use the expected host orientation, not the currently open activity's width. */
+    internal fun normalizeHostSize(
+        size: SizeF,
+        displayWidth: Float,
+        displayHeight: Float,
+        density: Float,
+        landscape: Boolean?,
+    ): SizeF {
+        val short = minOf(displayWidth, displayHeight)
+        val long = maxOf(displayWidth, displayHeight)
+        // Unmatched exact sizes may describe a foldable state or another screen
+        // orientation. Only reject dimensions exceeding either screen orientation.
+        val maxWidth = if (landscape == false) short else long
+        val maxHeight = if (landscape == true) short else long
+        val (width, height) = normalizeSizeToDisplay(size.width, size.height, maxWidth, maxHeight, density)
+        return SizeF(width, height)
+    }
+
+    private fun build(context: Context, options: Bundle?, drawn: MutableMap<RenderKey, Bitmap>): RemoteViews {
+        val sizes = exactSizes(options)
+        val variantCount = if (sizes.isEmpty()) 2 else sizes.size
+        val dm = context.resources.displayMetrics
+        val colorVariants = if (Repository.design.value.background == Background.AUTO) 2 else 1
+        // All size/color bitmaps share one RemoteViews memory allowance. Leave
+        // headroom under the host's 6 * screen pixels budget (ARGB uses 4 bytes).
+        val pixelBudget = (dm.widthPixels.toLong() * dm.heightPixels / (variantCount * colorVariants))
+            .coerceIn(1L, 1_100_000L).toInt()
+        val portrait = legacySize(options, false)
+        val landscape = legacySize(options, true)
+        fun views(size: SizeF, landscapeMode: Boolean?): RemoteViews {
+            val normalized = normalizeHostSize(
+                size, dm.widthPixels / dm.density, dm.heightPixels / dm.density, dm.density, landscapeMode,
+            )
+            if (normalized != size) {
+                Log.w("GHWidget", "Corrected launcher bitmap size $size to $normalized; host key retained")
+            }
+            return buildSize(context, normalized, drawn, pixelBudget)
+        }
+        return if (android.os.Build.VERSION.SDK_INT >= 31 && sizes.isNotEmpty()) {
+            RemoteViews(sizes.associateWith { size ->
+                // Legacy bounds are integer dp; exact host dimensions can be fractional.
+                fun matches(bounds: SizeF) = kotlin.math.abs(size.width - bounds.width) <= 1f &&
+                    kotlin.math.abs(size.height - bounds.height) <= 1f
+                val landscapeMode = when {
+                    matches(portrait) && matches(landscape) -> isLandscape(context)
+                    matches(portrait) -> false
+                    matches(landscape) -> true
+                    else -> null
+                }
+                views(size, landscapeMode)
+            })
+        } else {
+            // Android 8–11 hosts select the appropriate variant when rotated.
+            RemoteViews(views(landscape, true), views(portrait, false))
+        }
+    }
+
+    private fun buildSize(
+        context: Context,
+        size: SizeF,
+        drawn: MutableMap<RenderKey, Bitmap>,
+        pixelBudget: Int,
+    ): RemoteViews {
         val design = Repository.design.value
         val data = Repository.data.value
         val placeholder = when {
@@ -89,10 +173,10 @@ object WidgetUpdater {
             Repository.hasUser -> WidgetRenderer.Placeholder.LOADING
             else -> WidgetRenderer.Placeholder.SIGNED_OUT
         }
-        fun render(dark: Boolean) = drawn.getOrPut(Triple(size.width, size.height, dark)) {
+        fun render(dark: Boolean) = drawn.getOrPut(RenderKey(size.width, size.height, dark, pixelBudget)) {
             WidgetRenderer.render(
                 context, design, data, Repository.avatar.value, size.width, size.height, dark, placeholder,
-                Repository.numberFont.value,
+                Repository.numberFont.value, maxPixels = pixelBudget,
             )
         }
 

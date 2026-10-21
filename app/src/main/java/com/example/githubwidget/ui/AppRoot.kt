@@ -10,6 +10,15 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -22,6 +31,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -109,7 +121,7 @@ fun AppRoot() {
                 AppUpdate.markPrompted(context, info.latestVersion)
             },
             containerColor = AppTheme.colors.card,
-            shape = MaterialTheme.shapes.large,
+            shape = MaterialTheme.shapes.extraLarge,
             title = {
                 Text(
                     "Update available",
@@ -121,7 +133,7 @@ fun AppRoot() {
                 Text(
                     "Version ${info.latestVersion} is out" +
                         (if (current != null) " (you have $current)" else "") +
-                        ". Download the APK and install it to update.",
+                        ". Download the complete new app APK. Install it over this version to keep your profile and settings.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = AppTheme.colors.textSecondary,
                 )
@@ -139,7 +151,7 @@ fun AppRoot() {
                         // No browser installed; nothing sensible to do.
                     }
                 }, modifier = Modifier.heightIn(min = 48.dp)) {
-                    Text("Download", style = MaterialTheme.typography.labelLarge)
+                    Text("Download full app", style = MaterialTheme.typography.labelLarge)
                 }
             },
             dismissButton = {
@@ -158,34 +170,62 @@ fun AppRoot() {
 private fun MainTabs(tab: Tab, onTab: (Tab) -> Unit, onChangeAccount: () -> Unit) {
     // Back from Stats/Settings goes to the Widget tab before leaving the app.
     BackHandler(enabled = tab != Tab.WIDGET) { onTab(Tab.WIDGET) }
-    Scaffold(
-        containerColor = AppTheme.colors.canvas,
-        bottomBar = {
-            NavigationBar(containerColor = AppTheme.colors.card, tonalElevation = androidx.compose.ui.unit.Dp(0f)) {
-                Tab.entries.forEach { t ->
-                    NavigationBarItem(
-                        selected = t == tab,
-                        onClick = { onTab(t) },
-                        icon = { Icon(t.icon, contentDescription = null) },
-                        label = { Text(t.label, style = MaterialTheme.typography.labelMedium) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = AppTheme.colors.textPrimary,
-                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
-                            unselectedIconColor = AppTheme.colors.textTertiary,
-                            unselectedTextColor = AppTheme.colors.textSecondary,
-                        ),
-                    )
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val useRail = maxWidth >= 600.dp
+        Scaffold(
+            contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
+            containerColor = AppTheme.colors.canvas,
+            bottomBar = {
+                if (!useRail) {
+                    NavigationBar(containerColor = AppTheme.colors.card, tonalElevation = 0.dp) {
+                        Tab.entries.forEach { destination ->
+                            NavigationBarItem(
+                                selected = destination == tab,
+                                onClick = { onTab(destination) },
+                                icon = { Icon(destination.icon, contentDescription = null) },
+                                label = { Text(destination.label, style = MaterialTheme.typography.labelMedium) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    selectedTextColor = AppTheme.colors.textPrimary,
+                                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                                    unselectedIconColor = AppTheme.colors.textSecondary,
+                                    unselectedTextColor = AppTheme.colors.textSecondary,
+                                ),
+                            )
+                        }
+                    }
                 }
-            }
-        },
-    ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
-            AnimatedContent(tab, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { t ->
-                when (t) {
-                    Tab.WIDGET -> DesignScreen(onOpenStats = { onTab(Tab.STATS) })
-                    Tab.STATS -> StatsScreen()
-                    Tab.SETTINGS -> SettingsScreen(onChangeAccount = onChangeAccount)
+            },
+        ) { padding ->
+            Row(Modifier.fillMaxSize().padding(padding)) {
+                if (useRail) {
+                    NavigationRail(
+                        modifier = Modifier.statusBarsPadding(),
+                        containerColor = AppTheme.colors.canvas,
+                    ) {
+                        Tab.entries.forEach { destination ->
+                            NavigationRailItem(
+                                selected = destination == tab,
+                                onClick = { onTab(destination) },
+                                icon = { Icon(destination.icon, contentDescription = null) },
+                                label = { Text(destination.label) },
+                            )
+                        }
+                    }
+                }
+                Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
+                    AnimatedContent(
+                        tab,
+                        modifier = Modifier.widthIn(max = 720.dp).fillMaxWidth(),
+                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                        label = "tab",
+                    ) { destination ->
+                        when (destination) {
+                            Tab.WIDGET -> DesignScreen(onOpenStats = { onTab(Tab.STATS) })
+                            Tab.STATS -> StatsScreen()
+                            Tab.SETTINGS -> SettingsScreen(onChangeAccount = onChangeAccount)
+                        }
+                    }
                 }
             }
         }

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Circular backdrop so the white refresh icon reads on light and dark cards. -->
+<!-- Peggy blue pill behind the white refresh icon; reads on light and dark cards. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
-    <solid android:color="#99000000" />
+    <solid android:color="#D94A7CFF" />
     <stroke
         android:width="1dp"
         android:color="#33FFFFFF" />

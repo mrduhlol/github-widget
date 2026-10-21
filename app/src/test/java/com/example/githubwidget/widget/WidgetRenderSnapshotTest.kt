@@ -47,6 +47,10 @@ class WidgetRenderSnapshotTest {
         save("classic_large", d, 340f, 260f)
         save("classic_small", d, 170f, 170f)
         save("classic_short", d, 340f, 90f)
+        save("classic_minimum", d, 110f, 60f)
+        save("classic_portrait", d, 170f, 340f)
+        save("numbers_short", d.copy(layout = WidgetLayout.NUMBERS), 340f, 60f)
+        save("numbers_minimum", d.copy(layout = WidgetLayout.NUMBERS), 110f, 60f)
         save("graph_wide", d.copy(layout = WidgetLayout.GRAPH), 340f, 170f)
         save("graph_year_circles", d.copy(layout = WidgetLayout.GRAPH, range = Range.YEAR, cellShape = CellShape.CIRCLE, paletteId = "violet"), 400f, 130f)
         save("numbers_wide", d.copy(layout = WidgetLayout.NUMBERS, paletteId = "sunset"), 340f, 170f)
@@ -65,6 +69,20 @@ class WidgetRenderSnapshotTest {
                 ctx, WidgetDesign(layout = WidgetLayout.NUMBERS), SampleData.userData, null, 340f, 170f, true, font = font,
             )
             File(out, "font_${font.name.lowercase()}.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        }
+    }
+
+    @Test
+    fun limitedBitmapBudgetPreservesLauncherAspectRatio() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        for ((width, height) in listOf(110f to 60f, 170f to 340f, 600f to 90f, 540f to 420f)) {
+            val bmp = WidgetRenderer.render(
+                ctx, WidgetDesign(), SampleData.userData, null, width, height, true,
+                maxPixels = 50_000,
+            )
+            assertTrue("Combined RemoteViews bitmap budget must be respected", bmp.width * bmp.height <= 50_000)
+            assertEquals("Render must retain the host's proportions", width / height,
+                bmp.width.toFloat() / bmp.height, width / height * 0.01f)
         }
     }
 

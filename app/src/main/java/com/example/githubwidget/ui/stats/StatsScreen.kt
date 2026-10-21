@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
@@ -53,6 +52,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -223,7 +223,7 @@ private fun RefreshAction(loading: Boolean) {
 private fun ErrorBanner(message: String) {
     val warning = AppTheme.colors.warning
     Surface(
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         color = warning.copy(alpha = if (AppTheme.colors.isDark) 0.12f else 0.08f),
         border = BorderStroke(1.dp, warning.copy(alpha = 0.35f)),
     ) {
@@ -257,7 +257,7 @@ private fun HeroCard(data: UserData, avatar: android.graphics.Bitmap?, stats: St
     val name = data.profile?.displayName ?: login
     val primary = MaterialTheme.colorScheme.primary
     Surface(
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.extraLarge,
         color = AppTheme.colors.card,
         border = BorderStroke(1.dp, AppTheme.colors.hairline),
     ) {
@@ -279,7 +279,7 @@ private fun HeroCard(data: UserData, avatar: android.graphics.Bitmap?, stats: St
                         name,
                         style = MaterialTheme.typography.titleMedium,
                         color = AppTheme.colors.textPrimary,
-                        maxLines = 1,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
@@ -356,10 +356,11 @@ private fun StatTiles(stats: Stats, numbersFamily: FontFamily) {
         ),
         Tile("Active days", numbers.format(stats.activeDays), "of ${numbers.format(stats.trackedDays)}"),
     )
+    val columns = if (LocalDensity.current.fontScale > 1.3f) 1 else 2
     Column {
         SectionLabel("At a glance", Modifier.padding(start = 4.dp, bottom = 8.dp))
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            tiles.chunked(2).forEach { pair ->
+            tiles.chunked(columns).forEach { pair ->
                 Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     pair.forEach { StatTile(it, numbersFamily, Modifier.weight(1f).fillMaxHeight()) }
                 }
@@ -372,7 +373,7 @@ private fun StatTiles(stats: Stats, numbersFamily: FontFamily) {
 private fun StatTile(tile: Tile, numbersFamily: FontFamily, modifier: Modifier = Modifier) {
     Surface(
         modifier,
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         color = AppTheme.colors.card,
         border = BorderStroke(1.dp, AppTheme.colors.hairline),
     ) {
@@ -381,7 +382,6 @@ private fun StatTile(tile: Tile, numbersFamily: FontFamily, modifier: Modifier =
                 tile.label,
                 style = MaterialTheme.typography.labelMedium,
                 color = AppTheme.colors.textSecondary,
-                maxLines = 2,
             )
             Spacer(Modifier.height(10.dp))
             Text(
@@ -405,8 +405,6 @@ private fun StatTile(tile: Tile, numbersFamily: FontFamily, modifier: Modifier =
                 ),
                 fontWeight = FontWeight.Bold,
                 color = AppTheme.colors.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -566,7 +564,7 @@ private fun ShareCard(data: UserData, avatar: android.graphics.Bitmap?, design: 
     SectionCard(title = "Share") {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
-                Modifier.size(44.dp).clip(RoundedCornerShape(14.dp))
+                Modifier.size(44.dp).clip(MaterialTheme.shapes.medium)
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
@@ -620,7 +618,7 @@ private fun EmptyState(loading: Boolean, failure: String?) {
                 )
             } else {
                 Box(
-                    Modifier.size(72.dp).clip(RoundedCornerShape(24.dp))
+                    Modifier.size(72.dp).clip(MaterialTheme.shapes.extraLarge)
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
                     contentAlignment = Alignment.Center,
                 ) {

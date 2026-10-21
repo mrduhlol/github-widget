@@ -38,14 +38,15 @@ internal object ShareImage {
     private const val W = 1080
     private const val H = 1350
 
-    private const val BG_TOP = 0xFF0D1117.toInt()
-    private const val BG_BOTTOM = 0xFF05070A.toInt()
-    private const val TILE = 0xFF161B22.toInt()
-    private const val TILE_BORDER = 0xFF262C36.toInt()
-    private const val EMPTY = 0xFF21262D.toInt()
-    private const val WHITE = 0xFFF0F6FC.toInt()
-    private const val GRAY = 0xFF9198A1.toInt()
-    private const val DIM = 0xFF656D76.toInt()
+    // Peggy-style light card: periwinkle canvas, white tiles, navy text.
+    private const val BG_TOP = 0xFFE8EDFF.toInt()
+    private const val BG_BOTTOM = 0xFFD5DEFF.toInt()
+    private const val TILE = 0xFFFFFFFF.toInt()
+    private const val TILE_BORDER = 0xFFD4DCF5.toInt()
+    private const val EMPTY = 0xFFF1F4FF.toInt()
+    private const val WHITE = 0xFF1A2340.toInt()
+    private const val GRAY = 0xFF5A6585.toInt()
+    private const val DIM = 0xFF8E97B5.toInt()
 
     /** Renders, saves and opens the share sheet. Returns false if anything went wrong. */
     suspend fun share(
@@ -91,7 +92,8 @@ internal object ShareImage {
     ): Bitmap {
         val bmp = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
-        val colors = Palettes.colors(context, design.copy(background = Background.DARK, opacity = 100), true)
+        // Light-friendly graph levels so the squares read well on white tiles.
+        val colors = Palettes.colors(context, design.copy(background = Background.LIGHT, opacity = 100), false)
         val accent = colors.accent
         val stats = Stats.from(data.contributions)
         val numbers = NumberFormat.getIntegerInstance()
@@ -105,7 +107,7 @@ internal object ShareImage {
         c.drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint(Paint.ANTI_ALIAS_FLAG).apply {
             shader = RadialGradient(
                 W * 0.88f, 40f, 760f,
-                ColorUtils.setAlphaComponent(accent, 64), 0x00000000, Shader.TileMode.CLAMP,
+                ColorUtils.setAlphaComponent(accent, 40), 0x00000000, Shader.TileMode.CLAMP,
             )
         })
 
@@ -239,7 +241,7 @@ internal object ShareImage {
         c.drawCircle(cx, cy, radius - 1.5f, Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = 3f
-            color = 0x33FFFFFF
+            color = 0x66FFFFFF
         })
     }
 

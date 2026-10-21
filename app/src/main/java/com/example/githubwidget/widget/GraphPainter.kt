@@ -48,10 +48,11 @@ object GraphPainter {
     fun draw(canvas: Canvas, area: RectF, days: List<Day>, spec: Spec): RectF {
         val labelH = if (spec.monthLabelPaint != null) spec.monthLabelHeightPx else 0f
         val gridH = area.height() - labelH
+        if (area.width() <= 0f || gridH <= 0f) return RectF(area.left, area.top, area.left, area.top)
         var cell = cellForHeight(gridH)
         val weeks: Int
         if (spec.weeks != null) {
-            weeks = spec.weeks
+            weeks = spec.weeks.coerceIn(1, 53)
             cell = minOf(cell, area.width() / (weeks + (weeks - 1) * GAP))
         } else {
             cell = minOf(cell, spec.maxCellPx)

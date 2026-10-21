@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Widget picker preview (generated). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="320dp" android:height="150dp" android:viewportWidth="320" android:viewportHeight="150">
-    <path android:fillColor="#0D1117" android:pathData="M20,0h280a20,20 0 0 1 20,20v110a20,20 0 0 1 -20,20h-280a20,20 0 0 1 -20,-20v-110a20,20 0 0 1 20,-20z"/>
+    <path android:fillColor="#1A2145" android:pathData="M22,0h276a22,22 0 0 1 22,22v106a22,22 0 0 1 -22,22h-276a22,22 0 0 1 -22,-22v-106a22,22 0 0 1 22,-22z"/>
     <path android:fillColor="#26A641" android:pathData="M24,16h0a8,8 0 0 1 8,8v0a8,8 0 0 1 -8,8h-0a8,8 0 0 1 -8,-8v-0a8,8 0 0 1 8,-8z"/>
     <path android:fillColor="#F0F6FC" android:pathData="M45,19h70a5,5 0 0 1 5,5v0a5,5 0 0 1 -5,5h-70a5,5 0 0 1 -5,-5v-0a5,5 0 0 1 5,-5z"/>
     <path android:fillColor="#39D353" android:pathData="M249,19h50a5,5 0 0 1 5,5v0a5,5 0 0 1 -5,5h-50a5,5 0 0 1 -5,-5v-0a5,5 0 0 1 5,-5z"/>

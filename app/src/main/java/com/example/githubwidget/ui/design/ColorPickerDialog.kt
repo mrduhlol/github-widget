@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -59,11 +58,12 @@ fun ColorPickerDialog(initial: Int, onDismiss: () -> Unit, onPick: (Int) -> Unit
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppTheme.colors.card,
-        title = { Text("Pick a color", color = AppTheme.colors.textPrimary) },
+        shape = MaterialTheme.shapes.extraLarge,
+        title = { Text("Pick a color", style = MaterialTheme.typography.headlineSmall, color = AppTheme.colors.textPrimary) },
         text = {
             Column {
                 Box(
-                    Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(16.dp)).background(color),
+                    Modifier.fillMaxWidth().height(56.dp).clip(MaterialTheme.shapes.medium).background(color),
                 )
                 Spacer(Modifier.height(16.dp))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -106,8 +106,8 @@ fun ColorPickerDialog(initial: Int, onDismiss: () -> Unit, onPick: (Int) -> Unit
                 ) { value = 0.35f + it * 0.65f }
             }
         },
-        confirmButton = { TextButton(onClick = { onPick(color.toArgb()) }) { Text("Use color") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = { onPick(color.toArgb()) }) { Text("Use color", color = MaterialTheme.colorScheme.primary) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = AppTheme.colors.textSecondary) } },
     )
 }
 
@@ -126,14 +126,14 @@ private fun GradientSlider(fraction: Float, brush: Brush, thumb: Color, onChange
                 .pointerInput(trackPx) { detectDragGestures { change, _ -> update(change.position.x) } },
             contentAlignment = Alignment.CenterStart,
         ) {
-            Box(Modifier.fillMaxWidth().height(14.dp).clip(RoundedCornerShape(7.dp)).background(brush))
+            Box(Modifier.fillMaxWidth().height(14.dp).clip(CircleShape).background(brush))
             Box(
                 Modifier
                     .offset { IntOffset((fraction.coerceIn(0f, 1f) * trackPx).roundToInt(), 0) }
                     .size(thumbSize)
                     .clip(CircleShape)
                     .background(thumb)
-                    .border(3.dp, Color.White, CircleShape),
+                    .border(3.dp, AppTheme.colors.card, CircleShape),
             )
         }
     }

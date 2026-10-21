@@ -25,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.githubwidget.ContributionWidgetProvider
 import com.example.githubwidget.ui.theme.AppTheme
@@ -85,7 +84,7 @@ private fun Step(n: Int, title: String, body: String) {
             Modifier.size(30.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary),
             contentAlignment = Alignment.Center,
         ) {
-            Text("$n", style = MaterialTheme.typography.labelLarge, color = Color.White)
+            Text("$n", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimary)
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {

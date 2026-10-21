@@ -45,13 +45,13 @@ data class ExtraColors(
 )
 
 private val LightExtra = ExtraColors(
-    canvas = Color(0xFFF6F8FA),
+    canvas = Color(0xFFE8EDFF),
     card = Color(0xFFFFFFFF),
-    raised = Color(0xFFEFF2F5),
-    hairline = Color(0xFFDDE2E7),
-    textPrimary = Color(0xFF1F2328),
-    textSecondary = Color(0xFF59636E),
-    textTertiary = Color(0xFF8C959F),
+    raised = Color(0xFFF1F4FF),
+    hairline = Color(0xFFD4DCF5),
+    textPrimary = Color(0xFF1A2340),
+    textSecondary = Color(0xFF5A6585),
+    textTertiary = Color(0xFF687492),
     success = Color(0xFF1A7F37),
     warning = Color(0xFF9A6700),
     danger = Color(0xFFCF222E),
@@ -60,13 +60,13 @@ private val LightExtra = ExtraColors(
 )
 
 private val DarkExtra = ExtraColors(
-    canvas = Color(0xFF0B0E13),
-    card = Color(0xFF141920),
-    raised = Color(0xFF1D232C),
-    hairline = Color(0xFF262D37),
-    textPrimary = Color(0xFFF0F6FC),
-    textSecondary = Color(0xFF9198A1),
-    textTertiary = Color(0xFF656D76),
+    canvas = Color(0xFF0E1330),
+    card = Color(0xFF1A2145),
+    raised = Color(0xFF232B55),
+    hairline = Color(0xFF2E3765),
+    textPrimary = Color(0xFFF2F4FF),
+    textSecondary = Color(0xFFA8B1D1),
+    textTertiary = Color(0xFF969FBF),
     success = Color(0xFF3FB950),
     warning = Color(0xFFD29922),
     danger = Color(0xFFF85149),
@@ -76,14 +76,15 @@ private val DarkExtra = ExtraColors(
 
 private fun scheme(x: ExtraColors): ColorScheme {
     val base = if (x.isDark) darkColorScheme() else lightColorScheme()
-    val primary = if (x.isDark) Color(0xFF3FB950) else Color(0xFF1F883D)
+    val primary = if (x.isDark) Color(0xFF8AA4FF) else Color(0xFF365CE0)
+    val onPrimary = if (x.isDark) Color(0xFF0E1330) else Color.White
     return base.copy(
         primary = primary,
-        onPrimary = Color.White,
-        primaryContainer = primary.copy(alpha = 0.16f),
-        onPrimaryContainer = if (x.isDark) Color(0xFF7EE787) else Color(0xFF116329),
+        onPrimary = onPrimary,
+        primaryContainer = primary.copy(alpha = if (x.isDark) 0.20f else 0.16f),
+        onPrimaryContainer = x.textPrimary,
         secondary = primary,
-        onSecondary = Color.White,
+        onSecondary = onPrimary,
         secondaryContainer = x.raised,
         onSecondaryContainer = x.textPrimary,
         background = x.canvas,

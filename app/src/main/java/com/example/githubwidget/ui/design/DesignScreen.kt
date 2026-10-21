@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -48,8 +50,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -81,7 +87,7 @@ import com.example.githubwidget.ui.theme.numberFontFamily
 import com.example.githubwidget.widget.WidgetUpdater
 
 /**
- * The "Widget" tab: a live preview pinned at the top, and simple visual
+ * The "Widget" tab: a live preview followed by simple visual
  * choices below it. Every change is saved and applied to the home-screen
  * widget immediately — there's no Save button to forget.
  */
@@ -108,117 +114,126 @@ fun DesignScreen(onOpenStats: () -> Unit) {
         if (!WidgetPinning.request(context)) showHelp = true
     }
 
-    Column(Modifier.fillMaxSize().background(AppTheme.colors.canvas)) {
-        // ---------------------------------------------------------- pinned preview
-        Column(
-            Modifier
-                .statusBarsPadding()
-                .padding(horizontal = 20.dp)
-                .padding(top = 12.dp, bottom = 8.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("Your widget", style = MaterialTheme.typography.headlineMedium, color = AppTheme.colors.textPrimary)
-                    Text(
-                        "Changes show up on your home screen right away.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = AppTheme.colors.textSecondary,
-                    )
-                }
-            }
-            Spacer(Modifier.height(14.dp))
-            WallpaperBackdrop {
-                WidgetPreview(
-                    design = design,
-                    data = data,
-                    avatar = if (realData != null) avatar else null,
-                    widthDp = previewSize.widthDp,
-                    heightDp = previewSize.heightDp,
-                    modifier = Modifier.fillMaxWidth().height(168.dp),
-                )
-            }
-            Spacer(Modifier.height(10.dp))
-            SegmentedChoice(
-                options = PreviewSize.entries,
-                selected = previewSize,
-                label = { it.label },
-                onSelect = { previewSize = it },
-            )
-        }
-
-        // ---------------------------------------------------------- controls
-        LazyColumn(
-            Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-        ) {
-            item {
-                AddWidgetCard(hasWidget, onAdd = ::addWidget, onHelp = { showHelp = true })
-            }
-            item {
-                SectionCard(title = "Colors") {
-                    PaletteRow(design, onSelect = { id -> update { it.copy(paletteId = id) } }, onCustom = { pickingColor = true })
-                }
-            }
-            item {
-                SectionCard(title = "Style") {
-                    LayoutChoices(design, data, onSelect = { l -> update { it.copy(layout = l) } })
-                }
-            }
-            item {
-                SectionCard(title = "Font") {
-                    Field("Typeface", hint = "Used for the widget, the numbers in Stats and the share image") {
-                        NumberFontChoice(onSelect = { Repository.setNumberFont(it) })
-                    }
-                }
-            }
-            item {
-                SectionCard(title = "Background") {
-                    Field("Card color", hint = if (design.background == Background.AUTO) "Light or dark, following your phone's setting" else null) {
-                        SegmentedChoice(Background.entries, design.background, { it.label }, { b -> update { it.copy(background = b) } })
-                    }
-                    Spacer(Modifier.height(20.dp))
-                    OpacitySlider(design.opacity) { v -> update { it.copy(opacity = v) } }
-                    Spacer(Modifier.height(16.dp))
-                    Field("Corners") {
-                        SegmentedChoice(Corners.entries, design.corners, { it.label }, { c -> update { it.copy(corners = c) } })
-                    }
-                }
-            }
-            item {
-                SectionCard(title = "Graph") {
-                    Field(
-                        "How much to show",
-                        hint = if (design.range == Range.AUTO) "Shows as many weeks as fit. Make the widget wider to see more." else null,
-                    ) {
-                        SegmentedChoice(Range.entries, design.range, { it.label }, { r -> update { it.copy(range = r) } })
-                    }
-                    Spacer(Modifier.height(20.dp))
-                    Field("Square shape") {
-                        SegmentedChoice(CellShape.entries, design.cellShape, { it.label }, { s -> update { it.copy(cellShape = s) } })
-                    }
-                    Spacer(Modifier.height(20.dp))
-                    Field("Weeks start on") {
-                        SegmentedChoice(
-                            listOf(false, true), design.weekStartsMonday,
-                            { if (it) "Monday" else "Sunday" },
-                            { m -> update { it.copy(weekStartsMonday = m) } },
+    LazyColumn(
+        Modifier.fillMaxSize().background(AppTheme.colors.canvas).statusBarsPadding(),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        item {
+            Column(
+                Modifier
+                    .fillMaxWidth(),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            buildAnnotatedString {
+                                withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Normal)) {
+                                    append("Your ")
+                                }
+                                withStyle(SpanStyle(color = AppTheme.colors.textPrimary, fontWeight = FontWeight.Bold)) {
+                                    append("widget")
+                                }
+                            },
+                            style = MaterialTheme.typography.headlineMedium,
+                        )
+                        Text(
+                            "Changes show up on your home screen right away.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = AppTheme.colors.textSecondary,
                         )
                     }
                 }
+                Spacer(Modifier.height(14.dp))
+                WallpaperBackdrop {
+                    WidgetPreview(
+                        design = design,
+                        data = data,
+                        avatar = if (realData != null) avatar else null,
+                        widthDp = previewSize.widthDp,
+                        heightDp = previewSize.heightDp,
+                        modifier = Modifier.fillMaxWidth().height(168.dp),
+                    )
+                }
+                if (realData == null) {
+                    Text("Example data · Refresh Stats to load your activity", style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textSecondary)
+                }
+                Spacer(Modifier.height(10.dp))
+                SegmentedChoice(
+                    options = PreviewSize.entries,
+                    selected = previewSize,
+                    label = { it.label },
+                    onSelect = { previewSize = it },
+                )
             }
-            item {
-                ShowOnWidget(design, ::update)
+        }
+        // ---------------------------------------------------------- controls
+        item {
+            AddWidgetCard(hasWidget, onAdd = ::addWidget, onHelp = { showHelp = true })
+        }
+        item {
+            SectionCard(title = "Colors") {
+                PaletteRow(design, onSelect = { id -> update { it.copy(paletteId = id) } }, onCustom = { pickingColor = true })
             }
-            item {
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    if (realData != null) {
-                        TextButton(onClick = onOpenStats) { Text("See your full activity") }
-                    }
-                    if (design != WidgetDesign()) {
-                        TextButton(onClick = { Repository.resetDesign() }) {
-                            Text("Reset to the original look", color = AppTheme.colors.textSecondary)
-                        }
+        }
+        item {
+            SectionCard(title = "Style") {
+                LayoutChoices(design, data, onSelect = { l -> update { it.copy(layout = l) } })
+            }
+        }
+        item {
+            SectionCard(title = "Font") {
+                Field("Typeface", hint = "Used for the widget, the numbers in Stats and the share image") {
+                    NumberFontChoice(onSelect = { Repository.setNumberFont(it) })
+                }
+            }
+        }
+        item {
+            SectionCard(title = "Background") {
+                Field("Card color", hint = if (design.background == Background.AUTO) "Light or dark, following your phone's setting" else null) {
+                    SegmentedChoice(Background.entries, design.background, { it.label }, { b -> update { it.copy(background = b) } })
+                }
+                Spacer(Modifier.height(20.dp))
+                OpacitySlider(design.opacity) { v -> update { it.copy(opacity = v) } }
+                Spacer(Modifier.height(16.dp))
+                Field("Corners") {
+                    SegmentedChoice(Corners.entries, design.corners, { it.label }, { c -> update { it.copy(corners = c) } })
+                }
+            }
+        }
+        item {
+            SectionCard(title = "Graph") {
+                Field(
+                    "How much to show",
+                    hint = if (design.range == Range.AUTO) "Shows as many weeks as fit. Make the widget wider to see more." else null,
+                ) {
+                    SegmentedChoice(Range.entries, design.range, { it.label }, { r -> update { it.copy(range = r) } })
+                }
+                Spacer(Modifier.height(20.dp))
+                Field("Square shape") {
+                    SegmentedChoice(CellShape.entries, design.cellShape, { it.label }, { s -> update { it.copy(cellShape = s) } })
+                }
+                Spacer(Modifier.height(20.dp))
+                Field("Weeks start on") {
+                    SegmentedChoice(
+                        listOf(false, true), design.weekStartsMonday,
+                        { if (it) "Monday" else "Sunday" },
+                        { m -> update { it.copy(weekStartsMonday = m) } },
+                    )
+                }
+            }
+        }
+        item {
+            ShowOnWidget(design, ::update)
+        }
+        item {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                if (realData != null) {
+                    TextButton(onClick = onOpenStats, modifier = Modifier.heightIn(min = 48.dp)) { Text("See your full activity") }
+                }
+                if (design != WidgetDesign()) {
+                    TextButton(onClick = { Repository.resetDesign() }) {
+                        Text("Reset to the original look", color = AppTheme.colors.textSecondary)
                     }
                 }
             }
@@ -251,7 +266,7 @@ private fun AddWidgetCard(hasWidget: Boolean, onAdd: () -> Unit, onHelp: () -> U
         }
     } else {
         Surface(
-            shape = RoundedCornerShape(18.dp),
+            shape = MaterialTheme.shapes.large,
             color = AppTheme.colors.success.copy(alpha = 0.10f),
             border = BorderStroke(1.dp, AppTheme.colors.success.copy(alpha = 0.25f)),
         ) {
@@ -317,7 +332,7 @@ private fun Swatch(label: String, levels: List<Color>, selected: Boolean, showEd
     Column(
         Modifier
             .width(64.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(MaterialTheme.shapes.medium)
             .clickable(onClick = onClick, onClickLabel = "Use $label colors")
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -325,9 +340,9 @@ private fun Swatch(label: String, levels: List<Color>, selected: Boolean, showEd
         Box(
             Modifier
                 .size(56.dp)
-                .border(selectionBorder(selected), ring, RoundedCornerShape(16.dp))
+                .border(selectionBorder(selected), ring, MaterialTheme.shapes.medium)
                 .padding(6.dp)
-                .clip(RoundedCornerShape(11.dp))
+                .clip(MaterialTheme.shapes.small)
                 .background(AppTheme.colors.raised),
             contentAlignment = Alignment.Center,
         ) {
@@ -347,7 +362,7 @@ private fun Swatch(label: String, levels: List<Color>, selected: Boolean, showEd
                 ) {
                     Icon(
                         if (selected) Icons.Rounded.Check else Icons.Rounded.Edit, null,
-                        tint = if (selected) Color.White else AppTheme.colors.textSecondary,
+                        tint = if (selected) MaterialTheme.colorScheme.onPrimary else AppTheme.colors.textSecondary,
                         modifier = Modifier.size(12.dp),
                     )
                 }
@@ -358,7 +373,7 @@ private fun Swatch(label: String, levels: List<Color>, selected: Boolean, showEd
             label,
             style = MaterialTheme.typography.labelSmall,
             color = if (selected) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary,
-            maxLines = 1,
+            maxLines = 2,
             textAlign = TextAlign.Center,
         )
     }
@@ -381,17 +396,17 @@ private fun LayoutChoices(design: WidgetDesign, data: com.example.githubwidget.d
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .border(selectionBorder(selected), border, RoundedCornerShape(18.dp))
+                    .clip(MaterialTheme.shapes.large)
+                    .border(selectionBorder(selected), border, MaterialTheme.shapes.large)
                     .clickable { onSelect(layout) }
                     .padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
                     Modifier
-                        .width(132.dp)
+                        .widthIn(max = 108.dp).fillMaxWidth(0.34f)
                         .height(66.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(MaterialTheme.shapes.small)
                         .background(AppTheme.colors.raised),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -420,13 +435,14 @@ private fun LayoutChoices(design: WidgetDesign, data: com.example.githubwidget.d
 @Composable
 private fun NumberFontChoice(onSelect: (NumberFont) -> Unit) {
     val selected by Repository.numberFont.collectAsState()
+    val columns = if (LocalDensity.current.fontScale > 1.3f) 1 else 2
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        NumberFont.entries.chunked(2).forEach { pair ->
+        NumberFont.entries.chunked(columns).forEach { pair ->
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 pair.forEach { font ->
                     FontCard(font, selected = font == selected, onClick = { onSelect(font) }, modifier = Modifier.weight(1f))
                 }
-                if (pair.size == 1) Spacer(Modifier.weight(1f))
+                if (pair.size == 1 && columns == 2) Spacer(Modifier.weight(1f))
             }
         }
     }
@@ -436,7 +452,7 @@ private fun NumberFontChoice(onSelect: (NumberFont) -> Unit) {
 private fun FontCard(font: NumberFont, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val family = remember(font) { numberFontFamily(context, font) }
-    val shape = RoundedCornerShape(16.dp)
+    val shape = MaterialTheme.shapes.medium
     val border by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else AppTheme.colors.hairline, label = "font")
     Column(
         modifier

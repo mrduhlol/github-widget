@@ -12,8 +12,8 @@ android {
         applicationId = "com.example.githubwidget"
         minSdk = 26
         targetSdk = 34
-        versionCode = 23
-        versionName = "3.1.4"
+        versionCode = 26
+        versionName = "3.6"
     }
 
     // Repo keystore (PKCS12): every release APK gets the same signature,

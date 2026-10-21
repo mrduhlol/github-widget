@@ -72,19 +72,19 @@ object Palettes {
     fun colors(context: Context, design: WidgetDesign, dark: Boolean): ColorSet {
         val card = when {
             design.background == Background.BLACK -> c(0xFF000000)
-            dark -> c(0xFF0D1117)
+            dark -> c(0xFF1A2145)
             else -> c(0xFFFFFFFF)
         }
         val see = design.opacity < 45
-        val textPrimary = if (dark) c(0xFFF0F6FC) else c(0xFF1F2328)
-        val textSecondary = if (dark) c(0xFF9198A1) else c(0xFF59636E)
+        val textPrimary = if (dark) c(0xFFF2F4FF) else c(0xFF1A2340)
+        val textSecondary = if (dark) c(0xFFA8B1D1) else c(0xFF5A6585)
         // On a see-through card the empty squares must still be visible on any wallpaper.
         val empty = when {
             see && dark -> 0x33FFFFFF
             see -> 0x26000000
-            design.background == Background.BLACK -> c(0xFF161B22)
-            dark -> c(0xFF151B23)
-            else -> c(0xFFEFF2F5)
+            design.background == Background.BLACK -> c(0xFF232B55)
+            dark -> c(0xFF232B55)
+            else -> c(0xFFF1F4FF)
         }
         val p = palette(context, design, dark)
         val ramp = (if (dark) p.darkRamp else p.lightRamp)?.takeUnless { see }
@@ -92,7 +92,7 @@ object Palettes {
         val accent = if (p.id == DEFAULT_ID && !dark) c(0xFF1A7F37) else p.accent
         return ColorSet(
             card = card,
-            border = if (dark) 0x1FFFFFFF else 0x1A1F2328,
+            border = if (dark) 0x1FFFFFFF else 0x1A1A2340,
             textPrimary = textPrimary,
             textSecondary = textSecondary,
             accent = accent,

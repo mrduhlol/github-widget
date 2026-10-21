@@ -22,16 +22,22 @@
         android:scaleType="fitCenter"
         android:visibility="gone" />
 
-    <ImageButton
+    <!-- Keep the visible control compact while providing a full touch target. -->
+    <FrameLayout
         android:id="@+id/widget_refresh"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="top|end"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="12dp"
-        android:background="@drawable/widget_refresh_bg"
-        android:contentDescription="@string/widget_refresh_desc"
-        android:padding="4dp"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_refresh" />
+        android:contentDescription="@string/widget_refresh_desc">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:background="@drawable/widget_refresh_bg"
+            android:importantForAccessibility="no"
+            android:padding="4dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_refresh" />
+    </FrameLayout>
 </FrameLayout>

@@ -36,7 +36,13 @@ jobs:
         # throwaway debug key, so debug APKs can NEVER update each other
         # (Android rejects it as "package conflicts with an existing package").
         # Tagged releases below build + sign a proper release APK instead.
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew testDebugUnitTest assembleDebug --stacktrace
+
+      - name: Verify release version matches tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts)
+          test "$GITHUB_REF_NAME" = "v$VERSION" || { echo "Release tag must match app version v$VERSION"; exit 1; }
 
       - name: Rename APK with version
         run: |

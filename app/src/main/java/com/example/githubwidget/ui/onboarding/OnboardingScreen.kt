@@ -5,12 +5,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -21,9 +16,9 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -38,9 +33,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -70,13 +65,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -127,54 +124,54 @@ fun OnboardingScreen(changingAccount: Boolean, onDone: () -> Unit, onCancel: () 
     }
     BackHandler(enabled = canGoBack, onBack = goBack)
 
-    // The tour always wears its dark-purple look, like the mascot art.
-    GhTheme(dark = true) {
+    // Insets are applied once around the flow, including the keyboard.
+    GhTheme {
         Column(
             Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(Color(0xFF2B0F4E), Color(0xFF140725))))
+                .background(AppTheme.colors.canvas)
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .imePadding(),
         ) {
-        TopBar(
-            count = steps.size,
-            index = index,
-            showBack = canGoBack,
-            backIsClose = index == 0,
-            onBack = goBack,
-        )
-        AnimatedContent(
-            targetState = step,
-            modifier = Modifier.weight(1f),
-            transitionSpec = {
-                val forward = targetState.ordinal > initialState.ordinal
-                val dir = if (forward) 1 else -1
-                (slideInHorizontally(tween(320, easing = FastOutSlowInEasing)) { dir * it / 4 } + fadeIn(tween(260, 60)))
-                    .togetherWith(slideOutHorizontally(tween(280, easing = FastOutSlowInEasing)) { -dir * it / 4 } + fadeOut(tween(180)))
-            },
-            label = "onboardingStep",
-        ) { s ->
-            when (s) {
-                Step.WELCOME -> WelcomeStep(onNext = { step = Step.USERNAME })
-                Step.USERNAME -> UsernameStep(
-                    name = name,
-                    onNameChange = { name = it },
-                    onFound = {
-                        lookup = it
-                        step = Step.CONFIRM
-                    },
-                )
-                Step.CONFIRM -> lookup?.let {
-                    ConfirmStep(
-                        lookup = it,
-                        changingAccount = changingAccount,
-                        onNotMe = { step = Step.USERNAME },
-                        onDone = onDone,
+            TopBar(
+                count = steps.size,
+                index = index,
+                showBack = canGoBack,
+                backIsClose = index == 0,
+                onBack = goBack,
+            )
+            AnimatedContent(
+                targetState = step,
+                modifier = Modifier.weight(1f),
+                transitionSpec = {
+                    val forward = targetState.ordinal > initialState.ordinal
+                    val dir = if (forward) 1 else -1
+                    (slideInHorizontally(tween(320, easing = FastOutSlowInEasing)) { dir * it / 4 } + fadeIn(tween(260, 60)))
+                        .togetherWith(slideOutHorizontally(tween(280, easing = FastOutSlowInEasing)) { -dir * it / 4 } + fadeOut(tween(180)))
+                },
+                label = "onboardingStep",
+            ) { s ->
+                when (s) {
+                    Step.WELCOME -> WelcomeStep(onNext = { step = Step.USERNAME })
+                    Step.USERNAME -> UsernameStep(
+                        name = name,
+                        onNameChange = { name = it },
+                        onFound = {
+                            lookup = it
+                            step = Step.CONFIRM
+                        },
                     )
-                } ?: Box(Modifier.fillMaxSize())
+                    Step.CONFIRM -> lookup?.let {
+                        ConfirmStep(
+                            lookup = it,
+                            changingAccount = changingAccount,
+                            onNotMe = { step = Step.USERNAME },
+                            onDone = onDone,
+                        )
+                    } ?: Box(Modifier.fillMaxSize())
+                }
             }
-        }
         }
     }
 }
@@ -193,7 +190,20 @@ private fun TopBar(count: Int, index: Int, showBack: Boolean, backIsClose: Boole
                 )
             }
         }
-        if (count > 1) StepDots(count, index, Modifier.align(Alignment.Center))
+        if (count > 1) {
+            Column(
+                Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(7.dp),
+            ) {
+                Text(
+                    "Step ${index + 1} of $count",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = AppTheme.colors.textSecondary,
+                )
+                StepDots(count, index)
+            }
+        }
     }
 }
 
@@ -216,30 +226,44 @@ private fun StepDots(count: Int, index: Int, modifier: Modifier = Modifier) {
     }
 }
 
-/** Shared page layout: scrollable content on top, actions pinned at the bottom. */
+/** Keep actions visible on phones; let the whole page scroll when space is tight. */
 @Composable
 private fun StepPage(
     content: @Composable ColumnScope.() -> Unit,
     actions: @Composable ColumnScope.() -> Unit,
     centered: Boolean = false,
 ) {
-    Column(Modifier.fillMaxSize()) {
-        Column(
-            Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start,
-            verticalArrangement = if (centered) Arrangement.Center else Arrangement.Top,
-        ) {
-            content()
-        }
-        Column(
-            Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = 12.dp, bottom = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            actions()
+    val fontScale = LocalDensity.current.fontScale
+    BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        val scrollTogether = maxHeight < 420.dp || fontScale > 1.3f
+        if (scrollTogether) {
+            Column(
+                Modifier.widthIn(max = 560.dp).fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start,
+            ) {
+                content()
+                Spacer(Modifier.height(24.dp))
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, content = actions)
+            }
+        } else {
+            Column(Modifier.widthIn(max = 560.dp).fillMaxWidth()) {
+                Column(
+                    Modifier.weight(1f).fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
+                    horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start,
+                    verticalArrangement = if (centered) Arrangement.Center else Arrangement.Top,
+                    content = content,
+                )
+                Column(
+                    Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+                        .padding(top = 12.dp, bottom = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    content = actions,
+                )
+            }
         }
     }
 }
@@ -249,80 +273,59 @@ private fun StepPage(
 @Composable
 private fun WelcomeStep(onNext: () -> Unit) {
     val design by Repository.design.collectAsState()
-    val float = rememberInfiniteTransition(label = "float")
-    val offset by float.animateFloat(
-        initialValue = -5f,
-        targetValue = 5f,
-        animationSpec = infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "floatY",
-    )
-    val tilt by float.animateFloat(
-        initialValue = -0.6f,
-        targetValue = 0.6f,
-        animationSpec = infiniteRepeatable(tween(4200, easing = LinearEasing), RepeatMode.Reverse),
-        label = "tilt",
-    )
-
     StepPage(
-        centered = true,
         content = {
-            Spacer(Modifier.height(8.dp))
-            Box(
-                Modifier
-                    .size(148.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f))
-                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), CircleShape)
-                    .graphicsLayer {
-                        translationY = offset * density
-                        rotationZ = tilt
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    AppIcons.Octocat,
-                    contentDescription = "GitHub Octocat",
-                    tint = Color.White,
-                    modifier = Modifier.size(84.dp),
-                )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Icon(AppIcons.Octocat, null, Modifier.size(28.dp), tint = AppTheme.colors.textPrimary)
+                Text("GH-widgets", style = MaterialTheme.typography.titleMedium, color = AppTheme.colors.textPrimary, modifier = Modifier.weight(1f))
             }
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(30.dp))
             Text(
-                "Your GitHub activity, on your home screen",
-                style = MaterialTheme.typography.headlineMedium,
+                "Your GitHub.\nAt a glance.",
+                style = MaterialTheme.typography.displaySmall,
                 color = AppTheme.colors.textPrimary,
-                textAlign = TextAlign.Center,
+                modifier = Modifier.semantics { heading() },
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                "A little widget that shows your green squares and keeps itself up to date.",
+                "Your contribution graph, right on your home screen. Set it up with just your username.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = AppTheme.colors.textSecondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 8.dp),
             )
-            Spacer(Modifier.height(20.dp))
-            WallpaperBackdrop(Modifier.padding(vertical = 8.dp)) {
+            Spacer(Modifier.height(28.dp))
+            WallpaperBackdrop {
                 WidgetPreview(
                     design = design,
                     data = SampleData.userData,
                     avatar = null,
                     widthDp = 340f,
                     heightDp = 170f,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 18.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
+                        .semantics { contentDescription = "Example contribution widget with sample data" },
                 )
             }
-            Spacer(Modifier.height(16.dp))
-        },
-        actions = {
-            PrimaryButton("Get started", onNext)
             Spacer(Modifier.height(10.dp))
             Text(
-                "Free. No sign-in or password needed.",
+                "Example widget · Your activity comes next",
                 style = MaterialTheme.typography.bodySmall,
-                color = AppTheme.colors.textTertiary,
+                color = AppTheme.colors.textSecondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(24.dp))
+            Text(
+                "Choose your style. Add your widget. Make it yours.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = AppTheme.colors.textSecondary,
+            )
+        },
+        actions = {
+            PrimaryButton("Set up my widget", onNext)
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "No sign-in. No token. Just your username.",
+                style = MaterialTheme.typography.bodySmall,
+                color = AppTheme.colors.textSecondary,
                 textAlign = TextAlign.Center,
             )
         },
@@ -371,13 +374,14 @@ private fun UsernameStep(name: String, onNameChange: (String) -> Unit, onFound: 
         content = {
             Spacer(Modifier.height(16.dp))
             Text(
-                "What's your GitHub username?",
+                "Find your GitHub profile",
                 style = MaterialTheme.typography.headlineMedium,
                 color = AppTheme.colors.textPrimary,
+                modifier = Modifier.semantics { heading() },
             )
             Spacer(Modifier.height(10.dp))
             Text(
-                "It's the name in your profile link:",
+                "Enter a username or paste your GitHub profile link. We only need your public profile.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = AppTheme.colors.textSecondary,
             )
@@ -395,13 +399,14 @@ private fun UsernameStep(name: String, onNameChange: (String) -> Unit, onFound: 
                 enabled = !loading,
                 isError = error != null,
                 textStyle = MaterialTheme.typography.titleLarge.copy(color = AppTheme.colors.textPrimary),
+                label = { Text("GitHub username") },
                 placeholder = {
-                    Text("ex: mrduhlol", style = MaterialTheme.typography.titleLarge, color = AppTheme.colors.textTertiary)
+                    Text("username", style = MaterialTheme.typography.titleLarge, color = AppTheme.colors.textSecondary)
                 },
                 prefix = {
-                    Text("@", style = MaterialTheme.typography.titleLarge, color = AppTheme.colors.textTertiary)
+                    Text("@", style = MaterialTheme.typography.titleLarge, color = AppTheme.colors.textSecondary)
                 },
-                shape = RoundedCornerShape(16.dp),
+                shape = MaterialTheme.shapes.large,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.None,
                     autoCorrectEnabled = false,
@@ -423,7 +428,7 @@ private fun UsernameStep(name: String, onNameChange: (String) -> Unit, onFound: 
                 ),
             )
             AnimatedVisibility(error != null, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-                Row(Modifier.padding(top = 10.dp, start = 4.dp, end = 4.dp), verticalAlignment = Alignment.Top) {
+                Row(Modifier.padding(top = 10.dp, start = 4.dp, end = 4.dp).semantics { liveRegion = LiveRegionMode.Polite }, verticalAlignment = Alignment.Top) {
                     Icon(
                         Icons.Rounded.Info, null,
                         Modifier.padding(top = 1.dp).size(18.dp),
@@ -439,45 +444,33 @@ private fun UsernameStep(name: String, onNameChange: (String) -> Unit, onFound: 
             }
             Spacer(Modifier.height(16.dp))
             Text(
-                "You can also paste your whole profile link.",
+                "No password or access token required.",
                 style = MaterialTheme.typography.bodySmall,
-                color = AppTheme.colors.textTertiary,
+                color = AppTheme.colors.textSecondary,
                 modifier = Modifier.padding(horizontal = 4.dp),
             )
             Spacer(Modifier.height(16.dp))
         },
         actions = {
-            PrimaryButton("Continue", submit, loading = loading, enabled = name.isNotBlank())
+            PrimaryButton(
+                if (loading) "Finding profile…" else "Find my profile",
+                submit,
+                modifier = Modifier.semantics { contentDescription = if (loading) "Finding GitHub profile" else "Find my profile" },
+                loading = loading,
+                enabled = name.isNotBlank(),
+            )
         },
     )
 }
 
-/** "github.com/ mrduhlol" with the name part highlighted. */
+/** A profile-link example that remains readable at large font sizes. */
 @Composable
 private fun ProfileLinkExample() {
-    Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = AppTheme.colors.card,
-        border = BorderStroke(1.dp, AppTheme.colors.hairline),
-    ) {
-        Row(Modifier.padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("github.com/", style = MaterialTheme.typography.bodyLarge, color = AppTheme.colors.textSecondary)
-            Spacer(Modifier.width(2.dp))
-            Box(
-                Modifier
-                    .clip(RoundedCornerShape(9.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .padding(horizontal = 10.dp, vertical = 4.dp),
-            ) {
-                Text(
-                    "mrduhlol",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-            }
-        }
-    }
+    Text(
+        "For example: github.com/username",
+        style = MaterialTheme.typography.bodyMedium,
+        color = AppTheme.colors.textSecondary,
+    )
 }
 
 // ------------------------------------------------------------------ step 3: confirm
@@ -503,13 +496,20 @@ private fun ConfirmStep(lookup: Lookup, changingAccount: Boolean, onNotMe: () ->
         content = {
             Spacer(Modifier.height(16.dp))
             Text(
-                "Is this you?",
+                if (changingAccount || hasWidget) "Confirm your profile" else "Make it your home screen",
                 style = MaterialTheme.typography.headlineMedium,
                 color = AppTheme.colors.textPrimary,
+                modifier = Modifier.semantics { heading() },
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                if (changingAccount || hasWidget) "Check that this is the profile you want to follow." else "Check your profile, then add your widget.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = AppTheme.colors.textSecondary,
             )
             Spacer(Modifier.height(20.dp))
             Surface(
-                shape = MaterialTheme.shapes.large,
+                shape = MaterialTheme.shapes.extraLarge,
                 color = AppTheme.colors.card,
                 border = BorderStroke(1.dp, AppTheme.colors.hairline),
             ) {
@@ -521,7 +521,7 @@ private fun ConfirmStep(lookup: Lookup, changingAccount: Boolean, onNotMe: () ->
                             displayName,
                             style = MaterialTheme.typography.titleLarge,
                             color = AppTheme.colors.textPrimary,
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
                         if (displayName != login) {
@@ -592,10 +592,8 @@ private fun ConfirmStep(lookup: Lookup, changingAccount: Boolean, onNotMe: () ->
                         }
                     })
                     Spacer(Modifier.height(4.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        QuietButton("Not me, go back", onNotMe, Modifier.weight(1f))
-                        QuietButton("I'll add it later", ::finish, Modifier.weight(1f))
-                    }
+                    QuietButton("I'll add it later", ::finish, Modifier.fillMaxWidth())
+                    QuietButton("Choose another profile", onNotMe, Modifier.fillMaxWidth())
                 }
             }
         },
@@ -612,6 +610,6 @@ private fun ConfirmStep(lookup: Lookup, changingAccount: Boolean, onNotMe: () ->
 @Composable
 private fun QuietButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     TextButton(onClick = onClick, modifier = modifier.heightIn(min = 48.dp)) {
-        Text(text, style = MaterialTheme.typography.labelLarge, color = AppTheme.colors.textSecondary, maxLines = 1)
+        Text(text, style = MaterialTheme.typography.labelLarge, color = AppTheme.colors.textSecondary, textAlign = TextAlign.Center)
     }
 }
