@@ -49,6 +49,7 @@ data class WidgetDesign(
     /** Base color used when [paletteId] is [Palettes.CUSTOM_ID]. */
     val customColor: Int = 0xFF39D353.toInt(),
     val layout: WidgetLayout = WidgetLayout.CLASSIC,
+    val contributionLayout: WidgetLayout = WidgetLayout.CLASSIC,
     val background: Background = Background.AUTO,
     /** 0 = fully see-through, 100 = solid. */
     val opacity: Int = 100,
@@ -76,6 +77,7 @@ data class WidgetDesign(
         .put("palette", paletteId)
         .put("customColor", customColor)
         .put("layout", layout.name)
+        .put("contributionLayout", contributionLayout.name)
         .put("background", background.name)
         .put("opacity", opacity)
         .put("corners", corners.name)
@@ -110,6 +112,7 @@ data class WidgetDesign(
                     paletteId = o.optString("palette", d.paletteId),
                     customColor = o.optInt("customColor", d.customColor),
                     layout = enumOr(o.optString("layout"), d.layout),
+                    contributionLayout = enumOr(o.optString("contributionLayout", o.optString("layout")), d.contributionLayout),
                     background = enumOr(o.optString("background"), d.background),
                     opacity = o.optInt("opacity", d.opacity).coerceIn(0, 100),
                     corners = enumOr(o.optString("corners"), d.corners),

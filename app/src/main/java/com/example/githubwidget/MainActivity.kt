@@ -1,6 +1,11 @@
 package com.example.githubwidget
 
 import android.os.Bundle
+import android.content.Intent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableIntStateOf
+import com.example.githubwidget.design.WidgetLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -10,14 +15,32 @@ import com.example.githubwidget.ui.theme.GhTheme
 import com.example.githubwidget.widget.RefreshWorker
 
 class MainActivity : ComponentActivity() {
+    private var widgetOpenRequest by mutableIntStateOf(0)
+
+    companion object {
+        const val EXTRA_WIDGET_LAYOUT = "widget_layout"
+    }
+
+    private fun openWidget(intent: Intent?) {
+        val layout = WidgetLayout.entries.firstOrNull { it.name == intent?.getStringExtra(EXTRA_WIDGET_LAYOUT) } ?: return
+        Repository.updateDesign { it.copy(layout = layout) }
+        widgetOpenRequest++
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        openWidget(intent)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         Repository.init(this)
+        openWidget(intent)
         setContent {
             GhTheme {
-                AppRoot()
+                AppRoot(widgetOpenRequest)
             }
         }
     }

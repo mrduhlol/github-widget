@@ -29,7 +29,12 @@ class WidgetConfigActivity : Activity() {
         setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id))
         WidgetUpdater.update(this, intArrayOf(id))
         if (!Repository.hasUser || reconfigure) {
-            startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            val provider = AppWidgetManager.getInstance(this).getAppWidgetInfo(id)?.provider
+            val kind = com.example.githubwidget.widget.WidgetKind.entries.firstOrNull { it.component(this) == provider }
+            val layout = kind?.resolvedLayout(Repository.design.value.layout, Repository.design.value.contributionLayout)
+            startActivity(Intent(this, MainActivity::class.java)
+                .putExtra(MainActivity.EXTRA_WIDGET_LAYOUT, layout?.name)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
         finish()
     }

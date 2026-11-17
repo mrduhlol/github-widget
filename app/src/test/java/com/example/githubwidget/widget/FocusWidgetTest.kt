@@ -41,6 +41,7 @@ class FocusWidgetTest {
         assertEquals(WidgetLayout.PROFILE, WidgetKind.PORTRAIT_PROFILE.resolvedLayout(WidgetLayout.WEEKLY_GOAL))
         assertEquals(WidgetLayout.CLASSIC, WidgetKind.CONTRIBUTIONS.resolvedLayout(WidgetLayout.PROFILE))
         assertEquals(WidgetLayout.GRAPH, WidgetKind.CONTRIBUTIONS.resolvedLayout(WidgetLayout.GRAPH))
+        assertEquals(WidgetLayout.GRAPH, WidgetKind.CONTRIBUTIONS.resolvedLayout(WidgetLayout.PROFILE, WidgetLayout.GRAPH))
     }
 
     @Test fun settingsSurviveRoundTripAndOldInstalls() {

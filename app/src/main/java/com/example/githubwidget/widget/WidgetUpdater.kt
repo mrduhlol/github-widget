@@ -173,7 +173,7 @@ object WidgetUpdater {
         kind: WidgetKind,
     ): RemoteViews {
         val shared = Repository.design.value
-        val design = shared.copy(layout = kind.resolvedLayout(shared.layout))
+        val design = shared.copy(layout = kind.resolvedLayout(shared.layout, shared.contributionLayout))
         val data = Repository.data.value
         val placeholder = when {
             data != null -> WidgetRenderer.Placeholder.NONE
@@ -204,8 +204,10 @@ object WidgetUpdater {
         views.setContentDescription(R.id.widget_image_dark, desc)
 
         val open = PendingIntent.getActivity(
-            context, 0,
-            Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            context, 100 + kind.ordinal,
+            Intent(context, MainActivity::class.java)
+                .putExtra(MainActivity.EXTRA_WIDGET_LAYOUT, design.layout.name)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         views.setOnClickPendingIntent(R.id.widget_root, open)

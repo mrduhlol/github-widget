@@ -70,11 +70,17 @@ enum class Tab(val label: String, val icon: ImageVector) {
  *  - otherwise three tabs: Widget (design), Stats, Settings
  */
 @Composable
-fun AppRoot() {
+fun AppRoot(widgetOpenRequest: Int = 0) {
     val context = LocalContext.current
     val username by Repository.username.collectAsState()
     var changingAccount by rememberSaveable { mutableStateOf(false) }
     var tab by rememberSaveable { mutableStateOf(Tab.WIDGET) }
+    LaunchedEffect(widgetOpenRequest) {
+        if (widgetOpenRequest > 0) {
+            tab = Tab.WIDGET
+            changingAccount = false
+        }
+    }
 
     // Auto-check GitHub Releases at most once a day; pops the update dialog itself.
     var autoInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }

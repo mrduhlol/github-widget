@@ -14,9 +14,9 @@ internal enum class WidgetKind(val provider: Class<*>, val layout: WidgetLayout?
 
     fun component(context: Context) = ComponentName(context, provider)
 
-    fun resolvedLayout(selected: WidgetLayout): WidgetLayout = layout ?: when (selected) {
+    fun resolvedLayout(selected: WidgetLayout, contributions: WidgetLayout = WidgetLayout.CLASSIC): WidgetLayout = layout ?: when (selected) {
         WidgetLayout.CLASSIC, WidgetLayout.GRAPH, WidgetLayout.NUMBERS -> selected
-        else -> WidgetLayout.CLASSIC
+        else -> contributions.takeIf { it in listOf(WidgetLayout.CLASSIC, WidgetLayout.GRAPH, WidgetLayout.NUMBERS) } ?: WidgetLayout.CLASSIC
     }
 
     companion object {

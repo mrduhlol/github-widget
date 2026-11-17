@@ -212,7 +212,10 @@ object Repository {
     // ---------------------------------------------------------------- design & settings
 
     fun updateDesign(transform: (WidgetDesign) -> WidgetDesign) {
-        val next = transform(_design.value)
+        val changed = transform(_design.value)
+        val next = if (changed.layout in listOf(com.example.githubwidget.design.WidgetLayout.CLASSIC, com.example.githubwidget.design.WidgetLayout.GRAPH, com.example.githubwidget.design.WidgetLayout.NUMBERS)) {
+            changed.copy(contributionLayout = changed.layout)
+        } else changed
         if (next == _design.value) return
         _design.value = next
         prefs().edit().putString(KEY_DESIGN, next.toJson()).apply()
