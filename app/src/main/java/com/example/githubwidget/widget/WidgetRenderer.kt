@@ -101,12 +101,16 @@ object WidgetRenderer {
         fun text(sizeSp: Float, color: Int, bold: Boolean = false) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = dp(sizeSp)
             this.color = color
-            typeface = NumberFont.typeface(context, font, if (bold) 700 else 400)
+            typeface = NumberFont.typeface(context, if (font == NumberFont.DOT_MATRIX) NumberFont.SYSTEM else font, if (bold) 700 else 400)
             if (seeThrough) setShadowLayer(dp(3f), 0f, dp(1f), if (colors.isDark) 0x99000000.toInt() else 0x66FFFFFF)
         }
 
         fun medium(sizeSp: Float, color: Int) = text(sizeSp, color).apply {
-            typeface = NumberFont.typeface(context, font, 500)
+            typeface = NumberFont.typeface(context, if (font == NumberFont.DOT_MATRIX) NumberFont.SYSTEM else font, 500)
+        }
+
+        fun numberText(size: Float, color: Int) = text(size, color, bold = true).apply {
+            typeface = NumberFont.typeface(context, font, 700)
         }
 
         fun draw(data: UserData?, avatar: Bitmap?, placeholder: Placeholder) {
@@ -117,6 +121,8 @@ object WidgetRenderer {
                 data == null -> drawPlaceholder(area, placeholder)
                 design.layout == WidgetLayout.GRAPH -> drawGraphOnly(area, data)
                 design.layout == WidgetLayout.NUMBERS -> drawNumbers(area, data)
+                design.layout in listOf(WidgetLayout.STREAK, WidgetLayout.WEEKLY_GOAL, WidgetLayout.PROFILE) ->
+                    FocusWidgetPainter.draw(canvas, area, s, design, colors, context, font, data, avatar)
                 else -> drawClassic(area, data, avatar)
             }
         }
@@ -232,7 +238,7 @@ object WidgetRenderer {
             // Keep clear of the refresh icon overlaid at top-end inside the card (20dp + margins).
             var right = r.right - dp(28f)
             if (design.showTotal) {
-                val num = text(16f, colors.accent, bold = true)
+                val num = numberText(16f, colors.accent)
                 val numStr = numbers.format(stats.total)
                 val label = text(11f, colors.textSecondary)
                 val labelStr = if (r.width() > dp(220f)) " contributions" else ""
@@ -309,7 +315,7 @@ object WidgetRenderer {
 
         fun drawBigStats(r: RectF, stats: Stats, compact: Boolean) {
             val bigSize = if (compact) (r.height() / s * 0.34f).coerceIn(18f, 30f) else 30f
-            val big = text(bigSize, colors.accent, bold = true)
+            val big = numberText(bigSize, colors.accent)
             val label = text(11f, colors.textSecondary)
             val small = medium(13f, colors.textPrimary)
 

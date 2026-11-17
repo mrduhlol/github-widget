@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
  *
  * The class name is kept from v2 so widgets already placed keep working.
  */
-class ContributionWidgetProvider : AppWidgetProvider() {
+open class ContributionWidgetProvider : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)

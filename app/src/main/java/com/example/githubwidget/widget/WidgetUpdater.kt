@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import com.example.githubwidget.design.WidgetLayout
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
@@ -21,11 +22,12 @@ object WidgetUpdater {
 
     private const val PREFS = "gh_widget_ids"
     private const val KEY_DRAWN = "drawn"
-    private data class RenderKey(val width: Float, val height: Float, val dark: Boolean, val pixelBudget: Int)
+    private data class RenderKey(val layout: WidgetLayout, val width: Float, val height: Float, val dark: Boolean, val pixelBudget: Int)
 
     fun widgetIds(context: Context): IntArray =
-        AppWidgetManager.getInstance(context)
-            .getAppWidgetIds(ComponentName(context, ContributionWidgetProvider::class.java))
+        WidgetKind.entries.flatMap { kind ->
+            AppWidgetManager.getInstance(context).getAppWidgetIds(kind.component(context)).toList()
+        }.toIntArray()
 
     fun hasWidgets(context: Context) = widgetIds(context).isNotEmpty()
 
@@ -40,7 +42,10 @@ object WidgetUpdater {
         // stay on the Palettes ramps.
         val drawn = HashMap<RenderKey, Bitmap>()
         for (id in ids) {
-            runCatching { mgr.updateAppWidget(id, build(context, mgr.getAppWidgetOptions(id), drawn)) }
+            val component = mgr.getAppWidgetInfo(id)?.provider
+            val kind = WidgetKind.entries.firstOrNull { it.component(context) == component } ?: WidgetKind.CONTRIBUTIONS
+            runCatching { mgr.updateAppWidget(id, build(context, mgr.getAppWidgetOptions(id), drawn, kind)) }
+                .onFailure { Log.e("GHWidget", "Could not render widget $id", it) }
         }
         markDrawn(context, ids)
     }
@@ -121,7 +126,7 @@ object WidgetUpdater {
         return SizeF(width, height)
     }
 
-    private fun build(context: Context, options: Bundle?, drawn: MutableMap<RenderKey, Bitmap>): RemoteViews {
+    private fun build(context: Context, options: Bundle?, drawn: MutableMap<RenderKey, Bitmap>, kind: WidgetKind): RemoteViews {
         val sizes = exactSizes(options)
         val variantCount = if (sizes.isEmpty()) 2 else sizes.size
         val dm = context.resources.displayMetrics
@@ -139,7 +144,7 @@ object WidgetUpdater {
             if (normalized != size) {
                 Log.w("GHWidget", "Corrected launcher bitmap size $size to $normalized; host key retained")
             }
-            return buildSize(context, normalized, drawn, pixelBudget)
+            return buildSize(context, normalized, drawn, pixelBudget, kind)
         }
         return if (android.os.Build.VERSION.SDK_INT >= 31 && sizes.isNotEmpty()) {
             RemoteViews(sizes.associateWith { size ->
@@ -165,15 +170,17 @@ object WidgetUpdater {
         size: SizeF,
         drawn: MutableMap<RenderKey, Bitmap>,
         pixelBudget: Int,
+        kind: WidgetKind,
     ): RemoteViews {
-        val design = Repository.design.value
+        val shared = Repository.design.value
+        val design = shared.copy(layout = kind.resolvedLayout(shared.layout))
         val data = Repository.data.value
         val placeholder = when {
             data != null -> WidgetRenderer.Placeholder.NONE
             Repository.hasUser -> WidgetRenderer.Placeholder.LOADING
             else -> WidgetRenderer.Placeholder.SIGNED_OUT
         }
-        fun render(dark: Boolean) = drawn.getOrPut(RenderKey(size.width, size.height, dark, pixelBudget)) {
+        fun render(dark: Boolean) = drawn.getOrPut(RenderKey(design.layout, size.width, size.height, dark, pixelBudget)) {
             WidgetRenderer.render(
                 context, design, data, Repository.avatar.value, size.width, size.height, dark, placeholder,
                 Repository.numberFont.value, maxPixels = pixelBudget,
@@ -191,7 +198,7 @@ object WidgetUpdater {
             views.setImageViewBitmap(R.id.widget_image_light, bmp)
             views.setImageViewBitmap(R.id.widget_image_dark, bmp)
         }
-        val desc = data?.let { "GitHub contributions for ${it.contributions.username}: ${it.contributions.totalLastYear} in the last year" }
+        val desc = data?.let { FocusWidgetPainter.accessibilityText(design, it) }
             ?: "GitHub contributions widget. Tap to set up."
         views.setContentDescription(R.id.widget_image_light, desc)
         views.setContentDescription(R.id.widget_image_dark, desc)

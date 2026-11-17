@@ -423,6 +423,7 @@ enum class PreviewSize(val label: String, val widthDp: Float, val heightDp: Floa
     SMALL("Small", 170f, 170f),
     WIDE("Wide", 340f, 170f),
     LARGE("Large", 340f, 260f),
+    PORTRAIT("Portrait", 170f, 340f),
 }
 
 /**

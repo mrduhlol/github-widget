@@ -14,11 +14,18 @@ data class Contributions(
     val today: Day? get() = days.lastOrNull()
 }
 
+data class ProfileLink(val label: String, val url: String)
+
 /** Public GitHub profile info shown next to the graph. */
 data class Profile(
     val login: String,
     val name: String?,
     val avatarUrl: String,
+    val followers: Int? = null,
+    val following: Int? = null,
+    val website: String? = null,
+    val socialLinks: List<ProfileLink> = emptyList(),
+    val fetchedAt: Long = 0L,
 ) {
     /** Real name when the user has set one, otherwise the login. */
     val displayName: String get() = name?.takeIf { it.isNotBlank() } ?: login

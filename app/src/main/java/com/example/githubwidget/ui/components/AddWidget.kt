@@ -38,11 +38,11 @@ object WidgetPinning {
      * Asks the launcher to place the widget. The launcher shows its own
      * confirmation. Returns false when unsupported — show [AddWidgetHelpSheet].
      */
-    fun request(context: Context): Boolean {
+    fun request(context: Context, layout: com.example.githubwidget.design.WidgetLayout = com.example.githubwidget.data.Repository.design.value.layout, portrait: Boolean = false): Boolean {
         val mgr = AppWidgetManager.getInstance(context)
         if (!mgr.isRequestPinAppWidgetSupported) return false
         return runCatching {
-            mgr.requestPinAppWidget(ComponentName(context, ContributionWidgetProvider::class.java), null, null)
+            mgr.requestPinAppWidget(com.example.githubwidget.widget.WidgetKind.forLayout(layout, portrait).component(context), null, null)
         }.getOrDefault(false)
     }
 }
@@ -68,7 +68,7 @@ fun AddWidgetHelpSheet(onDismiss: () -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
                 Step(1, "Go to your home screen", "Then touch and hold an empty spot until a menu appears.")
                 Step(2, "Tap “Widgets”", "On some phones it's under “Add” or the + button.")
-                Step(3, "Find “GH Widgets”", "Touch and hold the GitHub contributions widget, then drop it where you like.")
+                Step(3, "Find “GH Widgets”", "Choose Contributions, Streak, Weekly goal or a Profile card, then drop it where you like.")
                 Step(4, "Make it your size", "Touch and hold the widget and drag its edges. It shows more weeks when it's wider.")
             }
             Spacer(Modifier.height(24.dp))

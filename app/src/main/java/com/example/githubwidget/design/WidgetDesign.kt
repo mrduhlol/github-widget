@@ -7,6 +7,9 @@ enum class WidgetLayout(val label: String, val description: String) {
     CLASSIC("Classic", "Name, graph and stats"),
     GRAPH("Graph only", "Just the squares"),
     NUMBERS("Numbers", "Big stats, small graph"),
+    STREAK("Streak", "Current streak, best streak and today"),
+    WEEKLY_GOAL("Weekly goal", "This week’s contributions and your target"),
+    PROFILE("Profile card", "Your GitHub ID · landscape or portrait"),
 }
 
 /** Card background. AUTO follows the phone's light/dark setting. */
@@ -38,8 +41,8 @@ enum class Corners(val label: String, val dp: Float) {
 }
 
 /**
- * The complete look of the widget. One design is shared by every widget on the
- * home screen, so the in-app preview is always exactly what the user gets.
+ * Shared appearance settings. Dedicated widget providers retain their own layout
+ * while using the same connected profile, colors and font as the in-app preview.
  */
 data class WidgetDesign(
     val paletteId: String = Palettes.DEFAULT_ID,
@@ -59,6 +62,15 @@ data class WidgetDesign(
     val showToday: Boolean = true,
     val showMonths: Boolean = true,
     val weekStartsMonday: Boolean = false,
+    val weeklyGoal: Int = 20,
+    val profileShowName: Boolean = true,
+    val profileShowAvatar: Boolean = true,
+    val profileShowFollowers: Boolean = true,
+    val profileShowFollowing: Boolean = true,
+    val profileShowGitHub: Boolean = true,
+    val profileShowWebsite: Boolean = true,
+    val profileShowSocials: Boolean = true,
+    val profileHiddenLinks: Set<String> = emptySet(),
 ) {
     fun toJson(): String = JSONObject()
         .put("palette", paletteId)
@@ -76,6 +88,15 @@ data class WidgetDesign(
         .put("showToday", showToday)
         .put("showMonths", showMonths)
         .put("weekStartsMonday", weekStartsMonday)
+        .put("weeklyGoal", weeklyGoal)
+        .put("profileShowName", profileShowName)
+        .put("profileShowAvatar", profileShowAvatar)
+        .put("profileShowFollowers", profileShowFollowers)
+        .put("profileShowFollowing", profileShowFollowing)
+        .put("profileShowGitHub", profileShowGitHub)
+        .put("profileShowWebsite", profileShowWebsite)
+        .put("profileShowSocials", profileShowSocials)
+        .put("profileHiddenLinks", org.json.JSONArray(profileHiddenLinks.sorted()))
         .toString()
 
     companion object {
@@ -101,6 +122,18 @@ data class WidgetDesign(
                     showToday = o.optBoolean("showToday", d.showToday),
                     showMonths = o.optBoolean("showMonths", d.showMonths),
                     weekStartsMonday = o.optBoolean("weekStartsMonday", d.weekStartsMonday),
+                    weeklyGoal = o.optInt("weeklyGoal", d.weeklyGoal).coerceIn(1, 10000),
+                    profileShowName = o.optBoolean("profileShowName", d.profileShowName),
+                    profileShowAvatar = o.optBoolean("profileShowAvatar", d.profileShowAvatar),
+                    profileShowFollowers = o.optBoolean("profileShowFollowers", d.profileShowFollowers),
+                    profileShowFollowing = o.optBoolean("profileShowFollowing", d.profileShowFollowing),
+                    profileShowGitHub = o.optBoolean("profileShowGitHub", d.profileShowGitHub),
+                    profileShowWebsite = o.optBoolean("profileShowWebsite", d.profileShowWebsite),
+                    profileShowSocials = o.optBoolean("profileShowSocials", d.profileShowSocials),
+                    profileHiddenLinks = o.optJSONArray("profileHiddenLinks")?.let { links ->
+                        (0 until links.length()).map { links.optString(it) }.toSet()
+                    } ?: emptySet(),
+
                 )
             } catch (_: Exception) {
                 WidgetDesign()

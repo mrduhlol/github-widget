@@ -52,12 +52,36 @@ object GitHubApi {
         return Contributions(username, total, days)
     }
 
+    /** Accept only web links before displaying or opening public profile metadata. */
+    fun webUrl(raw: String?): String? {
+        val value = raw?.trim()?.takeIf { it.isNotEmpty() && it != "null" } ?: return null
+        val candidate = if ("://" in value) value else "https://$value"
+        val uri = runCatching { java.net.URI(candidate) }.getOrNull() ?: return null
+        return candidate.takeIf { uri.scheme?.lowercase() in listOf("https", "http") && !uri.host.isNullOrBlank() && uri.userInfo == null }
+    }
+
     fun fetchProfile(username: String): Profile {
         val o = JSONObject(get("https://api.github.com/users/${encode(username)}", username))
+        val links = runCatching {
+            val accounts = org.json.JSONArray(get("https://api.github.com/users/${encode(username)}/social_accounts", username))
+            (0 until accounts.length()).mapNotNull { i ->
+                val account = accounts.getJSONObject(i)
+                webUrl(account.optString("url"))?.let { ProfileLink(account.optString("provider", "Social"), it) }
+            }
+        }.getOrDefault(emptyList()).toMutableList()
+        o.optString("twitter_username").takeIf { it.matches(Regex("[A-Za-z0-9_]{1,15}")) }?.let {
+            val url = "https://x.com/$it"
+            if (links.none { link -> link.url == url }) links.add(ProfileLink("X", url))
+        }
         return Profile(
             login = o.optString("login", username),
             name = o.optString("name").takeIf { it.isNotBlank() && it != "null" },
             avatarUrl = o.optString("avatar_url", "https://github.com/${encode(username)}.png"),
+            followers = if (o.has("followers")) o.optInt("followers").coerceAtLeast(0) else null,
+            following = if (o.has("following")) o.optInt("following").coerceAtLeast(0) else null,
+            website = webUrl(o.optString("blog")),
+            socialLinks = links.distinctBy { it.url }.take(8),
+            fetchedAt = System.currentTimeMillis(),
         )
     }
 

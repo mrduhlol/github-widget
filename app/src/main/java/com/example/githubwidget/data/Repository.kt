@@ -180,7 +180,7 @@ object Repository {
             val c = withContext(Dispatchers.IO) { GitHubApi.fetchContributions(name) }
             // Re-fetch the profile at most daily; it rarely changes and is rate limited.
             val old = _data.value
-            val profileFresh = old?.profile != null && System.currentTimeMillis() - old.fetchedAt < 24 * 3_600_000L
+            val profileFresh = old?.profile != null && System.currentTimeMillis() - old.profile.fetchedAt < 24 * 3_600_000L
             val profile = if (profileFresh) old?.profile else withContext(Dispatchers.IO) {
                 runCatching { GitHubApi.fetchProfile(name) }.getOrNull()
             } ?: old?.profile
@@ -254,7 +254,11 @@ object Repository {
             .put("days", days)
             .put("fetchedAt", d.fetchedAt)
         d.profile?.let {
-            root.put("profile", JSONObject().put("login", it.login).put("name", it.name ?: "").put("avatar", it.avatarUrl))
+            root.put("profile", JSONObject().put("login", it.login).put("name", it.name ?: "").put("avatar", it.avatarUrl)
+                .put("profileFetchedAt", it.fetchedAt).put("followers", it.followers).put("following", it.following).put("website", it.website)
+                .put("socialLinks", org.json.JSONArray().apply {
+                    it.socialLinks.forEach { link -> put(JSONObject().put("label", link.label).put("url", link.url)) }
+                }))
         }
         runCatching {
             val tmp = File(app.filesDir, "$CACHE_FILE.tmp")
@@ -275,7 +279,19 @@ object Repository {
         val p = root.optJSONObject("profile")
         UserData(
             Contributions(root.getString("username"), root.optInt("total"), days),
-            p?.let { Profile(it.getString("login"), it.optString("name").ifBlank { null }, it.getString("avatar")) },
+            p?.let {
+                val links = it.optJSONArray("socialLinks")
+                Profile(it.getString("login"), it.optString("name").ifBlank { null }, it.getString("avatar"),
+                    followers = if (it.has("followers") && !it.isNull("followers")) it.optInt("followers") else null,
+                    following = if (it.has("following") && !it.isNull("following")) it.optInt("following") else null,
+                    website = GitHubApi.webUrl(it.optString("website")),
+                    fetchedAt = it.optLong("profileFetchedAt"),
+                    socialLinks = (0 until (links?.length() ?: 0)).mapNotNull { i ->
+                        val link = links!!.getJSONObject(i)
+                        GitHubApi.webUrl(link.optString("url"))?.let { url -> ProfileLink(link.optString("label"), url) }
+                    },
+                )
+            },
             root.optLong("fetchedAt"),
         )
     }.getOrNull()

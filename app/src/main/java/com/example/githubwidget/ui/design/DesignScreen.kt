@@ -111,7 +111,7 @@ fun DesignScreen(onOpenStats: () -> Unit) {
 
     fun update(t: (WidgetDesign) -> WidgetDesign) = Repository.updateDesign(t)
     fun addWidget() {
-        if (!WidgetPinning.request(context)) showHelp = true
+        if (!WidgetPinning.request(context, design.layout, previewSize == PreviewSize.PORTRAIT)) showHelp = true
     }
 
     LazyColumn(
@@ -183,7 +183,7 @@ fun DesignScreen(onOpenStats: () -> Unit) {
         }
         item {
             SectionCard(title = "Font") {
-                Field("Typeface", hint = "Used for the widget, the numbers in Stats and the share image") {
+                Field("Typeface", hint = "Used for numbers in widgets, Stats and share images. Dot matrix keeps small labels in a regular font.") {
                     NumberFontChoice(onSelect = { Repository.setNumberFont(it) })
                 }
             }
@@ -201,7 +201,7 @@ fun DesignScreen(onOpenStats: () -> Unit) {
                 }
             }
         }
-        item {
+        if (design.layout in listOf(WidgetLayout.CLASSIC, WidgetLayout.GRAPH, WidgetLayout.NUMBERS)) item {
             SectionCard(title = "Graph") {
                 Field(
                     "How much to show",
@@ -223,8 +223,28 @@ fun DesignScreen(onOpenStats: () -> Unit) {
                 }
             }
         }
+        if (design.layout == WidgetLayout.WEEKLY_GOAL) {
+            item {
+                SectionCard(title = "Weekly goal", subtitle = "Contribution count · Monday to Sunday") {
+                    Field("Target", hint = "${design.weeklyGoal} contributions per week") {
+                        Slider(
+                            value = design.weeklyGoal.toFloat().coerceIn(1f, 200f),
+                            onValueChange = { value -> update { it.copy(weeklyGoal = value.toInt().coerceIn(1, 200)) } },
+                            valueRange = 1f..200f,
+                        )
+                    }
+                }
+            }
+        }
         item {
-            ShowOnWidget(design, ::update)
+            when (design.layout) {
+                WidgetLayout.PROFILE -> ProfileCardOptions(design, ::update)
+                WidgetLayout.STREAK, WidgetLayout.WEEKLY_GOAL -> Text(
+                    "Colors and fonts are shared. Each widget keeps its own type. All widgets use your connected GitHub profile.",
+                    style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textSecondary,
+                )
+                else -> ShowOnWidget(design, ::update)
+            }
         }
         item {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -505,6 +525,38 @@ private fun OpacitySlider(opacity: Int, onChange: (Int) -> Unit) {
             inactiveTrackColor = AppTheme.colors.raised,
         ),
     )
+}
+
+@Composable
+private fun ProfileCardOptions(design: WidgetDesign, update: ((WidgetDesign) -> WidgetDesign) -> Unit) {
+    val data by Repository.data.collectAsState()
+    val context = LocalContext.current
+    SectionCard(title = "Your ID card", subtitle = "Username is always shown. Resize the card for landscape or portrait.") {
+        ToggleRow("Profile photo", design.profileShowAvatar, { v -> update { it.copy(profileShowAvatar = v) } })
+        ToggleRow("Display name", design.profileShowName, { v -> update { it.copy(profileShowName = v) } })
+        ToggleRow("Followers", design.profileShowFollowers, { v -> update { it.copy(profileShowFollowers = v) } })
+        ToggleRow("Following", design.profileShowFollowing, { v -> update { it.copy(profileShowFollowing = v) } })
+        ToggleRow("GitHub link", design.profileShowGitHub, { v -> update { it.copy(profileShowGitHub = v) } })
+        ToggleRow("Website", design.profileShowWebsite, { v -> update { it.copy(profileShowWebsite = v) } }, subtitle = "Shown when it is public on GitHub")
+        ToggleRow("Social links", design.profileShowSocials, { v -> update { it.copy(profileShowSocials = v) } }, subtitle = "Public connections from your GitHub profile")
+        data?.let { user ->
+            com.example.githubwidget.widget.FocusWidgetPainter.profileLinks(design.copy(profileHiddenLinks = emptySet()), user).forEach { link ->
+                ToggleRow(link.label, link.url !in design.profileHiddenLinks, { shown ->
+                    update { it.copy(profileHiddenLinks = if (shown) it.profileHiddenLinks - link.url else it.profileHiddenLinks + link.url) }
+                })
+            }
+        }
+        Text("Links fit the available space. Open a connection below to visit it.", style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textSecondary)
+        data?.let { user ->
+            com.example.githubwidget.widget.FocusWidgetPainter.profileLinks(design, user).forEach { link ->
+                TextButton(onClick = {
+                    runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(link.url))) }
+                }, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text(link.label, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                }
+            }
+        }
+    }
 }
 
 // ------------------------------------------------------------------ content toggles
