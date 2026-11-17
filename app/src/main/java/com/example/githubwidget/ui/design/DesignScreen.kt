@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -428,7 +429,7 @@ private fun LayoutChoices(design: WidgetDesign, data: com.example.githubwidget.d
             Column(
                 Modifier.width(148.dp).clip(MaterialTheme.shapes.medium)
                     .border(selectionBorder(selected), if (selected) MaterialTheme.colorScheme.primary else AppTheme.colors.hairline, MaterialTheme.shapes.medium)
-                    .clickable(role = androidx.compose.ui.semantics.Role.RadioButton) { onSelect(layout) }
+                    .selectable(selected = selected, role = androidx.compose.ui.semantics.Role.RadioButton, onClick = { onSelect(layout) })
                     .padding(10.dp),
             ) {
                 WidgetPreview(design.copy(layout = layout), data, avatar, 340f, 170f, Modifier.fillMaxWidth().height(64.dp))

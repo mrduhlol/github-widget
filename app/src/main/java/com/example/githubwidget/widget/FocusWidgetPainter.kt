@@ -179,7 +179,7 @@ internal object FocusWidgetPainter {
                 identity(d.profileProject, x + dp(19f), top + dp(13f), width - dp(26f), 10.5f)
             }
             fun stats(x: Float, top: Float, width: Float) {
-                if (metrics.isEmpty() || top + dp(28f) > footerTop - dp(3f)) return
+                if (metrics.isEmpty() || top + dp(27f) > footerTop - dp(3f)) return
                 val column = width / metrics.size
                 metrics.forEachIndexed { i, (value, label) ->
                     val left = x + column * i

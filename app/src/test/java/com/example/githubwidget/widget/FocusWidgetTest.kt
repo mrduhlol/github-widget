@@ -99,6 +99,17 @@ class FocusWidgetTest {
         assertTrue(text.contains("Building a project"))
     }
 
+    @Test fun selectedCountsStayVisibleBesideTheProjectLine() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val design = WidgetDesign(layout = WidgetLayout.PROFILE, profileShowProject = true,
+            profileProject = "Building · NetSentinel")
+        val user = data()
+        val shown = WidgetRenderer.render(context, design, user, null, 340f, 170f, true)
+        val hidden = WidgetRenderer.render(context, design.copy(profileShowFollowers = false,
+            profileShowFollowing = false, profileShowRepos = false), user, null, 340f, 170f, true)
+        assertFalse("Selected metrics must change the rendered card", shown.sameAs(hidden))
+    }
+
     @Test fun renderNewWidgetsAcrossSizesAndFonts() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val avatar = android.graphics.BitmapFactory.decodeFile("../docs/assets/avatar.png")
