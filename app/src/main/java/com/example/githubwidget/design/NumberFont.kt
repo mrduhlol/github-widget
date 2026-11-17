@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 enum class NumberFont(val label: String, val asset: String?) {
     SYSTEM("System", null),
+    DOT_MATRIX("Dot matrix", "fonts/Doto-Variable.ttf"),
     INTER("Inter", "fonts/Inter-Variable.ttf"),
     SPACE_GROTESK("Space Grotesk", "fonts/SpaceGrotesk-Variable.ttf"),
     MANROPE("Manrope", "fonts/Manrope-Variable.ttf"),
