@@ -168,10 +168,14 @@ internal object FocusWidgetPainter {
                 y += dp(38f)
             }
             val links = profileLinks(d, data)
-            val slots = ((r.bottom - y) / dp(17f)).toInt().coerceAtLeast(0)
+            val columns = if (!portrait && r.width() >= dp(240f)) 2 else 1
+            val rows = if (y <= r.bottom) ((r.bottom - y) / dp(17f)).toInt() + 1 else 0
+            val slots = rows * columns
+            val columnWidth = r.width() / columns
             links.take(slots).forEachIndexed { i, link ->
                 val label = if (i == slots - 1 && links.size > slots) "+${links.size - i} links · open app" else link.label
-                line(label, r.left, y, r.width(), 10.5f, colors.textSecondary, center = portrait); y += dp(17f)
+                line(label, r.left + columnWidth * (i % columns), y + dp(17f) * (i / columns),
+                    columnWidth - if (columns > 1) dp(8f) else 0f, 10.5f, colors.textSecondary, center = portrait)
             }
         }
         fun avatar(x: Float, y: Float, size: Float) {
