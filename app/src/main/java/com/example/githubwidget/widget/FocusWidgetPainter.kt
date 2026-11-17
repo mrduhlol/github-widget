@@ -35,6 +35,23 @@ internal object FocusWidgetPainter {
         }
     }.distinctBy { it.url }.filterNot { it.url in design.profileHiddenLinks }
 
+    data class DockItem(val label: String, val url: String?)
+
+    /** Coordinates use the renderer's content rectangle; each link gets at least 48dp. */
+    fun profileDock(contentWidth: Float, contentHeight: Float, design: WidgetDesign, data: UserData): List<DockItem> {
+        if (contentHeight < 120f || contentWidth < 125f) return emptyList()
+        val links = profileLinks(design, data)
+        val capacity = (contentWidth / 48f).toInt().coerceIn(1, 6)
+        return if (links.size <= capacity) links.map { DockItem(it.label, it.url) }
+        else links.take(capacity - 1).map { DockItem(it.label, it.url) } + DockItem("All connections", null)
+    }
+
+    private fun compactCount(value: Int): String = when {
+        value >= 1_000_000 -> String.format(java.util.Locale.getDefault(), "%.1fM", value / 1_000_000f)
+        value >= 10_000 -> String.format(java.util.Locale.getDefault(), "%.1fk", value / 1_000f)
+        else -> NumberFormat.getIntegerInstance().format(value)
+    }
+
     fun accessibilityText(design: WidgetDesign, data: UserData): String {
         val a = activity(data)
         val username = data.contributions.username
@@ -43,7 +60,9 @@ internal object FocusWidgetPainter {
             WidgetLayout.WEEKLY_GOAL -> "$username: ${a.week} of ${design.weeklyGoal} contributions this week."
             WidgetLayout.PROFILE -> buildList {
                 if (design.profileShowName) data.profile?.displayName?.let { add(it) }
-                add("@$username")
+                if (design.profileShowHandle) add("@$username")
+                if (design.profileShowProject && design.profileProject.isNotBlank()) add(design.profileProject)
+                if (design.profileShowRepos) add("${data.profile?.publicRepos ?: "Unavailable"} public repositories")
                 if (design.profileShowFollowers) add("${data.profile?.followers ?: "Unavailable"} followers")
                 if (design.profileShowFollowing) add("${data.profile?.following ?: "Unavailable"} following")
                 addAll(profileLinks(design, data).map { it.label })
@@ -130,52 +149,95 @@ internal object FocusWidgetPainter {
             line(if (a.week >= target) "Goal met" else "${nf.format(target - a.week)} to go", r.left, r.bottom - dp(2f), r.width(), 11f, colors.textSecondary, center = true)
         }
         fun profile() {
-            val portrait = r.height() > r.width() * 1.1f
             val name = data.profile?.displayName ?: data.contributions.username
             val login = "@${data.contributions.username}"
-            val roomy = r.height() >= dp(100f)
-            var y: Float
-            if (portrait && roomy) {
-                val avSize = min(dp(76f), r.width() * .60f)
-                y = r.top + dp(4f)
-                if (d.profileShowAvatar) { avatar(r.centerX() - avSize/2, y, avSize); y += avSize + dp(19f) }
-                else y += dp(18f)
-                if (d.profileShowName) { line(name, r.left, y, r.width(), 16f, center = true); y += dp(21f) }
-                line(login, r.left, y, r.width(), 12f, colors.textSecondary, center = true)
-                y += dp(28f)
-            } else {
-                val avSize = if (roomy) dp(52f) else min(dp(34f), r.height())
-                var x = r.left
-                if (d.profileShowAvatar && roomy && r.width() >= dp(160f)) { avatar(x, r.top, avSize); x += avSize + dp(12f) }
-                val available = r.right - x - dp(24f)
-                if (d.profileShowName && roomy) {
-                    line(name, x, r.top + dp(21f), available, 17f)
-                    line(login, x, r.top + dp(42f), available, 12f, colors.textSecondary)
-                } else line(login, x, r.top + dp(21f), available, 13f)
-                y = r.top + if (roomy) dp(68f) else dp(55f)
+            val portrait = r.height() > r.width() * 1.1f
+            val compact = r.width() < dp(220f) && !portrait
+            val dock = profileDock(r.width() / s, r.height() / s, d, data)
+            val footerTop = if (dock.isEmpty()) r.bottom else r.bottom - dp(48f)
+            val metrics = buildList {
+                if (d.profileShowFollowers) add(data.profile?.followers to "Followers")
+                if (d.profileShowFollowing) add(data.profile?.following to "Following")
+                if (d.profileShowRepos) add(data.profile?.publicRepos to "Repos")
             }
-            val counts = buildList {
-                if (d.profileShowFollowers) add(data.profile?.followers to "followers")
-                if (d.profileShowFollowing) add(data.profile?.following to "following")
-            }
-            if (counts.isNotEmpty() && r.bottom - y >= dp(32f)) {
-                val column = r.width() / counts.size
-                counts.forEachIndexed { index, (value, label) ->
-                    val x = r.left + column * index
-                    line(value?.let { nf.format(it) } ?: "—", x, y, column - dp(4f), 22f, colors.accent, numeric = true, center = portrait)
-                    line(label, x, y + dp(16f), column - dp(4f), 10f, colors.textSecondary, center = portrait)
+            // Identity text always uses a readable sans; the chosen face applies to counts.
+            fun identity(text: String, x: Float, y: Float, width: Float, size: Float, bold: Boolean = false, centered: Boolean = false) {
+                if (width <= 0f || y > footerTop) return
+                val p = paint(size).apply {
+                    typeface = NumberFont.typeface(context, NumberFont.INTER, if (bold) 700 else 400)
+                    color = if (bold) colors.textPrimary else colors.textSecondary
                 }
-                y += dp(38f)
+                val shown = WidgetRenderer.ellipsize(text, p, width)
+                c.drawText(shown, if (centered) x + (width - p.measureText(shown))/2 else x, y, p)
             }
-            val links = profileLinks(d, data)
-            val columns = if (!portrait && r.width() >= dp(240f)) 2 else 1
-            val rows = if (y <= r.bottom) ((r.bottom - y) / dp(17f)).toInt() + 1 else 0
-            val slots = rows * columns
-            val columnWidth = r.width() / columns
-            links.take(slots).forEachIndexed { i, link ->
-                val label = if (i == slots - 1 && links.size > slots) "+${links.size - i} links · open app" else link.label
-                line(label, r.left + columnWidth * (i % columns), y + dp(17f) * (i / columns),
-                    columnWidth - if (columns > 1) dp(8f) else 0f, 10.5f, colors.textSecondary, center = portrait)
+            fun project(x: Float, top: Float, width: Float) {
+                if (!d.profileShowProject || d.profileProject.isBlank() || width < dp(45f)) return
+                val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colors.border; style = Paint.Style.STROKE; strokeWidth = dp(.75f) }
+                c.drawRoundRect(RectF(x, top, x + width, top + dp(18f)), dp(7f), dp(7f), p)
+                p.style = Paint.Style.FILL; p.color = colors.accent
+                c.drawCircle(x + dp(10f), top + dp(9f), dp(2.5f), p)
+                identity(d.profileProject, x + dp(19f), top + dp(13f), width - dp(26f), 10.5f)
+            }
+            fun stats(x: Float, top: Float, width: Float) {
+                if (metrics.isEmpty() || top + dp(28f) > footerTop - dp(3f)) return
+                val column = width / metrics.size
+                metrics.forEachIndexed { i, (value, label) ->
+                    val left = x + column * i
+                    if (i > 0) {
+                        val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colors.border; strokeWidth = dp(.7f) }
+                        c.drawLine(left - dp(5f), top + dp(1f), left - dp(5f), top + dp(27f), p)
+                    }
+                    line(value?.let { compactCount(it) } ?: "—", left, top + dp(13f), column - dp(9f), 16f, numeric = true)
+                    identity(label, left, top + dp(27f), column - dp(5f), 9f)
+                }
+            }
+            when {
+                portrait && r.height() >= dp(210f) -> {
+                    val photo = min(dp(104f), r.width() * .72f)
+                    var y = r.top + dp(7f)
+                    if (d.profileShowAvatar) { avatar(r.centerX() - photo/2, y, photo); y += photo + dp(27f) }
+                    else y += dp(28f)
+                    if (d.profileShowName) { identity(name, r.left, y, r.width(), 21f, true, true); y += dp(21f) }
+                    if (d.profileShowHandle) { identity(login, r.left, y, r.width(), 11.5f, centered = true); y += dp(17f) }
+                    if (d.profileShowProject && d.profileProject.isNotBlank() && y + dp(61f) < footerTop) {
+                        project(r.left, y, r.width()); y += dp(40f)
+                    } else y += dp(15f)
+                    stats(r.left + dp(3f), y, r.width() - dp(2f))
+                }
+                !compact && r.width() >= dp(220f) && r.height() >= dp(125f) -> {
+                    val photo = min(dp(84f), footerTop - r.top - dp(8f))
+                    var x = r.left
+                    if (d.profileShowAvatar) { avatar(x, r.top, photo); x += photo + dp(16f) }
+                    val width = r.right - x - dp(22f) // refresh target
+                    var y = r.top + dp(19f)
+                    if (d.profileShowName) { identity(name, x, y, width, 22f, true); y += dp(17f) }
+                    if (d.profileShowHandle) { identity(login, x, y, width, 11.5f); y += dp(4f) }
+                    if (d.profileShowProject && d.profileProject.isNotBlank()) {
+                        project(x, y, r.right - x); y += dp(20f)
+                    } else y += dp(13f)
+                    stats(x, y, r.right - x)
+                }
+                else -> {
+                    val photo = min(dp(40f), r.height())
+                    var x = r.left
+                    if (d.profileShowAvatar && r.width() >= dp(125f)) { avatar(x, r.top, photo); x += photo + dp(10f) }
+                    var y = r.top + dp(17f)
+                    if (d.profileShowName) { identity(name, x, y, r.right - x - dp(18f), 14f, true); y += dp(18f) }
+                    if (d.profileShowHandle) identity(login, x, y, r.right - x - dp(16f), 10.5f)
+                    stats(r.left + dp(3f), r.top + dp(56f), r.width())
+                }
+            }
+            if (dock.isNotEmpty()) {
+                val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colors.border; strokeWidth = dp(.75f) }
+                c.drawLine(r.left, footerTop, r.right, footerTop, p)
+                val slot = r.width() / dock.size
+                dock.forEachIndexed { i, item ->
+                    val center = r.left + slot * (i + .5f)
+                    val box = RectF(center - dp(16f), r.bottom - dp(40f), center + dp(16f), r.bottom - dp(8f))
+                    p.style = Paint.Style.STROKE; p.color = colors.border
+                    c.drawRoundRect(box, dp(8f), dp(8f), p)
+                    ProfileIcons.draw(c, item.url, box.centerX(), box.centerY(), dp(17f), colors.textPrimary)
+                }
             }
         }
         fun avatar(x: Float, y: Float, size: Float) {
@@ -186,9 +248,9 @@ internal object FocusWidgetPainter {
                 val scale = maxOf(size / avatar.width, size / avatar.height)
                 val matrix = Matrix().apply { setScale(scale, scale); postTranslate(x + (size - avatar.width * scale)/2, y + (size - avatar.height * scale)/2) }
                 shader.setLocalMatrix(matrix); p.shader = shader
-                c.drawOval(rect, p)
+                c.drawRoundRect(rect, dp(12f), dp(12f), p)
             } else {
-                p.color = colors.levels[2]; c.drawOval(rect, p)
+                p.color = colors.levels[2]; c.drawRoundRect(rect, dp(12f), dp(12f), p)
                 line(data.contributions.username.take(1).uppercase(), x, y + size * .65f, size, size / s * .42f, center = true)
             }
         }

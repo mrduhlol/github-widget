@@ -258,7 +258,7 @@ object Repository {
             .put("fetchedAt", d.fetchedAt)
         d.profile?.let {
             root.put("profile", JSONObject().put("login", it.login).put("name", it.name ?: "").put("avatar", it.avatarUrl)
-                .put("profileFetchedAt", it.fetchedAt).put("followers", it.followers).put("following", it.following).put("website", it.website)
+                .put("publicRepos", it.publicRepos).put("profileFetchedAt", it.fetchedAt).put("followers", it.followers).put("following", it.following).put("website", it.website)
                 .put("socialLinks", org.json.JSONArray().apply {
                     it.socialLinks.forEach { link -> put(JSONObject().put("label", link.label).put("url", link.url)) }
                 }))
@@ -285,6 +285,7 @@ object Repository {
             p?.let {
                 val links = it.optJSONArray("socialLinks")
                 Profile(it.getString("login"), it.optString("name").ifBlank { null }, it.getString("avatar"),
+                    publicRepos = if (it.has("publicRepos") && !it.isNull("publicRepos")) it.optInt("publicRepos") else null,
                     followers = if (it.has("followers") && !it.isNull("followers")) it.optInt("followers") else null,
                     following = if (it.has("following") && !it.isNull("following")) it.optInt("following") else null,
                     website = GitHubApi.webUrl(it.optString("website")),

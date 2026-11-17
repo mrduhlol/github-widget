@@ -63,22 +63,16 @@ object WidgetRenderer {
             Background.DARK, Background.BLACK -> true
         }
         val base = Palettes.colors(context, design, isDark)
-        // Peggy convergence (widget side only): card + text follow the Peggy
-        // theme (light card #FFFFFF, dark card #1A2145, black stays #000000).
-        // Graph levels + accent stay on the Palettes ramps untouched.
-        val peggyCard = when {
-            design.background == Background.BLACK -> 0xFF000000.toInt()
-            isDark -> 0xFF1A2145.toInt()
-            else -> 0xFFFFFFFF.toInt()
-        }
+        // Neutral card materials let the selected accent and profile photo lead.
         val colors = base.copy(
-            card = peggyCard,
-            border = ColorUtils.setAlphaComponent(
-                0xFFD4DCF5.toInt(),
-                if (isDark) 51 else 110,
-            ),
-            textPrimary = if (isDark) 0xFFF2F4FF.toInt() else 0xFF1A2340.toInt(),
-            textSecondary = if (isDark) 0xFFA8B1D1.toInt() else 0xFF5A6585.toInt(),
+            card = when {
+                design.background == Background.BLACK -> 0xFF000000.toInt()
+                isDark -> 0xFF141618.toInt()
+                else -> 0xFFFAFAF7.toInt()
+            },
+            border = if (isDark) 0xFF353A3D.toInt() else 0xFFD3D6D0.toInt(),
+            textPrimary = if (isDark) 0xFFF5F6F3.toInt() else 0xFF1A201C.toInt(),
+            textSecondary = if (isDark) 0xFFA9B0AB.toInt() else 0xFF59635C.toInt(),
         )
         Painter(Canvas(bmp), scale, widthDp, heightDp, design, colors, context, font).draw(data, avatar, placeholder)
         return bmp

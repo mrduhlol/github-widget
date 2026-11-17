@@ -26,6 +26,7 @@ data class Profile(
     val website: String? = null,
     val socialLinks: List<ProfileLink> = emptyList(),
     val fetchedAt: Long = 0L,
+    val publicRepos: Int? = null,
 ) {
     /** Real name when the user has set one, otherwise the login. */
     val displayName: String get() = name?.takeIf { it.isNotBlank() } ?: login

@@ -80,6 +80,7 @@ object GitHubApi {
             login = o.optString("login", username),
             name = o.optString("name").takeIf { it.isNotBlank() && it != "null" },
             avatarUrl = o.optString("avatar_url", "https://github.com/${encode(username)}.png"),
+            publicRepos = if (o.has("public_repos") && !o.isNull("public_repos")) o.optInt("public_repos").coerceAtLeast(0) else null,
             followers = if (o.has("followers") && !o.isNull("followers")) o.optInt("followers").coerceAtLeast(0) else null,
             following = if (o.has("following") && !o.isNull("following")) o.optInt("following").coerceAtLeast(0) else null,
             website = webUrl(o.optString("blog")),

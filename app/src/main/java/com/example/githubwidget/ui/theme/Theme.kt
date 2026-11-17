@@ -45,13 +45,13 @@ data class ExtraColors(
 )
 
 private val LightExtra = ExtraColors(
-    canvas = Color(0xFFE8EDFF),
+    canvas = Color(0xFFF1F2ED),
     card = Color(0xFFFFFFFF),
-    raised = Color(0xFFF1F4FF),
-    hairline = Color(0xFFD4DCF5),
-    textPrimary = Color(0xFF1A2340),
-    textSecondary = Color(0xFF5A6585),
-    textTertiary = Color(0xFF687492),
+    raised = Color(0xFFF0F2ED),
+    hairline = Color(0xFFD7DCD4),
+    textPrimary = Color(0xFF1C241F),
+    textSecondary = Color(0xFF566159),
+    textTertiary = Color(0xFF626D65),
     success = Color(0xFF1A7F37),
     warning = Color(0xFF9A6700),
     danger = Color(0xFFCF222E),
@@ -60,13 +60,13 @@ private val LightExtra = ExtraColors(
 )
 
 private val DarkExtra = ExtraColors(
-    canvas = Color(0xFF0E1330),
-    card = Color(0xFF1A2145),
-    raised = Color(0xFF232B55),
-    hairline = Color(0xFF2E3765),
-    textPrimary = Color(0xFFF2F4FF),
-    textSecondary = Color(0xFFA8B1D1),
-    textTertiary = Color(0xFF969FBF),
+    canvas = Color(0xFF0C0E10),
+    card = Color(0xFF171A1C),
+    raised = Color(0xFF222729),
+    hairline = Color(0xFF353C3B),
+    textPrimary = Color(0xFFF2F5F0),
+    textSecondary = Color(0xFFAAB5AE),
+    textTertiary = Color(0xFF9CA89F),
     success = Color(0xFF3FB950),
     warning = Color(0xFFD29922),
     danger = Color(0xFFF85149),
@@ -76,8 +76,8 @@ private val DarkExtra = ExtraColors(
 
 private fun scheme(x: ExtraColors): ColorScheme {
     val base = if (x.isDark) darkColorScheme() else lightColorScheme()
-    val primary = if (x.isDark) Color(0xFF8AA4FF) else Color(0xFF365CE0)
-    val onPrimary = if (x.isDark) Color(0xFF0E1330) else Color.White
+    val primary = if (x.isDark) Color(0xFFA4D9B2) else Color(0xFF28613B)
+    val onPrimary = if (x.isDark) Color(0xFF0C0E10) else Color.White
     return base.copy(
         primary = primary,
         onPrimary = onPrimary,

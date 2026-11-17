@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,6 +32,8 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -39,6 +42,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -98,6 +102,7 @@ fun DesignScreen(onOpenStats: () -> Unit) {
     val realData by Repository.data.collectAsState()
     val avatar by Repository.avatar.collectAsState()
     val data = realData ?: SampleData.userData
+    var profilePanel by rememberSaveable { mutableStateOf("Content") }
     var previewSize by rememberSaveable { mutableStateOf(PreviewSize.WIDE) }
     var hasWidget by remember { mutableStateOf(WidgetUpdater.hasWidgets(context)) }
     var showHelp by remember { mutableStateOf(false) }
@@ -132,7 +137,7 @@ fun DesignScreen(onOpenStats: () -> Unit) {
                                     append("Your ")
                                 }
                                 withStyle(SpanStyle(color = AppTheme.colors.textPrimary, fontWeight = FontWeight.Bold)) {
-                                    append("widget")
+                                    append(if (design.layout == WidgetLayout.PROFILE) "profile card" else "widget")
                                 }
                             },
                             style = MaterialTheme.typography.headlineMedium,
@@ -152,7 +157,7 @@ fun DesignScreen(onOpenStats: () -> Unit) {
                         avatar = if (realData != null) avatar else null,
                         widthDp = previewSize.widthDp,
                         heightDp = previewSize.heightDp,
-                        modifier = Modifier.fillMaxWidth().height(168.dp),
+                        modifier = Modifier.fillMaxWidth().height(if (previewSize == PreviewSize.PORTRAIT) 320.dp else if (previewSize == PreviewSize.LARGE) 250.dp else 180.dp),
                     )
                 }
                 if (realData == null) {
@@ -172,32 +177,38 @@ fun DesignScreen(onOpenStats: () -> Unit) {
             AddWidgetCard(hasWidget, onAdd = ::addWidget, onHelp = { showHelp = true })
         }
         item {
-            SectionCard(title = "Colors") {
-                PaletteRow(design, onSelect = { id -> update { it.copy(paletteId = id) } }, onCustom = { pickingColor = true })
-            }
-        }
-        item {
             SectionCard(title = "Style") {
                 LayoutChoices(design, data, onSelect = { l -> update { it.copy(layout = l) } })
             }
         }
-        item {
-            SectionCard(title = "Font") {
-                Field("Typeface", hint = "Used for numbers in widgets, Stats and share images. Dot matrix keeps small labels in a regular font.") {
-                    NumberFontChoice(onSelect = { Repository.setNumberFont(it) })
+        if (design.layout == WidgetLayout.PROFILE) {
+            item { SegmentedChoice(listOf("Content", "Appearance"), profilePanel, { it }, { profilePanel = it }) }
+            if (profilePanel == "Content") item { ProfileCardOptions(design, ::update) }
+        }
+        if (design.layout != WidgetLayout.PROFILE || profilePanel == "Appearance") {
+            item {
+                SectionCard(title = "Colors") {
+                    PaletteRow(design, onSelect = { id -> update { it.copy(paletteId = id) } }, onCustom = { pickingColor = true })
                 }
             }
-        }
-        item {
-            SectionCard(title = "Background") {
-                Field("Card color", hint = if (design.background == Background.AUTO) "Light or dark, following your phone's setting" else null) {
-                    SegmentedChoice(Background.entries, design.background, { it.label }, { b -> update { it.copy(background = b) } })
+            item {
+                SectionCard(title = "Font") {
+                    Field("Typeface", hint = "Used for numbers in widgets, Stats and share images. Dot matrix keeps small labels in a regular font.") {
+                        NumberFontChoice(onSelect = { Repository.setNumberFont(it) })
+                    }
                 }
-                Spacer(Modifier.height(20.dp))
-                OpacitySlider(design.opacity) { v -> update { it.copy(opacity = v) } }
-                Spacer(Modifier.height(16.dp))
-                Field("Corners") {
-                    SegmentedChoice(Corners.entries, design.corners, { it.label }, { c -> update { it.copy(corners = c) } })
+            }
+            item {
+                SectionCard(title = "Background") {
+                    Field("Card color", hint = if (design.background == Background.AUTO) "Light or dark, following your phone's setting" else null) {
+                        SegmentedChoice(Background.entries, design.background, { it.label }, { b -> update { it.copy(background = b) } })
+                    }
+                    Spacer(Modifier.height(20.dp))
+                    OpacitySlider(design.opacity) { v -> update { it.copy(opacity = v) } }
+                    Spacer(Modifier.height(16.dp))
+                    Field("Corners") {
+                        SegmentedChoice(Corners.entries, design.corners, { it.label }, { c -> update { it.copy(corners = c) } })
+                    }
                 }
             }
         }
@@ -238,7 +249,7 @@ fun DesignScreen(onOpenStats: () -> Unit) {
         }
         item {
             when (design.layout) {
-                WidgetLayout.PROFILE -> ProfileCardOptions(design, ::update)
+                WidgetLayout.PROFILE -> Unit
                 WidgetLayout.STREAK, WidgetLayout.WEEKLY_GOAL -> Text(
                     "Colors and fonts are shared. Each widget keeps its own type. All widgets use your connected GitHub profile.",
                     style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textSecondary,
@@ -409,43 +420,22 @@ private fun Cell(c: Color) {
 @Composable
 private fun LayoutChoices(design: WidgetDesign, data: com.example.githubwidget.data.UserData, onSelect: (WidgetLayout) -> Unit) {
     val avatar by Repository.avatar.collectAsState()
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        WidgetLayout.entries.forEach { layout ->
-            val selected = design.layout == layout
-            val border by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else AppTheme.colors.hairline, label = "layout")
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.large)
-                    .border(selectionBorder(selected), border, MaterialTheme.shapes.large)
-                    .clickable { onSelect(layout) }
+    val listState = rememberLazyListState()
+    LaunchedEffect(design.layout) { listState.animateScrollToItem(WidgetLayout.entries.indexOf(design.layout)) }
+    LazyRow(state = listState, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        items(WidgetLayout.entries) { layout ->
+            val selected = layout == design.layout
+            Column(
+                Modifier.width(148.dp).clip(MaterialTheme.shapes.medium)
+                    .border(selectionBorder(selected), if (selected) MaterialTheme.colorScheme.primary else AppTheme.colors.hairline, MaterialTheme.shapes.medium)
+                    .clickable(role = androidx.compose.ui.semantics.Role.RadioButton) { onSelect(layout) }
                     .padding(10.dp),
-                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
-                    Modifier
-                        .widthIn(max = 108.dp).fillMaxWidth(0.34f)
-                        .height(66.dp)
-                        .clip(MaterialTheme.shapes.small)
-                        .background(AppTheme.colors.raised),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    WidgetPreview(
-                        design = design.copy(layout = layout, opacity = 100),
-                        data = data,
-                        avatar = avatar,
-                        widthDp = 320f,
-                        heightDp = 160f,
-                        modifier = Modifier.fillMaxSize().padding(4.dp),
-                    )
-                }
-                Spacer(Modifier.width(14.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(layout.label, style = MaterialTheme.typography.titleSmall, color = AppTheme.colors.textPrimary)
-                    Text(layout.description, style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textSecondary)
-                }
-                if (selected) {
-                    Icon(Icons.Rounded.CheckCircle, "Selected", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 4.dp))
+                WidgetPreview(design.copy(layout = layout), data, avatar, 340f, 170f, Modifier.fillMaxWidth().height(64.dp))
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(layout.label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+                    if (selected) Icon(Icons.Rounded.Check, "Selected", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                 }
             }
         }
@@ -529,31 +519,81 @@ private fun OpacitySlider(opacity: Int, onChange: (Int) -> Unit) {
 
 @Composable
 private fun ProfileCardOptions(design: WidgetDesign, update: ((WidgetDesign) -> WidgetDesign) -> Unit) {
-    val data by Repository.data.collectAsState()
-    val context = LocalContext.current
-    SectionCard(title = "Your ID card", subtitle = "Username is always shown. Resize the card for landscape or portrait.") {
-        ToggleRow("Profile photo", design.profileShowAvatar, { v -> update { it.copy(profileShowAvatar = v) } })
-        ToggleRow("Display name", design.profileShowName, { v -> update { it.copy(profileShowName = v) } })
-        ToggleRow("Followers", design.profileShowFollowers, { v -> update { it.copy(profileShowFollowers = v) } })
-        ToggleRow("Following", design.profileShowFollowing, { v -> update { it.copy(profileShowFollowing = v) } })
-        ToggleRow("GitHub link", design.profileShowGitHub, { v -> update { it.copy(profileShowGitHub = v) } })
-        ToggleRow("Website", design.profileShowWebsite, { v -> update { it.copy(profileShowWebsite = v) } }, subtitle = "Shown when it is public on GitHub")
-        ToggleRow("Social links", design.profileShowSocials, { v -> update { it.copy(profileShowSocials = v) } }, subtitle = "Public connections from your GitHub profile")
-        data?.let { user ->
-            com.example.githubwidget.widget.FocusWidgetPainter.profileLinks(design.copy(profileHiddenLinks = emptySet()), user).forEach { link ->
-                ToggleRow(link.label, link.url !in design.profileHiddenLinks, { shown ->
-                    update { it.copy(profileHiddenLinks = if (shown) it.profileHiddenLinks - link.url else it.profileHiddenLinks + link.url) }
-                })
+    val realData by Repository.data.collectAsState()
+    val data = realData ?: SampleData.userData
+    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        SectionCard(title = "Identity", subtitle = "Choose what appears. Your settings apply to all profile cards.") {
+            ProfileChoices(listOf(
+                Triple("Photo", design.profileShowAvatar, { update { it.copy(profileShowAvatar = !it.profileShowAvatar) } }),
+                Triple("Name", design.profileShowName, { update { it.copy(profileShowName = !it.profileShowName) } }),
+                Triple("Username", design.profileShowHandle, { update { it.copy(profileShowHandle = !it.profileShowHandle) } }),
+            ))
+            Spacer(Modifier.height(12.dp))
+            ToggleRow("Project line", design.profileShowProject, { v -> update { it.copy(profileShowProject = v) } }, subtitle = "Add what you're working on")
+            if (design.profileShowProject) {
+                OutlinedTextField(
+                    value = design.profileProject,
+                    onValueChange = { text -> update { it.copy(profileProject = text.replace('\n', ' ').take(80)) } },
+                    label = { Text("Project or status") },
+                    placeholder = { Text("Building · NetSentinel") },
+                    supportingText = { Text("${design.profileProject.length}/80 · Short text fits best") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
-        Text("Links fit the available space. Open a connection below to visit it.", style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textSecondary)
-        data?.let { user ->
-            com.example.githubwidget.widget.FocusWidgetPainter.profileLinks(design, user).forEach { link ->
-                TextButton(onClick = {
-                    runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(link.url))) }
-                }, modifier = Modifier.heightIn(min = 48.dp)) {
-                    Text(link.label, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        SectionCard(title = "Counts", subtitle = "Public GitHub data. Unavailable counts show a dash.") {
+            ProfileChoices(listOf(
+                Triple("Followers", design.profileShowFollowers, { update { it.copy(profileShowFollowers = !it.profileShowFollowers) } }),
+                Triple("Following", design.profileShowFollowing, { update { it.copy(profileShowFollowing = !it.profileShowFollowing) } }),
+                Triple("Repositories", design.profileShowRepos, { update { it.copy(profileShowRepos = !it.profileShowRepos) } }),
+            ))
+        }
+        SectionCard(title = "Connections", subtitle = "Tap a selected icon on your home screen to open it. Extra links appear under the more button.") {
+            val all = com.example.githubwidget.widget.FocusWidgetPainter.profileLinks(design.copy(
+                profileShowGitHub = true, profileShowWebsite = true, profileShowSocials = true, profileHiddenLinks = emptySet()), data)
+            val selected = com.example.githubwidget.widget.FocusWidgetPainter.profileLinks(design, data).map { it.url }.toSet()
+            ProfileChoices(all.map { link ->
+                Triple(com.example.githubwidget.widget.ProfileIcons.label(link.url), link.url in selected, {
+                    val next = if (link.url in selected) selected - link.url else selected + link.url
+                    update { it.copy(profileShowGitHub = true, profileShowWebsite = true, profileShowSocials = true,
+                        profileHiddenLinks = all.map { it.url }.toSet() - next) }
+                })
+            })
+            Spacer(Modifier.height(10.dp))
+            Text(if (realData == null) "Connect your GitHub account to choose your own links." else "Website and social accounts come from your public GitHub profile.",
+                style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textSecondary)
+            realData?.let { user ->
+                val links = com.example.githubwidget.widget.FocusWidgetPainter.profileLinks(design, user)
+                var showDestinations by remember { mutableStateOf(false) }
+                if (links.isNotEmpty()) {
+                    TextButton(onClick = { showDestinations = !showDestinations }) { Text(if (showDestinations) "Hide link addresses" else "View link addresses") }
                 }
+                if (showDestinations) {
+                    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                    links.forEach { link ->
+                        TextButton(onClick = { runCatching { uriHandler.openUri(link.url) } }, modifier = Modifier.heightIn(min = 48.dp)) {
+                            Text(link.label, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileChoices(choices: List<Triple<String, Boolean, () -> Unit>>) {
+    val columns = if (LocalDensity.current.fontScale > 1.3f) 1 else 2
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        choices.chunked(columns).forEach { group ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                group.forEach { (label, selected, onClick) ->
+                    FilterChip(selected = selected, onClick = onClick, label = { Text(label) },
+                        leadingIcon = if (selected) {{ Icon(Icons.Rounded.Check, null, Modifier.size(16.dp)) }} else null,
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp))
+                }
+                if (group.size < columns) Spacer(Modifier.weight(1f))
             }
         }
     }

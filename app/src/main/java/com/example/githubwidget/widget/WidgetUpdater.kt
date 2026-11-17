@@ -38,8 +38,6 @@ object WidgetUpdater {
         Repository.init(context)
         val mgr = AppWidgetManager.getInstance(context)
         // Widgets of the same size look identical, so each bitmap is drawn once per pass.
-        // Peggy card/text colors are applied inside WidgetRenderer; graph levels
-        // stay on the Palettes ramps.
         val drawn = HashMap<RenderKey, Bitmap>()
         for (id in ids) {
             val component = mgr.getAppWidgetInfo(id)?.provider
@@ -211,6 +209,26 @@ object WidgetUpdater {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         views.setOnClickPendingIntent(R.id.widget_root, open)
+        views.removeAllViews(R.id.widget_connections)
+        if (design.layout == WidgetLayout.PROFILE && data != null) {
+            val pad = if (size.width < 180 || size.height < 100) 12f else 16f
+            val dock = FocusWidgetPainter.profileDock(size.width - 2 * pad, size.height - 2 * pad, design, data)
+            views.setViewVisibility(R.id.widget_connections, if (dock.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE)
+            val px = (pad * context.resources.displayMetrics.density).toInt()
+            views.setViewPadding(R.id.widget_connections, px, 0, px, px)
+            dock.forEach { item ->
+                val button = RemoteViews(context.packageName, R.layout.widget_connection)
+                button.setContentDescription(R.id.widget_connection, item.url?.let { "Open ${ProfileIcons.label(it)}: $it" } ?: item.label)
+                val action = item.url?.let { url ->
+                    PendingIntent.getActivity(context, 0,
+                        Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)),
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                } ?: open
+                button.setOnClickPendingIntent(R.id.widget_connection, action)
+                views.addView(R.id.widget_connections, button)
+            }
+        }
+
 
         val refresh = PendingIntent.getBroadcast(
             context, 1,

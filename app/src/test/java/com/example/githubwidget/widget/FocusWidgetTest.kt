@@ -22,7 +22,7 @@ class FocusWidgetTest {
     private fun data(days: List<Day> = listOf(Day(today.minusDays(1), 4, 2), Day(today, 0, 0))) = UserData(
         Contributions("octocat", 1234, days),
         Profile("octocat", "The Octocat", "", 120, 42, "https://example.com",
-            listOf(ProfileLink("Mastodon", "https://mastodon.social/@octocat"), ProfileLink("X", "https://x.com/octocat"))),
+            listOf(ProfileLink("Mastodon", "https://mastodon.social/@octocat"), ProfileLink("X", "https://x.com/octocat")), publicRepos = 28),
         System.currentTimeMillis(),
     )
 
@@ -48,7 +48,8 @@ class FocusWidgetTest {
         val design = WidgetDesign(layout = WidgetLayout.PROFILE, weeklyGoal = 50,
             profileShowName = false, profileShowAvatar = false, profileShowFollowers = false,
             profileShowFollowing = false, profileShowGitHub = false, profileShowWebsite = false,
-            profileShowSocials = false, profileHiddenLinks = setOf("https://example.com"))
+            profileShowSocials = false, profileShowHandle = false, profileShowRepos = false,
+            profileShowProject = true, profileProject = "Building · NetSentinel", profileHiddenLinks = setOf("https://example.com"))
         assertEquals(design, WidgetDesign.fromJson(design.toJson()))
         assertEquals(WidgetDesign(), WidgetDesign.fromJson("{}"))
         assertEquals(1, WidgetDesign.fromJson("{\"weeklyGoal\":0}").weeklyGoal)
@@ -78,6 +79,26 @@ class FocusWidgetTest {
         assertEquals("https://x.com/octocat", GitHubApi.twitterProfileUrl("octocat"))
     }
 
+    @Test fun profileDockKeepsTouchTargetsAndRoutesOverflow() {
+        val design = WidgetDesign(layout = WidgetLayout.PROFILE)
+        val wide = FocusWidgetPainter.profileDock(308f, 138f, design, data())
+        assertEquals(4, wide.size)
+        assertTrue(wide.all { it.url != null })
+        val portrait = FocusWidgetPainter.profileDock(146f, 316f, design, data())
+        assertEquals(3, portrait.size)
+        assertNull(portrait.last().url)
+        assertEquals("All connections", portrait.last().label)
+        assertTrue(146f / portrait.size >= 48f)
+        assertTrue(FocusWidgetPainter.profileDock(86f, 36f, design, data()).isEmpty())
+        val hidden = design.copy(profileHiddenLinks = wide.mapNotNull { it.url }.toSet())
+        assertTrue(FocusWidgetPainter.profileDock(308f, 138f, hidden, data()).isEmpty())
+        val text = FocusWidgetPainter.accessibilityText(design.copy(profileShowHandle = false,
+            profileShowRepos = false, profileShowProject = true, profileProject = "Building a project"), data())
+        assertFalse(text.split(". ").contains("@octocat"))
+        assertFalse(text.contains("public repositories"))
+        assertTrue(text.contains("Building a project"))
+    }
+
     @Test fun renderNewWidgetsAcrossSizesAndFonts() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val avatar = android.graphics.BitmapFactory.decodeFile("../docs/assets/avatar.png")
@@ -85,13 +106,22 @@ class FocusWidgetTest {
         for (layout in listOf(WidgetLayout.STREAK, WidgetLayout.WEEKLY_GOAL, WidgetLayout.PROFILE)) {
             for ((width, height) in listOf(170f to 90f, 170f to 170f, 340f to 170f, 170f to 340f, 110f to 60f)) {
                 for (dark in listOf(false, true)) {
-                    val bmp = WidgetRenderer.render(context, WidgetDesign(layout = layout), data(), avatar,
+                    val bmp = WidgetRenderer.render(context, WidgetDesign(layout = layout, profileShowProject = true, profileProject = "Building · NetSentinel"), data(), avatar,
                         width, height, dark, font = NumberFont.DOT_MATRIX, maxPixels = 200_000)
                     assertTrue(bmp.width * bmp.height <= 200_000)
                     assertEquals(width / height, bmp.width.toFloat() / bmp.height, 0.04f)
                     File(out, "${layout.name.lowercase()}_${width.toInt()}x${height.toInt()}_${if(dark) "dark" else "light"}.png")
                         .outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
                 }
+            }
+        }
+        for ((width, height) in listOf(340f to 170f, 170f to 340f)) {
+            for (dark in listOf(false, true)) {
+                val bitmap = WidgetRenderer.render(context, WidgetDesign(layout = WidgetLayout.PROFILE,
+                    profileShowProject = true, profileProject = "Building · NetSentinel"), data(), avatar,
+                    width, height, dark, font = NumberFont.INTER, maxPixels = 200_000)
+                File(out, "profile_studio_${width.toInt()}x${height.toInt()}_${if(dark) "dark" else "light"}.png")
+                    .outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
             }
         }
         val extreme = data().copy(contributions = data().contributions.copy(username = "a".repeat(39)), profile = data().profile!!.copy(name = "A very long GitHub display name that must truncate", login = "a".repeat(39)))
