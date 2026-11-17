@@ -60,6 +60,10 @@ object GitHubApi {
         return candidate.takeIf { uri.scheme?.lowercase() in listOf("https", "http") && !uri.host.isNullOrBlank() && uri.userInfo == null }
     }
 
+    internal fun twitterProfileUrl(username: String?): String? = username
+        ?.takeIf { it != "null" && it.matches(Regex("[A-Za-z0-9_]{1,15}")) }
+        ?.let { "https://x.com/$it" }
+
     fun fetchProfile(username: String): Profile {
         val o = JSONObject(get("https://api.github.com/users/${encode(username)}", username))
         val links = runCatching {
@@ -69,16 +73,15 @@ object GitHubApi {
                 webUrl(account.optString("url"))?.let { ProfileLink(account.optString("provider", "Social"), it) }
             }
         }.getOrDefault(emptyList()).toMutableList()
-        o.optString("twitter_username").takeIf { it.matches(Regex("[A-Za-z0-9_]{1,15}")) }?.let {
-            val url = "https://x.com/$it"
+        twitterProfileUrl(o.optString("twitter_username"))?.let { url ->
             if (links.none { link -> link.url == url }) links.add(ProfileLink("X", url))
         }
         return Profile(
             login = o.optString("login", username),
             name = o.optString("name").takeIf { it.isNotBlank() && it != "null" },
             avatarUrl = o.optString("avatar_url", "https://github.com/${encode(username)}.png"),
-            followers = if (o.has("followers")) o.optInt("followers").coerceAtLeast(0) else null,
-            following = if (o.has("following")) o.optInt("following").coerceAtLeast(0) else null,
+            followers = if (o.has("followers") && !o.isNull("followers")) o.optInt("followers").coerceAtLeast(0) else null,
+            following = if (o.has("following") && !o.isNull("following")) o.optInt("following").coerceAtLeast(0) else null,
             website = webUrl(o.optString("blog")),
             socialLinks = links.distinctBy { it.url }.take(8),
             fetchedAt = System.currentTimeMillis(),

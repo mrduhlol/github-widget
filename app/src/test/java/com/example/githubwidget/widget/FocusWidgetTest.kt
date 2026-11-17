@@ -70,6 +70,14 @@ class FocusWidgetTest {
         assertEquals("https://example.com", GitHubApi.webUrl("example.com"))
     }
 
+    @Test fun absentSocialAccountDoesNotCreateAPhantomConnection() {
+        assertNull(GitHubApi.twitterProfileUrl(null))
+        assertNull(GitHubApi.twitterProfileUrl("null"))
+        assertNull(GitHubApi.twitterProfileUrl(""))
+        assertNull(GitHubApi.twitterProfileUrl("invalid/handle"))
+        assertEquals("https://x.com/octocat", GitHubApi.twitterProfileUrl("octocat"))
+    }
+
     @Test fun renderNewWidgetsAcrossSizesAndFonts() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val avatar = android.graphics.BitmapFactory.decodeFile("../docs/assets/avatar.png")
