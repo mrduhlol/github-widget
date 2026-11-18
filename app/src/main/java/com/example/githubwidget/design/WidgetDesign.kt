@@ -67,8 +67,6 @@ data class WidgetDesign(
     val profileShowName: Boolean = true,
     val profileShowHandle: Boolean = true,
     val profileShowRepos: Boolean = true,
-    val profileShowProject: Boolean = false,
-    val profileProject: String = "",
     val profileShowAvatar: Boolean = true,
     val profileShowFollowers: Boolean = true,
     val profileShowFollowing: Boolean = true,
@@ -98,8 +96,6 @@ data class WidgetDesign(
         .put("profileShowName", profileShowName)
         .put("profileShowHandle", profileShowHandle)
         .put("profileShowRepos", profileShowRepos)
-        .put("profileShowProject", profileShowProject)
-        .put("profileProject", profileProject)
         .put("profileShowAvatar", profileShowAvatar)
         .put("profileShowFollowers", profileShowFollowers)
         .put("profileShowFollowing", profileShowFollowing)
@@ -137,8 +133,6 @@ data class WidgetDesign(
                     profileShowName = o.optBoolean("profileShowName", d.profileShowName),
                     profileShowHandle = o.optBoolean("profileShowHandle", d.profileShowHandle),
                     profileShowRepos = o.optBoolean("profileShowRepos", d.profileShowRepos),
-                    profileShowProject = o.optBoolean("profileShowProject", d.profileShowProject),
-                    profileProject = o.optString("profileProject", "").take(80),
                     profileShowAvatar = o.optBoolean("profileShowAvatar", d.profileShowAvatar),
                     profileShowFollowers = o.optBoolean("profileShowFollowers", d.profileShowFollowers),
                     profileShowFollowing = o.optBoolean("profileShowFollowing", d.profileShowFollowing),

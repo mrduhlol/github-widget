@@ -34,7 +34,6 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -531,19 +530,6 @@ private fun ProfileCardOptions(design: WidgetDesign, update: ((WidgetDesign) -> 
                 Triple("Name", design.profileShowName, { update { it.copy(profileShowName = !it.profileShowName) } }),
                 Triple("Username", design.profileShowHandle, { update { it.copy(profileShowHandle = !it.profileShowHandle) } }),
             ))
-            Spacer(Modifier.height(12.dp))
-            ToggleRow("Project line", design.profileShowProject, { v -> update { it.copy(profileShowProject = v) } }, subtitle = "Add what you're working on")
-            if (design.profileShowProject) {
-                OutlinedTextField(
-                    value = design.profileProject,
-                    onValueChange = { text -> update { it.copy(profileProject = text.replace('\n', ' ').take(80)) } },
-                    label = { Text("Project or status") },
-                    placeholder = { Text("Building · NetSentinel") },
-                    supportingText = { Text("${design.profileProject.length}/80 · Short text fits best") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
         }
         SectionCard(title = "Counts", subtitle = "Public GitHub data. Unavailable counts show a dash.") {
             ProfileChoices(listOf(

@@ -43,20 +43,9 @@ internal object FocusWidgetPainter {
     fun profileDock(contentWidth: Float, contentHeight: Float, design: WidgetDesign, data: UserData): List<DockItem> {
         if (contentHeight < 120f || contentWidth < 125f) return emptyList()
         val links = profileLinks(design, data)
-        val reserved = if (hasProfileBadge(contentWidth, contentHeight, links)) 68f else 0f
-        val capacity = ((contentWidth - reserved) / PROFILE_LINK_SIZE).toInt().coerceIn(1, 6)
+        val capacity = (contentWidth / PROFILE_LINK_SIZE).toInt().coerceIn(1, 6)
         return if (links.size <= capacity) links.map { DockItem(it.label, it.url) }
         else links.take(capacity - 1).map { DockItem(it.label, it.url) } + DockItem("All connections", null)
-    }
-
-    private fun hasProfileBadge(width: Float, height: Float, links: List<ProfileLink>): Boolean =
-        width >= 220f && height >= 125f && links.any { ProfileIcons.label(it.url) == "GitHub" }
-
-    fun profileBadge(width: Float, height: Float, design: WidgetDesign, data: UserData?): String? {
-        if (design.layout != WidgetLayout.PROFILE || data == null) return null
-        val links = profileLinks(design, data)
-        return links.firstOrNull { ProfileIcons.label(it.url) == "GitHub" }?.url
-            ?.takeIf { hasProfileBadge(width - 32f, height - 32f, links) }
     }
 
     private fun compactCount(value: Int): String = when {
@@ -74,7 +63,6 @@ internal object FocusWidgetPainter {
             WidgetLayout.PROFILE -> buildList {
                 if (design.profileShowName) data.profile?.displayName?.let { add(it) }
                 if (design.profileShowHandle) add("@$username")
-                if (design.profileShowProject && design.profileProject.isNotBlank()) add(design.profileProject)
                 if (design.profileShowRepos) add("${data.profile?.publicRepos ?: "Unavailable"} public repositories")
                 if (design.profileShowFollowers) add("${data.profile?.followers ?: "Unavailable"} followers")
                 if (design.profileShowFollowing) add("${data.profile?.following ?: "Unavailable"} following")
@@ -166,25 +154,19 @@ internal object FocusWidgetPainter {
         fun profile() {
             val name = data.profile?.displayName ?: data.contributions.username
             val login = "@${data.contributions.username}"
-            val project = d.profileProject.takeIf { d.profileShowProject && it.isNotBlank() }
             val dock = profileDock(contentWidthDp, contentHeightDp, d, data)
             val footerTop = if (dock.isEmpty()) r.bottom else r.bottom - dp(48f)
             val wide = contentWidthDp >= 220f && contentHeightDp >= 125f
             val tall = r.height() > r.width() * 1.1f && r.height() >= dp(210f)
-            val accent = if (d.paletteId == Palettes.DEFAULT_ID && colors.isDark) 0xFF69EAB1.toInt() else colors.accent
             val rule = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = colors.border
                 style = Paint.Style.STROKE
                 strokeWidth = dp(.8f)
             }
             val metrics = buildList {
-                if (d.profileShowFollowers) add(Triple(data.profile?.followers, "Followers", "users"))
-                if (d.profileShowFollowing) add(Triple(data.profile?.following, "Following", "users"))
-                if (d.profileShowRepos) add(Triple(data.profile?.publicRepos, "Repos", "repo"))
-            }
-
-            fun frame(left: Float, top: Float, right: Float, bottom: Float, radius: Float = 3f) {
-                c.drawRoundRect(left, top, right, bottom, dp(radius), dp(radius), rule)
+                if (d.profileShowFollowers) add(data.profile?.followers to "Followers")
+                if (d.profileShowFollowing) add(data.profile?.following to "Following")
+                if (d.profileShowRepos) add(data.profile?.publicRepos to "Repos")
             }
 
             fun mono(text: String, x: Float, y: Float, width: Float, size: Float,
@@ -197,62 +179,40 @@ internal object FocusWidgetPainter {
                 c.drawText(WidgetRenderer.ellipsize(text, p, width), x, y, p)
             }
 
-            fun status(text: String, x: Float, y: Float, width: Float) {
-                if (width < dp(32f)) return
-                val pillWidth = min(width, dp(22f + text.length * 6f))
-                frame(x, y, x + pillWidth, y + dp(16f), 6f)
-                c.drawCircle(x + dp(9f), y + dp(8f), dp(2.4f), Paint(Paint.ANTI_ALIAS_FLAG).apply { color = accent })
-                mono(text, x + dp(16f), y + dp(11.4f), pillWidth - dp(20f), 10f, color = colors.textPrimary)
-            }
-
             fun stats(x: Float, top: Float, width: Float) {
-                if (metrics.isEmpty() || top + dp(21f) > footerTop) return
+                if (metrics.isEmpty() || top + dp(28f) > footerTop) return
                 val column = width / metrics.size
-                metrics.forEachIndexed { i, (value, label, icon) ->
+                metrics.forEachIndexed { i, (value, label) ->
                     val left = x + column * i
-                    if (i > 0) c.drawLine(left - dp(5f), top + dp(2f), left - dp(5f), top + dp(20f), rule)
-                    val showIcon = column >= dp(64f)
-                    val inset = if (showIcon) dp(21f) else 0f
-                    if (showIcon) ProfileIcons.drawSymbol(c, icon, left + dp(8f), top + dp(12f), dp(15f), colors.textSecondary)
-                    mono(value?.let { compactCount(it) } ?: "—", left + inset, top + dp(10f),
-                        column - inset - dp(7f), 13f, true, colors.textPrimary, numeric = true)
-                    mono(label, left + inset, top + dp(21f), column - inset - dp(2f), if (showIcon) 9f else 8f)
+                    mono(value?.let { compactCount(it) } ?: "—", left, top + dp(14f),
+                        column - dp(3f), 17f, true, colors.textPrimary, numeric = true)
+                    mono(label, left, top + dp(27f), column - dp(2f), if (column >= dp(55f)) 10f else 8f)
                 }
             }
 
             when {
                 wide -> {
-                    contours(footerTop)
-                    val photo = min(r.width() * .23f, footerTop - r.top - dp(11f))
-                    val y = r.top + dp(4f)
+                    val headerHeight = min(dp(84f), footerTop - r.top - dp(7f))
+                    val y = r.top + (footerTop - r.top - headerHeight) / 2
                     var x = r.left
                     if (d.profileShowAvatar) {
-                        avatar(x, y, photo)
-                        frame(x, y, x + photo, y + photo)
-                        x += photo + dp(13f)
+                        avatar(x, y, headerHeight)
+                        x += headerHeight + dp(16f)
                     }
-                    val width = r.right - x - dp(37f)
-                    var baseline = y + dp(16f)
+                    val width = r.right - x - dp(22f)
+                    var baseline = y + dp(19f)
                     if (d.profileShowName) {
                         mono(name, x, baseline, width, 21f, true, colors.textPrimary)
-                        c.drawLine(x, baseline + dp(5f), x + dp(9f), baseline + dp(5f), rule)
-                        baseline += dp(17f)
+                        baseline += dp(15f)
                     }
-                    if (d.profileShowHandle) {
-                        mono(login, x, baseline, width, 11f)
-                        baseline += dp(6f)
-                    }
-                    if (project != null && baseline + dp(16f) <= footerTop - dp(22f)) {
-                        status(project, x, baseline, width)
-                    }
-                    stats(x, footerTop - dp(23f), min(r.right - x, dp(219f)))
+                    if (d.profileShowHandle) mono(login, x, baseline, width, 11f)
+                    stats(x, y + headerHeight - dp(28f), min(r.right - x, dp(206f)))
                 }
                 tall -> {
                     val photo = min(dp(102f), r.width())
                     var y = r.top
                     if (d.profileShowAvatar) {
                         avatar(r.left, y, photo)
-                        frame(r.left, y, r.left + photo, y + photo)
                         y += photo + dp(10f)
                     }
                     if (d.profileShowName) {
@@ -264,17 +224,13 @@ internal object FocusWidgetPainter {
                         y += dp(13f)
                         mono(login, r.left, y, r.width(), 11f)
                     }
-                    if (project != null && y + dp(52f) < footerTop) {
-                        status(project, r.left, y + dp(9f), r.width())
-                    }
-                    stats(r.left, footerTop - dp(35f), r.width())
+                    stats(r.left, y + dp(16f), r.width())
                 }
                 else -> {
                     val photo = min(dp(38f), r.height())
                     var x = r.left
                     if (d.profileShowAvatar && r.width() >= dp(120f)) {
                         avatar(x, r.top, photo)
-                        frame(x, r.top, x + photo, r.top + photo)
                         x += photo + dp(9f)
                     }
                     var y = r.top + dp(13f)
@@ -283,8 +239,7 @@ internal object FocusWidgetPainter {
                         y += dp(14f)
                     }
                     if (d.profileShowHandle) mono(login, x, y, r.right - x, 10f)
-                    if (project != null && footerTop - r.top >= dp(85f)) status(project, x, y + dp(5f), r.right - x)
-                    if (footerTop - r.top >= dp(61f)) stats(r.left, footerTop - dp(23f), r.width())
+                    if (footerTop - r.top >= dp(66f)) stats(r.left, footerTop - dp(28f), r.width())
                 }
             }
 
@@ -294,41 +249,9 @@ internal object FocusWidgetPainter {
                 val centerY = footerTop + dp(27f)
                 dock.forEachIndexed { i, item ->
                     val centerX = r.left + slot * (i + .5f)
-                    frame(centerX - dp(18f), centerY - dp(14f), centerX + dp(18f), centerY + dp(14f))
-                    ProfileIcons.draw(c, item.url, centerX, centerY, dp(16f), colors.textSecondary)
-                }
-                if (hasProfileBadge(contentWidthDp, contentHeightDp, profileLinks(d, data))) {
-                    val x = r.right - dp(63f)
-                    c.drawLine(x - dp(4f), centerY - dp(12f), x - dp(4f), centerY + dp(12f), rule)
-                    ProfileIcons.drawSymbol(c, "terminal", x + dp(12f), centerY, dp(18f), accent)
-                    mono("Refresh", x + dp(25f), centerY + dp(3f), dp(38f), 8.5f, color = accent)
+                    ProfileIcons.draw(c, item.url, centerX, centerY, dp(17f), colors.textSecondary)
                 }
             }
-        }
-
-        private fun contours(bottom: Float) {
-            val left = r.left + r.width() * .56f
-            val width = r.right - left
-            val height = bottom - r.top
-            val ink = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                style = Paint.Style.STROKE
-                strokeWidth = dp(.65f)
-                shader = LinearGradient(left, r.top, r.right, r.top,
-                    intArrayOf(Color.TRANSPARENT, colors.border and 0x30FFFFFF, colors.border and 0x12FFFFFF),
-                    floatArrayOf(0f, .62f, 1f), Shader.TileMode.CLAMP)
-            }
-            val clip = c.save()
-            c.clipRect(left, r.top, r.right, bottom)
-            for (i in 0..12) {
-                val y = r.top + height * (i / 13f)
-                val path = Path().apply {
-                    moveTo(left, y)
-                    cubicTo(left + width * .34f, y - height * .32f, left + width * .47f, y + height * .78f, left + width * .72f, y + height * .36f)
-                    quadTo(left + width * .89f, y + height * .1f, r.right + dp(3f), y + height * .3f)
-                }
-                c.drawPath(path, ink)
-            }
-            c.restoreToCount(clip)
         }
 
         fun avatar(x: Float, y: Float, size: Float) {

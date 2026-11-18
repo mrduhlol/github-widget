@@ -72,7 +72,7 @@ object WidgetRenderer {
                 else -> 0xFFFAFAF7.toInt()
             },
             border = when {
-                isDark && design.layout == WidgetLayout.PROFILE -> 0xFF535A63.toInt()
+                isDark && design.layout == WidgetLayout.PROFILE -> 0xFF30363C.toInt()
                 isDark -> 0xFF353A3D.toInt()
                 else -> 0xFFD3D6D0.toInt()
             },
@@ -117,20 +117,6 @@ object WidgetRenderer {
             val padDp = if (wDp < 180 || hDp < 100) 12f else 16f
             val pad = dp(padDp)
             val area = RectF(pad, pad, canvas.width - pad, canvas.height - pad)
-            val badge = FocusWidgetPainter.profileBadge(wDp, hDp, design, data)
-            if (badge != null) {
-                val x = canvas.width - dp(24f)
-                val y = dp(24f)
-                val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = colors.border
-                    style = Paint.Style.STROKE
-                    strokeWidth = dp(.8f)
-                }
-                canvas.drawRect(x - dp(15f), y - dp(14f), x + dp(15f), y + dp(14f), stroke)
-                ProfileIcons.draw(canvas, badge, x, y, dp(16f), colors.textPrimary)
-                canvas.drawLine(dp(8f), dp(11f), dp(16f), dp(11f), stroke)
-                canvas.drawLine(dp(12f), dp(7f), dp(12f), dp(15f), stroke)
-            }
             when {
                 data == null -> drawPlaceholder(area, placeholder)
                 design.layout == WidgetLayout.GRAPH -> drawGraphOnly(area, data)

@@ -30,16 +30,6 @@
         android:orientation="horizontal"
         android:visibility="gone" />
 
-    <FrameLayout
-        android:id="@+id/widget_profile_refresh"
-        android:layout_width="68dp"
-        android:layout_height="48dp"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:contentDescription="@string/widget_refresh_desc"
-        android:visibility="gone" />
-
     <!-- Keep the visible control compact while providing a full touch target. -->
     <FrameLayout
         android:id="@+id/widget_refresh"
@@ -49,7 +39,6 @@
         android:contentDescription="@string/widget_refresh_desc">
 
         <ImageView
-            android:id="@+id/widget_refresh_icon"
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_gravity="center"

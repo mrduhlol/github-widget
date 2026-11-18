@@ -49,9 +49,10 @@ class FocusWidgetTest {
             profileShowName = false, profileShowAvatar = false, profileShowFollowers = false,
             profileShowFollowing = false, profileShowGitHub = false, profileShowWebsite = false,
             profileShowSocials = false, profileShowHandle = false, profileShowRepos = false,
-            profileShowProject = true, profileProject = "Building · NetSentinel", profileHiddenLinks = setOf("https://example.com"))
+            profileHiddenLinks = setOf("https://example.com"))
         assertEquals(design, WidgetDesign.fromJson(design.toJson()))
         assertEquals(WidgetDesign(), WidgetDesign.fromJson("{}"))
+        assertEquals(WidgetDesign(), WidgetDesign.fromJson("""{"profileShowProject":true,"profileProject":"Legacy status"}"""))
         assertEquals(1, WidgetDesign.fromJson("{\"weeklyGoal\":0}").weeklyGoal)
     }
 
@@ -93,16 +94,14 @@ class FocusWidgetTest {
         val hidden = design.copy(profileHiddenLinks = wide.mapNotNull { it.url }.toSet())
         assertTrue(FocusWidgetPainter.profileDock(308f, 138f, hidden, data()).isEmpty())
         val text = FocusWidgetPainter.accessibilityText(design.copy(profileShowHandle = false,
-            profileShowRepos = false, profileShowProject = true, profileProject = "Building a project"), data())
+            profileShowRepos = false), data())
         assertFalse(text.split(". ").contains("@octocat"))
         assertFalse(text.contains("public repositories"))
-        assertTrue(text.contains("Building a project"))
     }
 
-    @Test fun selectedCountsStayVisibleBesideTheProjectLine() {
+    @Test fun selectedCountsChangeTheProfileRender() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val design = WidgetDesign(layout = WidgetLayout.PROFILE, profileShowProject = true,
-            profileProject = "Building · NetSentinel")
+        val design = WidgetDesign(layout = WidgetLayout.PROFILE)
         val user = data()
         val shown = WidgetRenderer.render(context, design, user, null, 340f, 170f, true)
         val hidden = WidgetRenderer.render(context, design.copy(profileShowFollowers = false,
@@ -117,7 +116,7 @@ class FocusWidgetTest {
         for (layout in listOf(WidgetLayout.STREAK, WidgetLayout.WEEKLY_GOAL, WidgetLayout.PROFILE)) {
             for ((width, height) in listOf(170f to 90f, 170f to 170f, 340f to 170f, 170f to 340f, 110f to 60f)) {
                 for (dark in listOf(false, true)) {
-                    val bmp = WidgetRenderer.render(context, WidgetDesign(layout = layout, profileShowProject = true, profileProject = "Building · NetSentinel"), data(), avatar,
+                    val bmp = WidgetRenderer.render(context, WidgetDesign(layout = layout), data(), avatar,
                         width, height, dark, font = NumberFont.DOT_MATRIX, maxPixels = 200_000)
                     assertTrue(bmp.width * bmp.height <= 200_000)
                     assertEquals(width / height, bmp.width.toFloat() / bmp.height, 0.04f)
@@ -128,8 +127,7 @@ class FocusWidgetTest {
         }
         for ((width, height) in listOf(340f to 170f, 170f to 340f)) {
             for (dark in listOf(false, true)) {
-                val bitmap = WidgetRenderer.render(context, WidgetDesign(layout = WidgetLayout.PROFILE,
-                    profileShowProject = true, profileProject = "Building · NetSentinel"), data(), avatar,
+                val bitmap = WidgetRenderer.render(context, WidgetDesign(layout = WidgetLayout.PROFILE), data(), avatar,
                     width, height, dark, font = NumberFont.INTER, maxPixels = 200_000)
                 File(out, "profile_studio_${width.toInt()}x${height.toInt()}_${if(dark) "dark" else "light"}.png")
                     .outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
