@@ -55,18 +55,34 @@ internal object FocusWidgetPainter {
         else -> NumberFormat.getIntegerInstance().format(value)
     }
 
+    private data class ProfileMetric(val value: Int?, val label: String, val spokenLabel: String)
+
+    private fun profileMetrics(design: WidgetDesign, data: UserData): List<ProfileMetric> = buildList {
+        fun addMetric(count: ProfileCount, enabled: Boolean, value: Int?, spokenLabel: String) {
+            if (design.profileStreakReplaces == count) {
+                val streak = activity(data).streak
+                add(ProfileMetric(streak, "Streak", if (streak == 1) "day contribution streak" else "days contribution streak"))
+            } else if (enabled) {
+                add(ProfileMetric(value, count.label, spokenLabel))
+            }
+        }
+        addMetric(ProfileCount.FOLLOWERS, design.profileShowFollowers, data.profile?.followers, "followers")
+        addMetric(ProfileCount.FOLLOWING, design.profileShowFollowing, data.profile?.following, "following")
+        addMetric(ProfileCount.REPOS, design.profileShowRepos, data.profile?.publicRepos, "public repositories")
+    }
+
     fun accessibilityText(design: WidgetDesign, data: UserData): String {
-        val a = activity(data)
         val username = data.contributions.username
         return when (design.layout) {
-            WidgetLayout.STREAK -> "$username: ${a.streak} day streak, ${a.today} contributions today. Best streak ${Stats.from(data.contributions).longestStreak} days."
-            WidgetLayout.WEEKLY_GOAL -> "$username: ${a.week} of ${design.weeklyGoal} contributions this week."
+            WidgetLayout.STREAK -> {
+                val a = activity(data)
+                "$username: ${a.streak} day streak, ${a.today} contributions today. Best streak ${Stats.from(data.contributions).longestStreak} days."
+            }
+            WidgetLayout.WEEKLY_GOAL -> "$username: ${activity(data).week} of ${design.weeklyGoal} contributions this week."
             WidgetLayout.PROFILE -> buildList {
                 if (design.profileShowName) data.profile?.displayName?.let { add(it) }
                 if (design.profileShowHandle) add("@$username")
-                if (design.profileShowRepos) add("${data.profile?.publicRepos ?: "Unavailable"} public repositories")
-                if (design.profileShowFollowers) add("${data.profile?.followers ?: "Unavailable"} followers")
-                if (design.profileShowFollowing) add("${data.profile?.following ?: "Unavailable"} following")
+                profileMetrics(design, data).forEach { add("${it.value ?: "Unavailable"} ${it.spokenLabel}") }
                 addAll(profileLinks(design, data).map { it.label })
             }.joinToString(". ")
             else -> "GitHub contributions for $username: ${data.contributions.totalLastYear} in the last year"
@@ -168,30 +184,36 @@ internal object FocusWidgetPainter {
                 style = Paint.Style.STROKE
                 strokeWidth = dp(.8f)
             }
-            val metrics = buildList {
-                if (d.profileShowFollowers) add(data.profile?.followers to "Followers")
-                if (d.profileShowFollowing) add(data.profile?.following to "Following")
-                if (d.profileShowRepos) add(data.profile?.publicRepos to "Repos")
+            val metrics = profileMetrics(d, data)
+
+            fun profileText(text: String, x: Float, y: Float, width: Float, size: Float,
+                            typeface: Typeface, color: Int = colors.textSecondary) {
+                if (width <= 0f || y > r.bottom) return
+                val p = paint(size, color).apply { this.typeface = typeface }
+                c.drawText(WidgetRenderer.ellipsize(text, p, width), x, y, p)
             }
 
-            fun mono(text: String, x: Float, y: Float, width: Float, size: Float,
-                     bold: Boolean = false, color: Int = colors.textSecondary, numeric: Boolean = false) {
-                if (width <= 0f || y > r.bottom) return
-                val p = paint(size, color).apply {
-                    typeface = if (numeric && font != NumberFont.SYSTEM) NumberFont.typeface(context, font, 700)
-                    else Typeface.create(Typeface.MONOSPACE, if (bold) Typeface.BOLD else Typeface.NORMAL)
+            fun identity(text: String, x: Float, y: Float, width: Float, size: Float, bold: Boolean = false) {
+                val style = if (bold) Typeface.BOLD else Typeface.NORMAL
+                val face = when (d.profileTypeface) {
+                    ProfileTypeface.MONO -> Typeface.create(Typeface.MONOSPACE, style)
+                    ProfileTypeface.SANS -> NumberFont.typeface(context, NumberFont.INTER, if (bold) 700 else 400)
+                    ProfileTypeface.CONDENSED -> Typeface.create("sans-serif-condensed", style)
                 }
-                c.drawText(WidgetRenderer.ellipsize(text, p, width), x, y, p)
+                profileText(text, x, y, width, size, face, if (bold) colors.textPrimary else colors.textSecondary)
             }
 
             fun stats(x: Float, top: Float, width: Float) {
                 if (metrics.isEmpty() || top + dp(28f) > footerTop) return
                 val column = width / metrics.size
+                val countFace = if (font == NumberFont.SYSTEM) Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                    else NumberFont.typeface(context, font, 700)
                 metrics.forEachIndexed { i, (value, label) ->
                     val left = x + column * i
-                    mono(value?.let { compactCount(it) } ?: "—", left, top + dp(14f),
-                        column - dp(3f), 17f, true, colors.textPrimary, numeric = true)
-                    mono(label, left, top + dp(27f), column - dp(2f), if (column >= dp(55f)) 10f else 8f)
+                    profileText(value?.let { compactCount(it) } ?: "—", left, top + dp(14f),
+                        column - dp(3f), 17f, countFace, colors.textPrimary)
+                    profileText(label, left, top + dp(27f), column - dp(2f),
+                        if (column >= dp(55f)) 10f else 8f, Typeface.MONOSPACE)
                 }
             }
 
@@ -216,10 +238,10 @@ internal object FocusWidgetPainter {
                     val width = r.right - x - dp(22f)
                     var baseline = y + dp(19f)
                     if (d.profileShowName) {
-                        mono(name, x, baseline, width, 21f, true, colors.textPrimary)
+                        identity(name, x, baseline, width, 21f, bold = true)
                         baseline += dp(15f)
                     }
-                    if (d.profileShowHandle) mono(login, x, baseline, width, 11f)
+                    if (d.profileShowHandle) identity(login, x, baseline, width, 11f)
                     stats(x, y + headerHeight - dp(28f), min(r.right - x, dp(206f)))
                 }
                 tall -> {
@@ -231,12 +253,12 @@ internal object FocusWidgetPainter {
                     }
                     if (d.profileShowName) {
                         y += dp(18f)
-                        mono(name, r.left, y, r.width(), 19f, true, colors.textPrimary)
+                        identity(name, r.left, y, r.width(), 19f, bold = true)
                         y += dp(5f)
                     }
                     if (d.profileShowHandle) {
                         y += dp(13f)
-                        mono(login, r.left, y, r.width(), 11f)
+                        identity(login, r.left, y, r.width(), 11f)
                     }
                     stats(r.left, y + dp(16f), r.width())
                 }
@@ -249,10 +271,10 @@ internal object FocusWidgetPainter {
                     }
                     var y = r.top + dp(13f)
                     if (d.profileShowName) {
-                        mono(name, x, y, r.right - x - dp(16f), 14f, true, colors.textPrimary)
+                        identity(name, x, y, r.right - x - dp(16f), 14f, bold = true)
                         y += dp(14f)
                     }
-                    if (d.profileShowHandle) mono(login, x, y, r.right - x, 10f)
+                    if (d.profileShowHandle) identity(login, x, y, r.right - x, 10f)
                     if (footerTop - r.top >= dp(66f)) stats(r.left, footerTop - dp(28f), r.width())
                 }
             }

@@ -71,6 +71,8 @@ import com.example.githubwidget.design.Corners
 import com.example.githubwidget.design.Palette
 import com.example.githubwidget.design.NumberFont
 import com.example.githubwidget.design.Palettes
+import com.example.githubwidget.design.ProfileCount
+import com.example.githubwidget.design.ProfileTypeface
 import com.example.githubwidget.design.Range
 import com.example.githubwidget.design.WidgetDesign
 import com.example.githubwidget.design.WidgetLayout
@@ -193,6 +195,13 @@ fun DesignScreen(onOpenStats: () -> Unit) {
             }
             item {
                 SectionCard(title = "Font") {
+                    if (design.layout == WidgetLayout.PROFILE) {
+                        Field("Name and username") {
+                            SegmentedChoice(ProfileTypeface.entries, design.profileTypeface, { it.label },
+                                { face -> update { it.copy(profileTypeface = face) } })
+                        }
+                        Spacer(Modifier.height(16.dp))
+                    }
                     Field("Typeface", hint = "Used for numbers in widgets, Stats and share images. Dot matrix keeps small labels in a regular font.") {
                         NumberFontChoice(onSelect = { Repository.setNumberFont(it) })
                     }
@@ -532,11 +541,19 @@ private fun ProfileCardOptions(design: WidgetDesign, update: ((WidgetDesign) -> 
             ))
         }
         SectionCard(title = "Counts", subtitle = "Public GitHub data. Unavailable counts show a dash.") {
-            ProfileChoices(listOf(
-                Triple("Followers", design.profileShowFollowers, { update { it.copy(profileShowFollowers = !it.profileShowFollowers) } }),
-                Triple("Following", design.profileShowFollowing, { update { it.copy(profileShowFollowing = !it.profileShowFollowing) } }),
-                Triple("Repositories", design.profileShowRepos, { update { it.copy(profileShowRepos = !it.profileShowRepos) } }),
+            ProfileChoices(listOfNotNull(
+                Triple("Followers", design.profileShowFollowers, { update { it.copy(profileShowFollowers = !it.profileShowFollowers) } })
+                    .takeUnless { design.profileStreakReplaces == ProfileCount.FOLLOWERS },
+                Triple("Following", design.profileShowFollowing, { update { it.copy(profileShowFollowing = !it.profileShowFollowing) } })
+                    .takeUnless { design.profileStreakReplaces == ProfileCount.FOLLOWING },
+                Triple("Repositories", design.profileShowRepos, { update { it.copy(profileShowRepos = !it.profileShowRepos) } })
+                    .takeUnless { design.profileStreakReplaces == ProfileCount.REPOS },
             ))
+            Spacer(Modifier.height(12.dp))
+            Field("Streak replaces", hint = "Show consecutive days with contributions in one count slot.") {
+                SegmentedChoice(listOf(null) + ProfileCount.entries, design.profileStreakReplaces,
+                    { it?.label ?: "Off" }, { count -> update { it.copy(profileStreakReplaces = count) } })
+            }
         }
         SectionCard(title = "Connections", subtitle = "Tap a selected icon on your home screen to open it. Extra links appear under the more button.") {
             val all = com.example.githubwidget.widget.FocusWidgetPainter.profileLinks(design.copy(

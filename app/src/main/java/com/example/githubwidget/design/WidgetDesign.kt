@@ -40,6 +40,18 @@ enum class Corners(val label: String, val dp: Float) {
     EXTRA("Extra", 32f),
 }
 
+enum class ProfileTypeface(val label: String) {
+    MONO("Monospace"),
+    SANS("Sans"),
+    CONDENSED("Condensed"),
+}
+
+enum class ProfileCount(val label: String) {
+    FOLLOWERS("Followers"),
+    FOLLOWING("Following"),
+    REPOS("Repos"),
+}
+
 /**
  * Shared appearance settings. Dedicated widget providers retain their own layout
  * while using the same connected profile, colors and font as the in-app preview.
@@ -74,6 +86,8 @@ data class WidgetDesign(
     val profileShowWebsite: Boolean = true,
     val profileShowSocials: Boolean = true,
     val profileHiddenLinks: Set<String> = emptySet(),
+    val profileTypeface: ProfileTypeface = ProfileTypeface.MONO,
+    val profileStreakReplaces: ProfileCount? = null,
 ) {
     fun toJson(): String = JSONObject()
         .put("palette", paletteId)
@@ -103,6 +117,8 @@ data class WidgetDesign(
         .put("profileShowWebsite", profileShowWebsite)
         .put("profileShowSocials", profileShowSocials)
         .put("profileHiddenLinks", org.json.JSONArray(profileHiddenLinks.sorted()))
+        .put("profileTypeface", profileTypeface.name)
+        .put("profileStreakReplaces", profileStreakReplaces?.name)
         .toString()
 
     companion object {
@@ -142,7 +158,8 @@ data class WidgetDesign(
                     profileHiddenLinks = o.optJSONArray("profileHiddenLinks")?.let { links ->
                         (0 until links.length()).map { links.optString(it) }.toSet()
                     } ?: emptySet(),
-
+                    profileTypeface = enumOr(o.optString("profileTypeface"), d.profileTypeface),
+                    profileStreakReplaces = ProfileCount.entries.firstOrNull { it.name == o.optString("profileStreakReplaces") },
                 )
             } catch (_: Exception) {
                 WidgetDesign()

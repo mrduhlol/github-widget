@@ -49,6 +49,7 @@ class FocusWidgetTest {
             profileShowName = false, profileShowAvatar = false, profileShowFollowers = false,
             profileShowFollowing = false, profileShowGitHub = false, profileShowWebsite = false,
             profileShowSocials = false, profileShowHandle = false, profileShowRepos = false,
+            profileTypeface = ProfileTypeface.CONDENSED, profileStreakReplaces = ProfileCount.FOLLOWING,
             profileHiddenLinks = setOf("https://example.com"))
         assertEquals(design, WidgetDesign.fromJson(design.toJson()))
         assertEquals(WidgetDesign(), WidgetDesign.fromJson("{}"))
@@ -107,6 +108,24 @@ class FocusWidgetTest {
         val hidden = WidgetRenderer.render(context, design.copy(profileShowFollowers = false,
             profileShowFollowing = false, profileShowRepos = false), user, null, 340f, 170f, true)
         assertFalse("Selected metrics must change the rendered card", shown.sameAs(hidden))
+    }
+
+    @Test fun profileTypefaceAndStreakReplacementReachTheRenderer() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val yesterday = LocalDate.now().minusDays(1)
+        val user = data(listOf(Day(yesterday, 2, 1), Day(yesterday.minusDays(1), 3, 1)))
+        val design = WidgetDesign(layout = WidgetLayout.PROFILE)
+        fun render(settings: WidgetDesign) = WidgetRenderer.render(context, settings, user, null, 340f, 170f, true)
+        val original = render(design)
+        assertFalse(original.sameAs(render(design.copy(profileTypeface = ProfileTypeface.SANS))))
+
+        val withStreak = design.copy(profileStreakReplaces = ProfileCount.FOLLOWING)
+        assertFalse(original.sameAs(render(withStreak)))
+        val description = FocusWidgetPainter.accessibilityText(withStreak, user)
+        assertTrue(description.contains("2 days contribution streak"))
+        assertTrue(description.contains("120 followers"))
+        assertTrue(description.contains("28 public repositories"))
+        assertFalse(description.contains("42 following"))
     }
 
     @Test fun renderNewWidgetsAcrossSizesAndFonts() {
