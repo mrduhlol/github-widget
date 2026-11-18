@@ -3,6 +3,7 @@ package com.example.githubwidget.widget
 import android.content.Context
 import android.graphics.*
 import android.text.TextPaint
+import androidx.core.graphics.ColorUtils
 import com.example.githubwidget.data.*
 import com.example.githubwidget.design.*
 import java.text.NumberFormat
@@ -155,6 +156,12 @@ internal object FocusWidgetPainter {
             val compact = r.width() < dp(220f) && !portrait
             val dock = profileDock(r.width() / s, r.height() / s, d, data)
             val footerTop = if (dock.isEmpty()) r.bottom else r.bottom - dp(48f)
+            val surface = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = ColorUtils.setAlphaComponent(colors.textPrimary, if (colors.isDark) 18 else 12)
+            }
+            val accentSurface = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = ColorUtils.setAlphaComponent(colors.accent, if (colors.isDark) 32 else 22)
+            }
             val metrics = buildList {
                 if (d.profileShowFollowers) add(data.profile?.followers to "Followers")
                 if (d.profileShowFollowing) add(data.profile?.following to "Following")
@@ -172,37 +179,41 @@ internal object FocusWidgetPainter {
             }
             fun project(x: Float, top: Float, width: Float) {
                 if (!d.profileShowProject || d.profileProject.isBlank() || width < dp(45f)) return
-                val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colors.border; style = Paint.Style.STROKE; strokeWidth = dp(.75f) }
-                c.drawRoundRect(RectF(x, top, x + width, top + dp(18f)), dp(7f), dp(7f), p)
-                p.style = Paint.Style.FILL; p.color = colors.accent
-                c.drawCircle(x + dp(10f), top + dp(9f), dp(2.5f), p)
-                identity(d.profileProject, x + dp(19f), top + dp(13f), width - dp(26f), 10.5f)
+                val dot = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colors.accent }
+                c.drawCircle(x + dp(3f), top + dp(9f), dp(3f), dot)
+                identity(d.profileProject, x + dp(12f), top + dp(13f), width - dp(12f), 11f)
             }
             fun stats(x: Float, top: Float, width: Float) {
-                if (metrics.isEmpty() || top + dp(27f) > footerTop - dp(3f)) return
+                val height = dp(33f)
+                if (metrics.isEmpty() || top + height > footerTop + dp(2f)) return
+                c.drawRoundRect(RectF(x, top, x + width, top + height), dp(9f), dp(9f), accentSurface)
                 val column = width / metrics.size
                 metrics.forEachIndexed { i, (value, label) ->
                     val left = x + column * i
                     if (i > 0) {
                         val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colors.border; strokeWidth = dp(.7f) }
-                        c.drawLine(left - dp(5f), top + dp(1f), left - dp(5f), top + dp(27f), p)
+                        c.drawLine(left, top + dp(7f), left, top + dp(26f), p)
                     }
-                    line(value?.let { compactCount(it) } ?: "—", left, top + dp(13f), column - dp(9f), 16f, numeric = true)
-                    identity(label, left, top + dp(27f), column - dp(5f), 9f)
+                    line(value?.let { compactCount(it) } ?: "—", left + dp(2f), top + dp(17f), column - dp(4f), 18f, numeric = true, center = true)
+                    identity(label, left + dp(2f), top + dp(29f), column - dp(4f), 9f, centered = true)
                 }
             }
             when {
                 portrait && r.height() >= dp(210f) -> {
                     val photo = min(dp(104f), r.width() * .72f)
                     var y = r.top + dp(7f)
-                    if (d.profileShowAvatar) { avatar(r.centerX() - photo/2, y, photo); y += photo + dp(27f) }
+                    if (d.profileShowAvatar) {
+                        c.drawRoundRect(RectF(r.left, y - dp(7f), r.right, y + photo + dp(7f)), dp(18f), dp(18f), accentSurface)
+                        avatar(r.centerX() - photo / 2, y, photo)
+                        y += photo + dp(31f)
+                    }
                     else y += dp(28f)
                     if (d.profileShowName) { identity(name, r.left, y, r.width(), 21f, true, true); y += dp(21f) }
                     if (d.profileShowHandle) { identity(login, r.left, y, r.width(), 11.5f, centered = true); y += dp(17f) }
                     if (d.profileShowProject && d.profileProject.isNotBlank() && y + dp(61f) < footerTop) {
-                        project(r.left, y, r.width()); y += dp(40f)
+                        project(r.left + dp(9f), y, r.width() - dp(18f)); y += dp(34f)
                     } else y += dp(15f)
-                    stats(r.left + dp(3f), y, r.width() - dp(2f))
+                    stats(r.left, y, r.width())
                 }
                 !compact && r.width() >= dp(220f) && r.height() >= dp(125f) -> {
                     val photo = min(dp(84f), footerTop - r.top - dp(8f))
@@ -213,8 +224,8 @@ internal object FocusWidgetPainter {
                     if (d.profileShowName) { identity(name, x, y, width, 22f, true); y += dp(17f) }
                     if (d.profileShowHandle) { identity(login, x, y, width, 11.5f); y += dp(4f) }
                     if (d.profileShowProject && d.profileProject.isNotBlank()) {
-                        project(x, y, r.right - x); y += dp(20f)
-                    } else y += dp(13f)
+                        project(x, y - dp(2f), r.right - x); y += dp(14f)
+                    } else y += dp(7f)
                     stats(x, y, r.right - x)
                 }
                 else -> {
@@ -224,19 +235,15 @@ internal object FocusWidgetPainter {
                     var y = r.top + dp(17f)
                     if (d.profileShowName) { identity(name, x, y, r.right - x - dp(18f), 14f, true); y += dp(18f) }
                     if (d.profileShowHandle) identity(login, x, y, r.right - x - dp(16f), 10.5f)
-                    stats(r.left + dp(3f), r.top + dp(56f), r.width())
+                    stats(r.left, r.top + dp(51f), r.width())
                 }
             }
             if (dock.isNotEmpty()) {
-                val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colors.border; strokeWidth = dp(.75f) }
-                c.drawLine(r.left, footerTop, r.right, footerTop, p)
+                c.drawRoundRect(RectF(r.left, footerTop + dp(7f), r.right, r.bottom - dp(5f)), dp(13f), dp(13f), surface)
                 val slot = r.width() / dock.size
                 dock.forEachIndexed { i, item ->
                     val center = r.left + slot * (i + .5f)
-                    val box = RectF(center - dp(16f), r.bottom - dp(40f), center + dp(16f), r.bottom - dp(8f))
-                    p.style = Paint.Style.STROKE; p.color = colors.border
-                    c.drawRoundRect(box, dp(8f), dp(8f), p)
-                    ProfileIcons.draw(c, item.url, box.centerX(), box.centerY(), dp(17f), colors.textPrimary)
+                    ProfileIcons.draw(c, item.url, center, footerTop + dp(25f), dp(19f), colors.textPrimary)
                 }
             }
         }
