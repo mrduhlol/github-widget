@@ -3,7 +3,6 @@ package com.example.githubwidget.widget
 import android.content.Context
 import android.graphics.*
 import android.text.TextPaint
-import androidx.core.graphics.ColorUtils
 import com.example.githubwidget.data.*
 import com.example.githubwidget.design.*
 import java.text.NumberFormat
@@ -36,15 +35,28 @@ internal object FocusWidgetPainter {
         }
     }.distinctBy { it.url }.filterNot { it.url in design.profileHiddenLinks }
 
+    const val PROFILE_LINK_SIZE = 48f
+
     data class DockItem(val label: String, val url: String?)
 
     /** Coordinates use the renderer's content rectangle; each link gets at least 48dp. */
     fun profileDock(contentWidth: Float, contentHeight: Float, design: WidgetDesign, data: UserData): List<DockItem> {
         if (contentHeight < 120f || contentWidth < 125f) return emptyList()
         val links = profileLinks(design, data)
-        val capacity = (contentWidth / 48f).toInt().coerceIn(1, 6)
+        val reserved = if (hasProfileBadge(contentWidth, contentHeight, links)) 68f else 0f
+        val capacity = ((contentWidth - reserved) / PROFILE_LINK_SIZE).toInt().coerceIn(1, 6)
         return if (links.size <= capacity) links.map { DockItem(it.label, it.url) }
         else links.take(capacity - 1).map { DockItem(it.label, it.url) } + DockItem("All connections", null)
+    }
+
+    private fun hasProfileBadge(width: Float, height: Float, links: List<ProfileLink>): Boolean =
+        width >= 220f && height >= 125f && links.any { ProfileIcons.label(it.url) == "GitHub" }
+
+    fun profileBadge(width: Float, height: Float, design: WidgetDesign, data: UserData?): String? {
+        if (design.layout != WidgetLayout.PROFILE || data == null) return null
+        val links = profileLinks(design, data)
+        return links.firstOrNull { ProfileIcons.label(it.url) == "GitHub" }?.url
+            ?.takeIf { hasProfileBadge(width - 32f, height - 32f, links) }
     }
 
     private fun compactCount(value: Int): String = when {
@@ -73,16 +85,18 @@ internal object FocusWidgetPainter {
     }
 
     fun draw(canvas: Canvas, area: RectF, scale: Float, design: WidgetDesign, colors: ColorSet,
-             context: Context, font: NumberFont, data: UserData, avatar: Bitmap?) {
+             context: Context, font: NumberFont, data: UserData, avatar: Bitmap?,
+             contentWidthDp: Float, contentHeightDp: Float) {
         val state = canvas.save()
         canvas.clipRect(area)
-        Card(canvas, area, scale, design, colors, context, font, data, avatar).draw()
+        Card(canvas, area, scale, design, colors, context, font, data, avatar, contentWidthDp, contentHeightDp).draw()
         canvas.restoreToCount(state)
     }
 
     private class Card(val c: Canvas, val r: RectF, val s: Float, val d: WidgetDesign,
                        val colors: ColorSet, val context: Context, val font: NumberFont,
-                       val data: UserData, val avatar: Bitmap?) {
+                       val data: UserData, val avatar: Bitmap?, val contentWidthDp: Float,
+                       val contentHeightDp: Float) {
         fun dp(v: Float) = v * s
         val nf = NumberFormat.getIntegerInstance()
         fun paint(size: Float, color: Int = colors.textPrimary, numeric: Boolean = false) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -152,101 +166,171 @@ internal object FocusWidgetPainter {
         fun profile() {
             val name = data.profile?.displayName ?: data.contributions.username
             val login = "@${data.contributions.username}"
-            val portrait = r.height() > r.width() * 1.1f
-            val compact = r.width() < dp(220f) && !portrait
-            val dock = profileDock(r.width() / s, r.height() / s, d, data)
+            val project = d.profileProject.takeIf { d.profileShowProject && it.isNotBlank() }
+            val dock = profileDock(contentWidthDp, contentHeightDp, d, data)
             val footerTop = if (dock.isEmpty()) r.bottom else r.bottom - dp(48f)
-            val surface = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = ColorUtils.setAlphaComponent(colors.textPrimary, if (colors.isDark) 18 else 12)
-            }
-            val accentSurface = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = ColorUtils.setAlphaComponent(colors.accent, if (colors.isDark) 32 else 22)
+            val wide = contentWidthDp >= 220f && contentHeightDp >= 125f
+            val tall = r.height() > r.width() * 1.1f && r.height() >= dp(210f)
+            val accent = if (d.paletteId == Palettes.DEFAULT_ID && colors.isDark) 0xFF69EAB1.toInt() else colors.accent
+            val rule = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = colors.border
+                style = Paint.Style.STROKE
+                strokeWidth = dp(.8f)
             }
             val metrics = buildList {
-                if (d.profileShowFollowers) add(data.profile?.followers to "Followers")
-                if (d.profileShowFollowing) add(data.profile?.following to "Following")
-                if (d.profileShowRepos) add(data.profile?.publicRepos to "Repos")
+                if (d.profileShowFollowers) add(Triple(data.profile?.followers, "Followers", "users"))
+                if (d.profileShowFollowing) add(Triple(data.profile?.following, "Following", "users"))
+                if (d.profileShowRepos) add(Triple(data.profile?.publicRepos, "Repos", "repo"))
             }
-            // Identity text always uses a readable sans; the chosen face applies to counts.
-            fun identity(text: String, x: Float, y: Float, width: Float, size: Float, bold: Boolean = false, centered: Boolean = false) {
-                if (width <= 0f || y > footerTop) return
-                val p = paint(size).apply {
-                    typeface = NumberFont.typeface(context, NumberFont.INTER, if (bold) 700 else 400)
-                    color = if (bold) colors.textPrimary else colors.textSecondary
+
+            fun frame(left: Float, top: Float, right: Float, bottom: Float, radius: Float = 3f) {
+                c.drawRoundRect(left, top, right, bottom, dp(radius), dp(radius), rule)
+            }
+
+            fun mono(text: String, x: Float, y: Float, width: Float, size: Float,
+                     bold: Boolean = false, color: Int = colors.textSecondary, numeric: Boolean = false) {
+                if (width <= 0f || y > r.bottom) return
+                val p = paint(size, color).apply {
+                    typeface = if (numeric && font != NumberFont.SYSTEM) NumberFont.typeface(context, font, 700)
+                    else Typeface.create(Typeface.MONOSPACE, if (bold) Typeface.BOLD else Typeface.NORMAL)
                 }
-                val shown = WidgetRenderer.ellipsize(text, p, width)
-                c.drawText(shown, if (centered) x + (width - p.measureText(shown))/2 else x, y, p)
+                c.drawText(WidgetRenderer.ellipsize(text, p, width), x, y, p)
             }
-            fun project(x: Float, top: Float, width: Float) {
-                if (!d.profileShowProject || d.profileProject.isBlank() || width < dp(45f)) return
-                val dot = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colors.accent }
-                c.drawCircle(x + dp(3f), top + dp(9f), dp(3f), dot)
-                identity(d.profileProject, x + dp(12f), top + dp(13f), width - dp(12f), 11f)
+
+            fun status(text: String, x: Float, y: Float, width: Float) {
+                if (width < dp(32f)) return
+                val pillWidth = min(width, dp(22f + text.length * 6f))
+                frame(x, y, x + pillWidth, y + dp(16f), 6f)
+                c.drawCircle(x + dp(9f), y + dp(8f), dp(2.4f), Paint(Paint.ANTI_ALIAS_FLAG).apply { color = accent })
+                mono(text, x + dp(16f), y + dp(11.4f), pillWidth - dp(20f), 10f, color = colors.textPrimary)
             }
+
             fun stats(x: Float, top: Float, width: Float) {
-                val height = dp(33f)
-                if (metrics.isEmpty() || top + height > footerTop + dp(2f)) return
-                c.drawRoundRect(RectF(x, top, x + width, top + height), dp(9f), dp(9f), accentSurface)
+                if (metrics.isEmpty() || top + dp(21f) > footerTop) return
                 val column = width / metrics.size
-                metrics.forEachIndexed { i, (value, label) ->
+                metrics.forEachIndexed { i, (value, label, icon) ->
                     val left = x + column * i
-                    if (i > 0) {
-                        val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colors.border; strokeWidth = dp(.7f) }
-                        c.drawLine(left, top + dp(7f), left, top + dp(26f), p)
-                    }
-                    line(value?.let { compactCount(it) } ?: "—", left + dp(2f), top + dp(17f), column - dp(4f), 18f, numeric = true, center = true)
-                    identity(label, left + dp(2f), top + dp(29f), column - dp(4f), 9f, centered = true)
+                    if (i > 0) c.drawLine(left - dp(5f), top + dp(2f), left - dp(5f), top + dp(20f), rule)
+                    val showIcon = column >= dp(64f)
+                    val inset = if (showIcon) dp(21f) else 0f
+                    if (showIcon) ProfileIcons.drawSymbol(c, icon, left + dp(8f), top + dp(12f), dp(15f), colors.textSecondary)
+                    mono(value?.let { compactCount(it) } ?: "—", left + inset, top + dp(10f),
+                        column - inset - dp(7f), 13f, true, colors.textPrimary, numeric = true)
+                    mono(label, left + inset, top + dp(21f), column - inset - dp(2f), if (showIcon) 9f else 8f)
                 }
             }
+
             when {
-                portrait && r.height() >= dp(210f) -> {
-                    val photo = min(dp(104f), r.width() * .72f)
-                    var y = r.top + dp(7f)
-                    if (d.profileShowAvatar) {
-                        c.drawRoundRect(RectF(r.left, y - dp(7f), r.right, y + photo + dp(7f)), dp(18f), dp(18f), accentSurface)
-                        avatar(r.centerX() - photo / 2, y, photo)
-                        y += photo + dp(31f)
-                    }
-                    else y += dp(28f)
-                    if (d.profileShowName) { identity(name, r.left, y, r.width(), 21f, true, true); y += dp(21f) }
-                    if (d.profileShowHandle) { identity(login, r.left, y, r.width(), 11.5f, centered = true); y += dp(17f) }
-                    if (d.profileShowProject && d.profileProject.isNotBlank() && y + dp(61f) < footerTop) {
-                        project(r.left + dp(9f), y, r.width() - dp(18f)); y += dp(34f)
-                    } else y += dp(15f)
-                    stats(r.left, y, r.width())
-                }
-                !compact && r.width() >= dp(220f) && r.height() >= dp(125f) -> {
-                    val photo = min(dp(84f), footerTop - r.top - dp(8f))
+                wide -> {
+                    contours(footerTop)
+                    val photo = min(r.width() * .23f, footerTop - r.top - dp(11f))
+                    val y = r.top + dp(4f)
                     var x = r.left
-                    if (d.profileShowAvatar) { avatar(x, r.top, photo); x += photo + dp(16f) }
-                    val width = r.right - x - dp(22f) // refresh target
-                    var y = r.top + dp(19f)
-                    if (d.profileShowName) { identity(name, x, y, width, 22f, true); y += dp(17f) }
-                    if (d.profileShowHandle) { identity(login, x, y, width, 11.5f); y += dp(4f) }
-                    if (d.profileShowProject && d.profileProject.isNotBlank()) {
-                        project(x, y - dp(2f), r.right - x); y += dp(14f)
-                    } else y += dp(7f)
-                    stats(x, y, r.right - x)
+                    if (d.profileShowAvatar) {
+                        avatar(x, y, photo)
+                        frame(x, y, x + photo, y + photo)
+                        x += photo + dp(13f)
+                    }
+                    val width = r.right - x - dp(37f)
+                    var baseline = y + dp(16f)
+                    if (d.profileShowName) {
+                        mono(name, x, baseline, width, 21f, true, colors.textPrimary)
+                        c.drawLine(x, baseline + dp(5f), x + dp(9f), baseline + dp(5f), rule)
+                        baseline += dp(17f)
+                    }
+                    if (d.profileShowHandle) {
+                        mono(login, x, baseline, width, 11f)
+                        baseline += dp(6f)
+                    }
+                    if (project != null && baseline + dp(16f) <= footerTop - dp(22f)) {
+                        status(project, x, baseline, width)
+                    }
+                    stats(x, footerTop - dp(23f), min(r.right - x, dp(219f)))
+                }
+                tall -> {
+                    val photo = min(dp(102f), r.width())
+                    var y = r.top
+                    if (d.profileShowAvatar) {
+                        avatar(r.left, y, photo)
+                        frame(r.left, y, r.left + photo, y + photo)
+                        y += photo + dp(10f)
+                    }
+                    if (d.profileShowName) {
+                        y += dp(18f)
+                        mono(name, r.left, y, r.width(), 19f, true, colors.textPrimary)
+                        y += dp(5f)
+                    }
+                    if (d.profileShowHandle) {
+                        y += dp(13f)
+                        mono(login, r.left, y, r.width(), 11f)
+                    }
+                    if (project != null && y + dp(52f) < footerTop) {
+                        status(project, r.left, y + dp(9f), r.width())
+                    }
+                    stats(r.left, footerTop - dp(35f), r.width())
                 }
                 else -> {
-                    val photo = min(dp(40f), r.height())
+                    val photo = min(dp(38f), r.height())
                     var x = r.left
-                    if (d.profileShowAvatar && r.width() >= dp(125f)) { avatar(x, r.top, photo); x += photo + dp(10f) }
-                    var y = r.top + dp(17f)
-                    if (d.profileShowName) { identity(name, x, y, r.right - x - dp(18f), 14f, true); y += dp(18f) }
-                    if (d.profileShowHandle) identity(login, x, y, r.right - x - dp(16f), 10.5f)
-                    stats(r.left, r.top + dp(51f), r.width())
+                    if (d.profileShowAvatar && r.width() >= dp(120f)) {
+                        avatar(x, r.top, photo)
+                        frame(x, r.top, x + photo, r.top + photo)
+                        x += photo + dp(9f)
+                    }
+                    var y = r.top + dp(13f)
+                    if (d.profileShowName) {
+                        mono(name, x, y, r.right - x - dp(16f), 14f, true, colors.textPrimary)
+                        y += dp(14f)
+                    }
+                    if (d.profileShowHandle) mono(login, x, y, r.right - x, 10f)
+                    if (project != null && footerTop - r.top >= dp(85f)) status(project, x, y + dp(5f), r.right - x)
+                    if (footerTop - r.top >= dp(61f)) stats(r.left, footerTop - dp(23f), r.width())
                 }
             }
+
             if (dock.isNotEmpty()) {
-                c.drawRoundRect(RectF(r.left, footerTop + dp(7f), r.right, r.bottom - dp(5f)), dp(13f), dp(13f), surface)
-                val slot = r.width() / dock.size
+                c.drawLine(r.left, footerTop + dp(4f), r.right, footerTop + dp(4f), rule)
+                val slot = dp(PROFILE_LINK_SIZE)
+                val centerY = footerTop + dp(27f)
                 dock.forEachIndexed { i, item ->
-                    val center = r.left + slot * (i + .5f)
-                    ProfileIcons.draw(c, item.url, center, footerTop + dp(25f), dp(19f), colors.textPrimary)
+                    val centerX = r.left + slot * (i + .5f)
+                    frame(centerX - dp(18f), centerY - dp(14f), centerX + dp(18f), centerY + dp(14f))
+                    ProfileIcons.draw(c, item.url, centerX, centerY, dp(16f), colors.textSecondary)
+                }
+                if (hasProfileBadge(contentWidthDp, contentHeightDp, profileLinks(d, data))) {
+                    val x = r.right - dp(63f)
+                    c.drawLine(x - dp(4f), centerY - dp(12f), x - dp(4f), centerY + dp(12f), rule)
+                    ProfileIcons.drawSymbol(c, "terminal", x + dp(12f), centerY, dp(18f), accent)
+                    mono("Refresh", x + dp(25f), centerY + dp(3f), dp(38f), 8.5f, color = accent)
                 }
             }
         }
+
+        private fun contours(bottom: Float) {
+            val left = r.left + r.width() * .56f
+            val width = r.right - left
+            val height = bottom - r.top
+            val ink = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                strokeWidth = dp(.65f)
+                shader = LinearGradient(left, r.top, r.right, r.top,
+                    intArrayOf(Color.TRANSPARENT, colors.border and 0x30FFFFFF, colors.border and 0x12FFFFFF),
+                    floatArrayOf(0f, .62f, 1f), Shader.TileMode.CLAMP)
+            }
+            val clip = c.save()
+            c.clipRect(left, r.top, r.right, bottom)
+            for (i in 0..12) {
+                val y = r.top + height * (i / 13f)
+                val path = Path().apply {
+                    moveTo(left, y)
+                    cubicTo(left + width * .34f, y - height * .32f, left + width * .47f, y + height * .78f, left + width * .72f, y + height * .36f)
+                    quadTo(left + width * .89f, y + height * .1f, r.right + dp(3f), y + height * .3f)
+                }
+                c.drawPath(path, ink)
+            }
+            c.restoreToCount(clip)
+        }
+
         fun avatar(x: Float, y: Float, size: Float) {
             val rect = RectF(x, y, x + size, y + size)
             val p = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
@@ -255,9 +339,9 @@ internal object FocusWidgetPainter {
                 val scale = maxOf(size / avatar.width, size / avatar.height)
                 val matrix = Matrix().apply { setScale(scale, scale); postTranslate(x + (size - avatar.width * scale)/2, y + (size - avatar.height * scale)/2) }
                 shader.setLocalMatrix(matrix); p.shader = shader
-                c.drawRoundRect(rect, dp(12f), dp(12f), p)
+                c.drawRoundRect(rect, dp(3f), dp(3f), p)
             } else {
-                p.color = colors.levels[2]; c.drawRoundRect(rect, dp(12f), dp(12f), p)
+                p.color = colors.levels[2]; c.drawRoundRect(rect, dp(3f), dp(3f), p)
                 line(data.contributions.username.take(1).uppercase(), x, y + size * .65f, size, size / s * .42f, center = true)
             }
         }

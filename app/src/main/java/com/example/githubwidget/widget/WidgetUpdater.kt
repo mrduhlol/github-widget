@@ -215,7 +215,9 @@ object WidgetUpdater {
             val dock = FocusWidgetPainter.profileDock(size.width - 2 * pad, size.height - 2 * pad, design, data)
             views.setViewVisibility(R.id.widget_connections, if (dock.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE)
             val px = (pad * context.resources.displayMetrics.density).toInt()
-            views.setViewPadding(R.id.widget_connections, px, 0, px, px)
+            val rightPad = (size.width - pad - dock.size * FocusWidgetPainter.PROFILE_LINK_SIZE).coerceAtLeast(pad)
+            views.setViewPadding(R.id.widget_connections, px, 0,
+                (rightPad * context.resources.displayMetrics.density).toInt(), px)
             dock.forEach { item ->
                 val button = RemoteViews(context.packageName, R.layout.widget_connection)
                 button.setContentDescription(R.id.widget_connection, item.url?.let { "Open ${ProfileIcons.label(it)}: $it" } ?: item.label)
@@ -235,7 +237,21 @@ object WidgetUpdater {
             Intent(context, ContributionWidgetProvider::class.java).setAction(ContributionWidgetProvider.ACTION_REFRESH),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        views.setOnClickPendingIntent(R.id.widget_refresh, refresh)
+        val badge = FocusWidgetPainter.profileBadge(size.width, size.height, design, data)
+        views.setViewVisibility(R.id.widget_refresh_icon,
+            if (badge == null) android.view.View.VISIBLE else android.view.View.GONE)
+        views.setViewVisibility(R.id.widget_profile_refresh,
+            if (badge == null) android.view.View.GONE else android.view.View.VISIBLE)
+        views.setOnClickPendingIntent(R.id.widget_profile_refresh, refresh)
+        if (badge != null) {
+            val openProfile = PendingIntent.getActivity(context, 0,
+                Intent(Intent.ACTION_VIEW, android.net.Uri.parse(badge)),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            views.setContentDescription(R.id.widget_refresh, "Open GitHub profile")
+            views.setOnClickPendingIntent(R.id.widget_refresh, openProfile)
+        } else {
+            views.setOnClickPendingIntent(R.id.widget_refresh, refresh)
+        }
         return views
     }
 

@@ -206,9 +206,11 @@ fun DesignScreen(onOpenStats: () -> Unit) {
                     }
                     Spacer(Modifier.height(20.dp))
                     OpacitySlider(design.opacity) { v -> update { it.copy(opacity = v) } }
-                    Spacer(Modifier.height(16.dp))
-                    Field("Corners") {
-                        SegmentedChoice(Corners.entries, design.corners, { it.label }, { c -> update { it.copy(corners = c) } })
+                    if (design.layout != WidgetLayout.PROFILE) {
+                        Spacer(Modifier.height(16.dp))
+                        Field("Corners") {
+                            SegmentedChoice(Corners.entries, design.corners, { it.label }, { c -> update { it.copy(corners = c) } })
+                        }
                     }
                 }
             }

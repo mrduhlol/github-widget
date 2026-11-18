@@ -67,10 +67,15 @@ object WidgetRenderer {
         val colors = base.copy(
             card = when {
                 design.background == Background.BLACK -> 0xFF000000.toInt()
+                isDark && design.layout == WidgetLayout.PROFILE -> 0xFF0D1013.toInt()
                 isDark -> 0xFF141618.toInt()
                 else -> 0xFFFAFAF7.toInt()
             },
-            border = if (isDark) 0xFF353A3D.toInt() else 0xFFD3D6D0.toInt(),
+            border = when {
+                isDark && design.layout == WidgetLayout.PROFILE -> 0xFF535A63.toInt()
+                isDark -> 0xFF353A3D.toInt()
+                else -> 0xFFD3D6D0.toInt()
+            },
             textPrimary = if (isDark) 0xFFF5F6F3.toInt() else 0xFF1A201C.toInt(),
             textSecondary = if (isDark) 0xFFA9B0AB.toInt() else 0xFF59635C.toInt(),
         )
@@ -109,14 +114,30 @@ object WidgetRenderer {
 
         fun draw(data: UserData?, avatar: Bitmap?, placeholder: Placeholder) {
             drawCard()
-            val pad = dp(if (wDp < 180 || hDp < 100) 12f else 16f)
+            val padDp = if (wDp < 180 || hDp < 100) 12f else 16f
+            val pad = dp(padDp)
             val area = RectF(pad, pad, canvas.width - pad, canvas.height - pad)
+            val badge = FocusWidgetPainter.profileBadge(wDp, hDp, design, data)
+            if (badge != null) {
+                val x = canvas.width - dp(24f)
+                val y = dp(24f)
+                val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = colors.border
+                    style = Paint.Style.STROKE
+                    strokeWidth = dp(.8f)
+                }
+                canvas.drawRect(x - dp(15f), y - dp(14f), x + dp(15f), y + dp(14f), stroke)
+                ProfileIcons.draw(canvas, badge, x, y, dp(16f), colors.textPrimary)
+                canvas.drawLine(dp(8f), dp(11f), dp(16f), dp(11f), stroke)
+                canvas.drawLine(dp(12f), dp(7f), dp(12f), dp(15f), stroke)
+            }
             when {
                 data == null -> drawPlaceholder(area, placeholder)
                 design.layout == WidgetLayout.GRAPH -> drawGraphOnly(area, data)
                 design.layout == WidgetLayout.NUMBERS -> drawNumbers(area, data)
                 design.layout in listOf(WidgetLayout.STREAK, WidgetLayout.WEEKLY_GOAL, WidgetLayout.PROFILE) ->
-                    FocusWidgetPainter.draw(canvas, area, s, design, colors, context, font, data, avatar)
+                    FocusWidgetPainter.draw(canvas, area, s, design, colors, context, font, data, avatar,
+                        wDp - 2 * padDp, hDp - 2 * padDp)
                 else -> drawClassic(area, data, avatar)
             }
         }
@@ -124,7 +145,7 @@ object WidgetRenderer {
         // ------------------------------------------------------------ card
 
         fun drawCard() {
-            val r = dp(design.corners.dp)
+            val r = if (design.layout == WidgetLayout.PROFILE) 0f else dp(design.corners.dp)
             val rect = RectF(0f, 0f, canvas.width.toFloat(), canvas.height.toFloat())
             if (design.opacity > 0) {
                 val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
