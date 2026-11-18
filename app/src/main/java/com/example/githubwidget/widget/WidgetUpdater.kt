@@ -206,7 +206,10 @@ object WidgetUpdater {
             val total = it.results?.total
             when {
                 total != null -> "PR Inbox. $total public review requests." +
-                    (latestReview?.let { request -> " Open ${request.title}, ${request.repository}." } ?: "") +
+                    (latestReview?.let { request ->
+                        " Open ${request.title}, ${request.repository}." +
+                            (request.excerpt?.let { " Description: $it" } ?: "")
+                    } ?: "") +
                     if (it.failed) " Showing the last check." else ""
                 it.failed -> "PR Inbox. Couldn't check for review requests."
                 it.username.isBlank() -> "PR Inbox. Tap to connect a GitHub profile."

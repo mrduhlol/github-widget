@@ -9,6 +9,8 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Shader
 import android.text.TextPaint
+import android.text.StaticLayout
+import android.text.TextUtils
 import androidx.core.graphics.ColorUtils
 import com.example.githubwidget.data.ReviewInboxState
 import com.example.githubwidget.data.Stats
@@ -159,17 +161,41 @@ object WidgetRenderer {
             line(title, titleY, if (compact) actionWidth else area.width(), titlePaint)
             if (newest != null) {
                 line("${newest.repository} #${newest.number}", titleY + dp(17f), area.width(), heading)
+                newest.excerpt?.let { excerpt ->
+                    drawReviewExcerpt(excerpt, RectF(area.left, titleY + dp(29f), area.right, area.bottom - dp(21f)))
+                }
             }
             if (area.bottom - titleY >= dp(35f)) {
                 val footer = when {
-                    inbox?.failed == true && results != null -> "Showing last check"
-                    results?.total == 1 -> "1 public PR waiting"
-                    results != null -> "${results.total} public PRs waiting"
+                    results != null -> {
+                        val count = if (results.total == 1) "1 PR waiting" else "${results.total} PRs waiting"
+                        if (inbox.failed) "$count · last check" else count
+                    }
                     inbox?.failed == true -> "Tap refresh to try again"
                     else -> "Public review requests"
                 }
                 line(footer, area.bottom - dp(1f), area.width(), heading)
             }
+        }
+
+        private fun drawReviewExcerpt(excerpt: String, area: RectF) {
+            val padding = dp(8f)
+            val width = (area.width() - 2 * padding).toInt()
+            val note = text(12f, colors.textSecondary)
+            val lineHeight = note.fontMetrics.run { descent - ascent }
+            val maxLines = ((area.height() - 2 * padding) / lineHeight).toInt().coerceIn(0, 2)
+            if (width < 1 || maxLines == 0) return
+            val layout = StaticLayout.Builder.obtain(excerpt, 0, excerpt.length, note, width)
+                .setIncludePad(false).setMaxLines(maxLines).setEllipsize(TextUtils.TruncateAt.END).build()
+            val panel = RectF(area.left, area.top, area.right, area.top + layout.height + 2 * padding)
+            val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = ColorUtils.setAlphaComponent(colors.textPrimary, if (colors.isDark) 14 else 12)
+            }
+            canvas.drawRoundRect(panel, dp(6f), dp(6f), fill)
+            val state = canvas.save()
+            canvas.translate(panel.left + padding, panel.top + padding)
+            layout.draw(canvas)
+            canvas.restoreToCount(state)
         }
 
         // ------------------------------------------------------------ card

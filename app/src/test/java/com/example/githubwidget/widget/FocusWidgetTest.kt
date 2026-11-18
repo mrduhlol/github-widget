@@ -51,13 +51,13 @@ class FocusWidgetTest {
         val results = ReviewResults.fromJson(JSONObject("""{
             "total_count": 17,
             "items": [
-                {"html_url":"https://github.com/octocat/Hello-World/pull/42","title":"Improve docs"},
+                {"html_url":"https://github.com/octocat/Hello-World/pull/42","title":"Improve docs","body_text":"Clarify the setup steps.\n\nAdd an example."},
                 {"html_url":"https://github.com/octocat/Hello-World/issues/43","title":"Not a pull request"}
             ]
         }"""), fetchedAt = 10L)
         assertEquals(17, results.total)
         assertEquals(listOf(ReviewRequest("Improve docs", "octocat/Hello-World", "42",
-            "https://github.com/octocat/Hello-World/pull/42")), results.requests)
+            "https://github.com/octocat/Hello-World/pull/42", "Clarify the setup steps. Add an example.")), results.requests)
     }
 
     @Test fun settingsSurviveRoundTripAndOldInstalls() {
@@ -176,8 +176,9 @@ class FocusWidgetTest {
     @Test fun renderReviewInboxWithPendingRequests() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val design = WidgetDesign(layout = WidgetLayout.PR_INBOX)
-        val request = ReviewRequest("Add keyboard shortcuts", "octocat/hello-world", "42",
-            "https://github.com/octocat/hello-world/pull/42")
+        val request = ReviewRequest("Fix search result ordering", "octocat/hello-world", "42",
+            "https://github.com/octocat/hello-world/pull/42",
+            "Sort exact matches first and keep results stable when two items have the same score.")
         val results = ReviewResults(3, listOf(request), 0L)
         val out = File("build/widget-renders").apply { mkdirs() }
         for (dark in listOf(false, true)) {
@@ -186,6 +187,9 @@ class FocusWidgetTest {
             val empty = WidgetRenderer.render(context, design, null, null, 340f, 170f, dark,
                 inbox = ReviewInboxState("octocat", results.copy(total = 0, requests = emptyList())))
             assertFalse(populated.sameAs(empty))
+            val withoutExcerpt = WidgetRenderer.render(context, design, null, null, 340f, 170f, dark,
+                inbox = ReviewInboxState("octocat", results.copy(requests = listOf(request.copy(excerpt = null)))))
+            assertFalse(populated.sameAs(withoutExcerpt))
             File(out, "pr_inbox_340x170_${if (dark) "dark" else "light"}.png")
                 .outputStream().use { assertTrue(populated.compress(Bitmap.CompressFormat.PNG, 100, it)) }
         }

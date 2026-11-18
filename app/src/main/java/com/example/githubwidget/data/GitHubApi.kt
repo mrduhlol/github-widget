@@ -97,7 +97,8 @@ object GitHubApi {
     internal fun fetchReviewRequests(username: String): ReviewResults {
         require(isValidUsername(username))
         val query = encode(reviewQuery(username))
-        val response = get("https://api.github.com/search/issues?q=$query&sort=updated&order=desc&per_page=8", username)
+        val response = get("https://api.github.com/search/issues?q=$query&sort=updated&order=desc&per_page=8",
+            username, accept = "application/vnd.github.text+json")
         val json = JSONObject(response)
         if (json.optBoolean("incomplete_results")) throw FetchError.Server(200)
         return ReviewResults.fromJson(json, System.currentTimeMillis())
@@ -126,13 +127,14 @@ object GitHubApi {
             setRequestProperty("User-Agent", USER_AGENT)
         }
 
-    private fun get(url: String, username: String): String {
+    private fun get(url: String, username: String, accept: String = "application/vnd.github+json"): String {
         val conn = try {
             open(url)
         } catch (_: IOException) {
             throw FetchError.Offline
         }
         try {
+            conn.setRequestProperty("Accept", accept)
             val code = try {
                 conn.responseCode
             } catch (_: IOException) {

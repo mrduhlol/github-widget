@@ -11,11 +11,19 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 
-data class ReviewRequest(val title: String, val repository: String, val number: String, val url: String)
+data class ReviewRequest(
+    val title: String,
+    val repository: String,
+    val number: String,
+    val url: String,
+    val excerpt: String? = null,
+)
 
 data class ReviewResults(val total: Int, val requests: List<ReviewRequest>, val fetchedAt: Long) {
     internal companion object {
         private val pullUrl = Regex("https://github\\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/pull/([1-9][0-9]*)")
+        private val whitespace = Regex("\\s+")
+        private const val EXCERPT_LIMIT = 220
 
         fun fromJson(json: JSONObject, fetchedAt: Long): ReviewResults {
             val items = json.getJSONArray("items")
@@ -23,7 +31,13 @@ data class ReviewResults(val total: Int, val requests: List<ReviewRequest>, val 
                 val item = items.getJSONObject(index)
                 val url = item.getString("html_url")
                 val match = pullUrl.matchEntire(url) ?: return@mapNotNull null
-                ReviewRequest(item.getString("title"), match.groupValues[1], match.groupValues[2], url)
+                val body = (item.opt("body_text") as? String).orEmpty().replace(whitespace, " ").trim()
+                val excerpt = when {
+                    body.isEmpty() -> null
+                    body.codePointCount(0, body.length) <= EXCERPT_LIMIT -> body
+                    else -> body.substring(0, body.offsetByCodePoints(0, EXCERPT_LIMIT - 1)).trimEnd() + "…"
+                }
+                ReviewRequest(item.getString("title"), match.groupValues[1], match.groupValues[2], url, excerpt)
             }
             return ReviewResults(json.getInt("total_count"), requests, fetchedAt)
         }
@@ -66,7 +80,7 @@ internal object ReviewInbox {
                 if (Repository.username.value != username) return@withLock
                 val items = JSONArray()
                 data.requests.forEach {
-                    items.put(JSONObject().put("html_url", it.url).put("title", it.title))
+                    items.put(JSONObject().put("html_url", it.url).put("title", it.title).put("body_text", it.excerpt))
                 }
                 val json = JSONObject().put("items", items).put("total_count", data.total).put("fetchedAt", data.fetchedAt)
                 prefs(context).edit().putString("username", username).putString("results", json.toString()).apply()
