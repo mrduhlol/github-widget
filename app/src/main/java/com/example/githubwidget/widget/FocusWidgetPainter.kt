@@ -196,7 +196,7 @@ internal object FocusWidgetPainter {
             }
 
             if (wide || tall) {
-                val left = r.right - r.width() * .56f
+                val left = r.right - r.width() * if (wide) .68f else .56f
                 val right = c.width - dp(1f)
                 val top = dp(1f)
                 val bottom = if (wide) c.height - dp(9f) else min(footerTop, top + (right - left) * 1.65f)

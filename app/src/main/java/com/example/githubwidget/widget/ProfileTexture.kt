@@ -74,8 +74,8 @@ internal object ProfileTexture {
             strokeWidth = .7f * scale
             strokeCap = Paint.Cap.ROUND
             shader = LinearGradient(bounds.left, bounds.top, bounds.right, bounds.top,
-                intArrayOf(color, color or 0x08000000, color or edgeAlpha),
-                floatArrayOf(0f, .36f, 1f), Shader.TileMode.CLAMP)
+                intArrayOf(color, color or (if (dark) 0x1B000000 else 0x10000000), color or edgeAlpha),
+                floatArrayOf(.18f, .40f, 1f), Shader.TileMode.CLAMP)
         }
         val path = Path()
         val clip = canvas.save()
