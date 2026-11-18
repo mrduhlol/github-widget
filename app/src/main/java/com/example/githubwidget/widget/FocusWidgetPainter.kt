@@ -77,8 +77,11 @@ internal object FocusWidgetPainter {
              context: Context, font: NumberFont, data: UserData, avatar: Bitmap?,
              contentWidthDp: Float, contentHeightDp: Float) {
         val state = canvas.save()
-        val extraBottom = if (design.layout == WidgetLayout.PROFILE) PROFILE_FOOTER_OFFSET * scale else 0f
-        canvas.clipRect(area.left, area.top, area.right, area.bottom + extraBottom)
+        if (design.layout == WidgetLayout.PROFILE) {
+            canvas.clipRect(area.left, area.top, canvas.width - scale, area.bottom + PROFILE_FOOTER_OFFSET * scale)
+        } else {
+            canvas.clipRect(area)
+        }
         Card(canvas, area, scale, design, colors, context, font, data, avatar, contentWidthDp, contentHeightDp).draw()
         canvas.restoreToCount(state)
     }
@@ -259,26 +262,27 @@ internal object FocusWidgetPainter {
         }
 
         private fun drawProfileContours(bottom: Float) {
-            val width = r.width() * .44f
-            val left = r.right - width
+            val right = c.width - dp(1f)
+            val left = r.right - r.width() * .44f
+            val width = right - left
             val height = bottom - r.top
             val ink = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.STROKE
                 strokeWidth = dp(.65f)
                 val color = colors.textSecondary and 0x00FFFFFF
-                shader = LinearGradient(left, r.top, r.right, r.top,
-                    intArrayOf(color, color or 0x2A000000, color or 0x1C000000),
+                shader = LinearGradient(left, r.top, right, r.top,
+                    intArrayOf(color, color or 0x2A000000, color or 0x26000000),
                     floatArrayOf(0f, .75f, 1f), Shader.TileMode.CLAMP)
             }
             val clip = c.save()
-            c.clipRect(left, r.top, r.right, bottom)
+            c.clipRect(left, r.top, right, bottom)
             for (index in -2..10) {
                 val y = r.top + index * height / 9f
                 val path = Path().apply {
                     moveTo(left, y)
                     cubicTo(left + width * .38f, y - height * .22f,
                         left + width * .49f, y + height * .41f, left + width * .74f, y + height * .21f)
-                    quadTo(left + width * .92f, y + height * .06f, r.right, y + height * .13f)
+                    quadTo(left + width * .92f, y + height * .06f, right + dp(1f), y + height * .13f)
                 }
                 c.drawPath(path, ink)
             }
