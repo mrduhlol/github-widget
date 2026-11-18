@@ -72,7 +72,7 @@ object WidgetRenderer {
                 else -> 0xFFFAFAF7.toInt()
             },
             border = when {
-                isDark && design.layout == WidgetLayout.PROFILE -> 0xFF30363C.toInt()
+                isDark && design.layout == WidgetLayout.PROFILE -> 0xFF41464D.toInt()
                 isDark -> 0xFF353A3D.toInt()
                 else -> 0xFFD3D6D0.toInt()
             },
@@ -133,7 +133,9 @@ object WidgetRenderer {
         fun drawCard() {
             val r = if (design.layout == WidgetLayout.PROFILE) 0f else dp(design.corners.dp)
             val rect = RectF(0f, 0f, canvas.width.toFloat(), canvas.height.toFloat())
-            if (design.opacity > 0) {
+            if (design.opacity > 0 && design.layout == WidgetLayout.PROFILE && design.background != Background.BLACK) {
+                ProfileTexture.drawSurface(canvas, rect, colors.card, colors.isDark, design.opacity, s)
+            } else if (design.opacity > 0) {
                 val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                     color = ColorUtils.setAlphaComponent(colors.card, design.opacity * 255 / 100)
                 }

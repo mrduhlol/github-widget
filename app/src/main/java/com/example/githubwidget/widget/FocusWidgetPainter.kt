@@ -164,7 +164,7 @@ internal object FocusWidgetPainter {
             val wide = contentWidthDp >= 220f && contentHeightDp >= 125f
             val tall = r.height() > r.width() * 1.1f && r.height() >= dp(210f)
             val rule = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = colors.border
+                color = if (colors.isDark) 0xFF30363C.toInt() else colors.border
                 style = Paint.Style.STROKE
                 strokeWidth = dp(.8f)
             }
@@ -195,7 +195,14 @@ internal object FocusWidgetPainter {
                 }
             }
 
-            if (wide || tall) drawProfileContours(footerTop)
+            if (wide || tall) {
+                val left = r.right - r.width() * .50f
+                val right = c.width - dp(1f)
+                val bottom = footerTop + dp(2f)
+                val top = if (wide) r.top else maxOf(r.top, bottom - (right - left) * 1.4f)
+                val texture = RectF(left, top, right, bottom)
+                ProfileTexture.drawContours(c, texture, colors.textSecondary, colors.isDark, s)
+            }
 
             when {
                 wide -> {
@@ -261,34 +268,6 @@ internal object FocusWidgetPainter {
             }
         }
 
-        private fun drawProfileContours(bottom: Float) {
-            val right = c.width - dp(1f)
-            val left = r.right - r.width() * .44f
-            val width = right - left
-            val height = bottom - r.top
-            val ink = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                style = Paint.Style.STROKE
-                strokeWidth = dp(.65f)
-                val color = colors.textSecondary and 0x00FFFFFF
-                shader = LinearGradient(left, r.top, right, r.top,
-                    intArrayOf(color, color or 0x2A000000, color or 0x26000000),
-                    floatArrayOf(0f, .75f, 1f), Shader.TileMode.CLAMP)
-            }
-            val clip = c.save()
-            c.clipRect(left, r.top, right, bottom)
-            for (index in -2..10) {
-                val y = r.top + index * height / 9f
-                val path = Path().apply {
-                    moveTo(left, y)
-                    cubicTo(left + width * .38f, y - height * .22f,
-                        left + width * .49f, y + height * .41f, left + width * .74f, y + height * .21f)
-                    quadTo(left + width * .92f, y + height * .06f, right + dp(1f), y + height * .13f)
-                }
-                c.drawPath(path, ink)
-            }
-            c.restoreToCount(clip)
-        }
-
         fun avatar(x: Float, y: Float, size: Float) {
             val rect = RectF(x, y, x + size, y + size)
             val p = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
@@ -302,6 +281,12 @@ internal object FocusWidgetPainter {
                 p.color = colors.levels[2]; c.drawRoundRect(rect, dp(3f), dp(3f), p)
                 line(data.contributions.username.take(1).uppercase(), x, y + size * .65f, size, size / s * .42f, center = true)
             }
+            rect.inset(dp(.4f), dp(.4f))
+            p.shader = null
+            p.style = Paint.Style.STROKE
+            p.strokeWidth = dp(.8f)
+            p.color = colors.border
+            c.drawRoundRect(rect, dp(2.6f), dp(2.6f), p)
         }
     }
 }
