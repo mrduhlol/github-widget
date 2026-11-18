@@ -172,4 +172,22 @@ class FocusWidgetTest {
         WidgetRenderer.render(context, WidgetDesign(layout = WidgetLayout.PROFILE), extreme, null, 110f, 60f, false)
         WidgetRenderer.render(context, WidgetDesign(layout = WidgetLayout.WEEKLY_GOAL, weeklyGoal = 1), data(), null, 170f, 170f, true)
     }
+
+    @Test fun renderReviewInboxWithPendingRequests() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val design = WidgetDesign(layout = WidgetLayout.PR_INBOX)
+        val request = ReviewRequest("Add keyboard shortcuts", "octocat/hello-world", "42",
+            "https://github.com/octocat/hello-world/pull/42")
+        val results = ReviewResults(3, listOf(request), 0L)
+        val out = File("build/widget-renders").apply { mkdirs() }
+        for (dark in listOf(false, true)) {
+            val populated = WidgetRenderer.render(context, design, null, null, 340f, 170f, dark,
+                inbox = ReviewInboxState("octocat", results))
+            val empty = WidgetRenderer.render(context, design, null, null, 340f, 170f, dark,
+                inbox = ReviewInboxState("octocat", results.copy(total = 0, requests = emptyList())))
+            assertFalse(populated.sameAs(empty))
+            File(out, "pr_inbox_340x170_${if (dark) "dark" else "light"}.png")
+                .outputStream().use { assertTrue(populated.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+        }
+    }
 }
