@@ -140,6 +140,7 @@ object Repository {
             WidgetUpdater.updateAll(app)
         }
         RefreshWorker.schedule(app, _refreshHours.value)
+        if (WidgetUpdater.reviewInboxIds(app).isNotEmpty()) RefreshWorker.runOnce(app)
     }
 
     /** Forgets the account and its cached data. The design is kept. */

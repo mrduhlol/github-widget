@@ -10,7 +10,8 @@ internal enum class WidgetKind(val provider: Class<*>, val layout: WidgetLayout?
     STREAK(StreakWidgetProvider::class.java, WidgetLayout.STREAK),
     WEEKLY_GOAL(WeeklyGoalWidgetProvider::class.java, WidgetLayout.WEEKLY_GOAL),
     PROFILE(ProfileWidgetProvider::class.java, WidgetLayout.PROFILE),
-    PORTRAIT_PROFILE(PortraitProfileWidgetProvider::class.java, WidgetLayout.PROFILE);
+    PORTRAIT_PROFILE(PortraitProfileWidgetProvider::class.java, WidgetLayout.PROFILE),
+    PR_INBOX(ReviewInboxWidgetProvider::class.java, WidgetLayout.PR_INBOX);
 
     fun component(context: Context) = ComponentName(context, provider)
 
@@ -23,6 +24,7 @@ internal enum class WidgetKind(val provider: Class<*>, val layout: WidgetLayout?
         fun forLayout(layout: WidgetLayout, portrait: Boolean = false) = when (layout) {
             WidgetLayout.STREAK -> STREAK
             WidgetLayout.WEEKLY_GOAL -> WEEKLY_GOAL
+            WidgetLayout.PR_INBOX -> PR_INBOX
             WidgetLayout.PROFILE -> if (portrait) PORTRAIT_PROFILE else PROFILE
             else -> CONTRIBUTIONS
         }

@@ -43,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,6 +66,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.example.githubwidget.data.Repository
 import com.example.githubwidget.data.SampleData
+import com.example.githubwidget.data.GitHubApi
+import com.example.githubwidget.data.ReviewInbox
+import com.example.githubwidget.data.ReviewInboxState
 import com.example.githubwidget.design.Background
 import com.example.githubwidget.design.CellShape
 import com.example.githubwidget.design.Corners
@@ -76,6 +80,9 @@ import com.example.githubwidget.design.ProfileTypeface
 import com.example.githubwidget.design.Range
 import com.example.githubwidget.design.WidgetDesign
 import com.example.githubwidget.design.WidgetLayout
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.example.githubwidget.ui.components.AddWidgetHelpSheet
 import com.example.githubwidget.ui.components.Field
 import com.example.githubwidget.ui.components.Hairline
@@ -104,6 +111,15 @@ fun DesignScreen(onOpenStats: () -> Unit) {
     val realData by Repository.data.collectAsState()
     val avatar by Repository.avatar.collectAsState()
     val data = realData ?: SampleData.userData
+    val username by Repository.username.collectAsState()
+    val activeInbox by ReviewInbox.state.collectAsState()
+    val inbox = activeInbox?.takeIf { it.username == username }
+        ?: remember(username) { ReviewInbox.cached(context, username) }
+    LaunchedEffect(design.layout, username) {
+        if (design.layout == WidgetLayout.PR_INBOX) {
+            refreshReviewInbox(context, username)
+        }
+    }
     var profilePanel by rememberSaveable { mutableStateOf("Content") }
     var previewSize by rememberSaveable { mutableStateOf(PreviewSize.WIDE) }
     var hasWidget by remember { mutableStateOf(WidgetUpdater.hasWidgets(context)) }
@@ -159,10 +175,11 @@ fun DesignScreen(onOpenStats: () -> Unit) {
                         avatar = if (realData != null) avatar else null,
                         widthDp = previewSize.widthDp,
                         heightDp = previewSize.heightDp,
+                        inbox = if (design.layout == WidgetLayout.PR_INBOX) inbox else null,
                         modifier = Modifier.fillMaxWidth().height(if (previewSize == PreviewSize.PORTRAIT) 320.dp else if (previewSize == PreviewSize.LARGE) 250.dp else 180.dp),
                     )
                 }
-                if (realData == null) {
+                if (realData == null && design.layout != WidgetLayout.PR_INBOX) {
                     Text("Example data · Refresh Stats to load your activity", style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textSecondary)
                 }
                 Spacer(Modifier.height(10.dp))
@@ -180,7 +197,7 @@ fun DesignScreen(onOpenStats: () -> Unit) {
         }
         item {
             SectionCard(title = "Style") {
-                LayoutChoices(design, data, onSelect = { l -> update { it.copy(layout = l) } })
+                LayoutChoices(design, data, inbox, onSelect = { l -> update { it.copy(layout = l) } })
             }
         }
         if (design.layout == WidgetLayout.PROFILE) {
@@ -261,6 +278,7 @@ fun DesignScreen(onOpenStats: () -> Unit) {
         item {
             when (design.layout) {
                 WidgetLayout.PROFILE -> Unit
+                WidgetLayout.PR_INBOX -> ReviewInboxSection(inbox)
                 WidgetLayout.STREAK, WidgetLayout.WEEKLY_GOAL -> Text(
                     "Colors and fonts are shared. Each widget keeps its own type. All widgets use your connected GitHub profile.",
                     style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textSecondary,
@@ -429,7 +447,12 @@ private fun Cell(c: Color) {
 // ------------------------------------------------------------------ style
 
 @Composable
-private fun LayoutChoices(design: WidgetDesign, data: com.example.githubwidget.data.UserData, onSelect: (WidgetLayout) -> Unit) {
+private fun LayoutChoices(
+    design: WidgetDesign,
+    data: com.example.githubwidget.data.UserData,
+    inbox: ReviewInboxState,
+    onSelect: (WidgetLayout) -> Unit,
+) {
     val avatar by Repository.avatar.collectAsState()
     val listState = rememberLazyListState()
     LaunchedEffect(design.layout) { listState.animateScrollToItem(WidgetLayout.entries.indexOf(design.layout)) }
@@ -442,7 +465,8 @@ private fun LayoutChoices(design: WidgetDesign, data: com.example.githubwidget.d
                     .selectable(selected = selected, role = androidx.compose.ui.semantics.Role.RadioButton, onClick = { onSelect(layout) })
                     .padding(10.dp),
             ) {
-                WidgetPreview(design.copy(layout = layout), data, avatar, 340f, 170f, Modifier.fillMaxWidth().height(64.dp))
+                WidgetPreview(design.copy(layout = layout), data, avatar, 340f, 170f,
+                    Modifier.fillMaxWidth().height(64.dp), inbox = inbox.takeIf { layout == WidgetLayout.PR_INBOX })
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(layout.label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
@@ -526,6 +550,58 @@ private fun OpacitySlider(opacity: Int, onChange: (Int) -> Unit) {
             inactiveTrackColor = AppTheme.colors.raised,
         ),
     )
+}
+
+private suspend fun refreshReviewInbox(context: android.content.Context, username: String) {
+    ReviewInbox.refresh(context, username)
+    withContext(Dispatchers.Default) {
+        WidgetUpdater.update(context, WidgetUpdater.reviewInboxIds(context))
+    }
+}
+
+@Composable
+private fun ReviewInboxSection(inbox: ReviewInboxState) {
+    val context = LocalContext.current
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    val scope = rememberCoroutineScope()
+    var refreshing by remember(inbox.username) { mutableStateOf(false) }
+    SectionCard(title = "Review requests", subtitle = "Open pull requests in public repositories waiting for your review.") {
+        val results = inbox.results
+        when {
+            inbox.username.isBlank() -> Text("Connect a GitHub profile to check for review requests.")
+            inbox.failed && results == null -> Text("Couldn’t check for review requests.")
+            inbox.failed -> Text("Couldn’t refresh. Showing the last check.")
+            results == null -> Text("Checking GitHub…")
+            results.total == 0 -> Text("All caught up.")
+            results.requests.isEmpty() -> Text("Open GitHub to see your review requests.")
+        }
+        results?.requests.orEmpty().forEach { request ->
+            TextButton(onClick = { uriHandler.openUri(request.url) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                Column(Modifier.fillMaxWidth()) {
+                    Text(request.title)
+                    Text("${request.repository} #${request.number}", style = MaterialTheme.typography.bodySmall,
+                        color = AppTheme.colors.textSecondary)
+                }
+            }
+        }
+        if (inbox.username.isNotBlank()) {
+            TextButton(onClick = {
+                scope.launch {
+                    refreshing = true
+                    try {
+                        refreshReviewInbox(context, inbox.username)
+                    } finally {
+                        refreshing = false
+                    }
+                }
+            }, enabled = !refreshing) { Text(if (refreshing) "Refreshing…" else "Refresh") }
+            if (results != null && results.total > results.requests.size) {
+                TextButton(onClick = { uriHandler.openUri(GitHubApi.reviewSearchUrl(inbox.username)) }) {
+                    Text("See all on GitHub")
+                }
+            }
+        }
+    }
 }
 
 @Composable

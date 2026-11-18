@@ -89,6 +89,20 @@ object GitHubApi {
         )
     }
 
+    private fun reviewQuery(username: String) = "is:pr is:open review-requested:$username"
+
+    fun reviewSearchUrl(username: String) =
+        "https://github.com/search?type=pullrequests&q=${encode(reviewQuery(username))}"
+
+    internal fun fetchReviewRequests(username: String): ReviewResults {
+        require(isValidUsername(username))
+        val query = encode(reviewQuery(username))
+        val response = get("https://api.github.com/search/issues?q=$query&sort=updated&order=desc&per_page=8", username)
+        val json = JSONObject(response)
+        if (json.optBoolean("incomplete_results")) throw FetchError.Server(200)
+        return ReviewResults.fromJson(json, System.currentTimeMillis())
+    }
+
     /** Downloads a square avatar; null on any failure (the UI falls back to initials). */
     fun fetchAvatar(avatarUrl: String, sizePx: Int = 160): Bitmap? = try {
         val sep = if (avatarUrl.contains('?')) '&' else '?'

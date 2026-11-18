@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.githubwidget.data.Repository
 import com.example.githubwidget.data.UserData
+import com.example.githubwidget.data.ReviewInboxState
 import com.example.githubwidget.design.WidgetDesign
 import com.example.githubwidget.ui.theme.AppTheme
 import com.example.githubwidget.ui.theme.GhTheme
@@ -439,12 +440,13 @@ fun WidgetPreview(
     heightDp: Float,
     modifier: Modifier = Modifier,
     dark: Boolean = AppTheme.colors.isDark,
+    inbox: ReviewInboxState? = null,
 ) {
     val context = LocalContext.current
     val font by Repository.numberFont.collectAsState()
-    val bitmap by produceState<ImageBitmap?>(null, design, data, avatar, widthDp, heightDp, dark, font) {
+    val bitmap by produceState<ImageBitmap?>(null, design, data, avatar, widthDp, heightDp, dark, font, inbox) {
         value = withContext(Dispatchers.Default) {
-            WidgetRenderer.render(context, design, data, avatar, widthDp, heightDp, dark, font = font).asImageBitmap()
+            WidgetRenderer.render(context, design, data, avatar, widthDp, heightDp, dark, font = font, inbox = inbox).asImageBitmap()
         }
     }
     BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {

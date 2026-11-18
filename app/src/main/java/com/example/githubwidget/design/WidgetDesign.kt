@@ -10,6 +10,7 @@ enum class WidgetLayout(val label: String, val description: String) {
     STREAK("Streak", "Current streak, best streak and today"),
     WEEKLY_GOAL("Weekly goal", "This week’s contributions and your target"),
     PROFILE("Profile card", "Your GitHub ID · landscape or portrait"),
+    PR_INBOX("PR Inbox", "Open pull requests awaiting your review"),
 }
 
 /** Card background. AUTO follows the phone's light/dark setting. */

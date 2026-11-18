@@ -15,6 +15,7 @@ import com.example.githubwidget.ContributionWidgetProvider
 import com.example.githubwidget.MainActivity
 import com.example.githubwidget.R
 import com.example.githubwidget.data.Repository
+import com.example.githubwidget.data.ReviewInbox
 import com.example.githubwidget.design.Background
 
 /** Renders the current design + data into every placed widget. */
@@ -30,6 +31,9 @@ object WidgetUpdater {
         }.toIntArray()
 
     fun hasWidgets(context: Context) = widgetIds(context).isNotEmpty()
+
+    internal fun reviewInboxIds(context: Context): IntArray =
+        AppWidgetManager.getInstance(context).getAppWidgetIds(WidgetKind.PR_INBOX.component(context))
 
     fun updateAll(context: Context) = update(context, widgetIds(context))
 
@@ -173,6 +177,7 @@ object WidgetUpdater {
         val shared = Repository.design.value
         val design = shared.copy(layout = kind.resolvedLayout(shared.layout, shared.contributionLayout))
         val data = Repository.data.value
+        val inbox = if (kind == WidgetKind.PR_INBOX) ReviewInbox.cached(context, Repository.username.value) else null
         val placeholder = when {
             data != null -> WidgetRenderer.Placeholder.NONE
             Repository.hasUser -> WidgetRenderer.Placeholder.LOADING
@@ -181,7 +186,7 @@ object WidgetUpdater {
         fun render(dark: Boolean) = drawn.getOrPut(RenderKey(design.layout, size.width, size.height, dark, pixelBudget)) {
             WidgetRenderer.render(
                 context, design, data, Repository.avatar.value, size.width, size.height, dark, placeholder,
-                Repository.numberFont.value, maxPixels = pixelBudget,
+                Repository.numberFont.value, maxPixels = pixelBudget, inbox = inbox,
             )
         }
 
@@ -196,7 +201,18 @@ object WidgetUpdater {
             views.setImageViewBitmap(R.id.widget_image_light, bmp)
             views.setImageViewBitmap(R.id.widget_image_dark, bmp)
         }
-        val desc = data?.let { FocusWidgetPainter.accessibilityText(design, it) }
+        val latestReview = inbox?.results?.requests?.firstOrNull()
+        val desc = inbox?.let {
+            val total = it.results?.total
+            when {
+                total != null -> "PR Inbox. $total public review requests." +
+                    (latestReview?.let { request -> " Open ${request.title}, ${request.repository}." } ?: "") +
+                    if (it.failed) " Showing the last check." else ""
+                it.failed -> "PR Inbox. Couldn't check for review requests."
+                it.username.isBlank() -> "PR Inbox. Tap to connect a GitHub profile."
+                else -> "PR Inbox. Checking for public review requests."
+            }
+        } ?: data?.let { FocusWidgetPainter.accessibilityText(design, it) }
             ?: "GitHub contributions widget. Tap to set up."
         views.setContentDescription(R.id.widget_image_light, desc)
         views.setContentDescription(R.id.widget_image_dark, desc)
@@ -208,7 +224,12 @@ object WidgetUpdater {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        views.setOnClickPendingIntent(R.id.widget_root, open)
+        val openReview = latestReview?.let { request ->
+            PendingIntent.getActivity(context, 0,
+                Intent(Intent.ACTION_VIEW, android.net.Uri.parse(request.url)),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
+        views.setOnClickPendingIntent(R.id.widget_root, openReview ?: open)
         views.removeAllViews(R.id.widget_connections)
         if (design.layout == WidgetLayout.PROFILE && data != null) {
             val pad = if (size.width < 180 || size.height < 100) 12f else 16f

@@ -11,6 +11,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.example.githubwidget.data.Repository
+import com.example.githubwidget.data.ReviewInbox
 import java.util.concurrent.TimeUnit
 
 /** Background refresh: downloads fresh data and repaints the widgets. */
@@ -19,6 +20,11 @@ class RefreshWorker(context: Context, params: WorkerParameters) : CoroutineWorke
     override suspend fun doWork(): Result {
         Repository.init(applicationContext)
         if (!Repository.hasUser) return Result.success()
+        val inboxIds = WidgetUpdater.reviewInboxIds(applicationContext)
+        if (inboxIds.isNotEmpty()) {
+            ReviewInbox.refresh(applicationContext, Repository.username.value)
+            WidgetUpdater.update(applicationContext, inboxIds)
+        }
         Repository.refresh()
         // Failures keep the cached graph on screen; the next run tries again.
         return Result.success()

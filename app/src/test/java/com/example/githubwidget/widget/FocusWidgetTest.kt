@@ -7,6 +7,7 @@ import com.example.githubwidget.data.*
 import com.example.githubwidget.design.*
 import org.junit.Assert.*
 import org.junit.Test
+import org.json.JSONObject
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -39,9 +40,24 @@ class FocusWidgetTest {
     @Test fun dedicatedProvidersRetainTheirType() {
         assertEquals(WidgetLayout.STREAK, WidgetKind.STREAK.resolvedLayout(WidgetLayout.PROFILE))
         assertEquals(WidgetLayout.PROFILE, WidgetKind.PORTRAIT_PROFILE.resolvedLayout(WidgetLayout.WEEKLY_GOAL))
+        assertEquals(WidgetKind.PR_INBOX, WidgetKind.forLayout(WidgetLayout.PR_INBOX))
+        assertEquals(WidgetLayout.PR_INBOX, WidgetKind.PR_INBOX.resolvedLayout(WidgetLayout.CLASSIC))
         assertEquals(WidgetLayout.CLASSIC, WidgetKind.CONTRIBUTIONS.resolvedLayout(WidgetLayout.PROFILE))
         assertEquals(WidgetLayout.GRAPH, WidgetKind.CONTRIBUTIONS.resolvedLayout(WidgetLayout.GRAPH))
         assertEquals(WidgetLayout.GRAPH, WidgetKind.CONTRIBUTIONS.resolvedLayout(WidgetLayout.PROFILE, WidgetLayout.GRAPH))
+    }
+
+    @Test fun reviewInboxUsesGitHubPullRequestLinksAndPreservesTheSearchTotal() {
+        val results = ReviewResults.fromJson(JSONObject("""{
+            "total_count": 17,
+            "items": [
+                {"html_url":"https://github.com/octocat/Hello-World/pull/42","title":"Improve docs"},
+                {"html_url":"https://github.com/octocat/Hello-World/issues/43","title":"Not a pull request"}
+            ]
+        }"""), fetchedAt = 10L)
+        assertEquals(17, results.total)
+        assertEquals(listOf(ReviewRequest("Improve docs", "octocat/Hello-World", "42",
+            "https://github.com/octocat/Hello-World/pull/42")), results.requests)
     }
 
     @Test fun settingsSurviveRoundTripAndOldInstalls() {

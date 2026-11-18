@@ -10,4 +10,6 @@
     <string name="widget_profile">GitHub ID · Landscape</string>
     <string name="widget_profile_portrait">GitHub ID · Portrait</string>
     <string name="widget_profile_desc">Your photo, username and the connections you choose to show.</string>
+    <string name="widget_pr_inbox">PR Inbox</string>
+    <string name="widget_pr_inbox_desc">Public pull requests waiting for your review</string>
 </resources>

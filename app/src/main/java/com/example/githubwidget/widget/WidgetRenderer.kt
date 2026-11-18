@@ -10,6 +10,7 @@ import android.graphics.RectF
 import android.graphics.Shader
 import android.text.TextPaint
 import androidx.core.graphics.ColorUtils
+import com.example.githubwidget.data.ReviewInboxState
 import com.example.githubwidget.data.Stats
 import com.example.githubwidget.data.UserData
 import com.example.githubwidget.data.SampleData
@@ -48,6 +49,7 @@ object WidgetRenderer {
         placeholder: Placeholder = if (data == null) Placeholder.SIGNED_OUT else Placeholder.NONE,
         font: NumberFont = NumberFont.SYSTEM,
         maxPixels: Int = MAX_PIXELS.toInt(),
+        inbox: ReviewInboxState? = null,
     ): Bitmap {
         val density = context.resources.displayMetrics.density
         var scale = density
@@ -79,7 +81,7 @@ object WidgetRenderer {
             textPrimary = if (isDark) 0xFFF5F6F3.toInt() else 0xFF1A201C.toInt(),
             textSecondary = if (isDark) 0xFFA9B0AB.toInt() else 0xFF59635C.toInt(),
         )
-        Painter(Canvas(bmp), scale, widthDp, heightDp, design, colors, context, font).draw(data, avatar, placeholder)
+        Painter(Canvas(bmp), scale, widthDp, heightDp, design, colors, context, font).draw(data, avatar, placeholder, inbox)
         return bmp
     }
 
@@ -112,12 +114,13 @@ object WidgetRenderer {
             typeface = NumberFont.typeface(context, font, 700)
         }
 
-        fun draw(data: UserData?, avatar: Bitmap?, placeholder: Placeholder) {
+        fun draw(data: UserData?, avatar: Bitmap?, placeholder: Placeholder, inbox: ReviewInboxState?) {
             drawCard()
             val padDp = if (wDp < 180 || hDp < 100) 12f else 16f
             val pad = dp(padDp)
             val area = RectF(pad, pad, canvas.width - pad, canvas.height - pad)
             when {
+                design.layout == WidgetLayout.PR_INBOX -> drawReviewInbox(area, inbox)
                 data == null -> drawPlaceholder(area, placeholder)
                 design.layout == WidgetLayout.GRAPH -> drawGraphOnly(area, data)
                 design.layout == WidgetLayout.NUMBERS -> drawNumbers(area, data)
@@ -125,6 +128,47 @@ object WidgetRenderer {
                     FocusWidgetPainter.draw(canvas, area, s, design, colors, context, font, data, avatar,
                         wDp - 2 * padDp, hDp - 2 * padDp)
                 else -> drawClassic(area, data, avatar)
+            }
+        }
+
+        private fun drawReviewInbox(area: RectF, inbox: ReviewInboxState?) {
+            val results = inbox?.results
+            val newest = results?.requests?.firstOrNull()
+            val heading = text(11f, colors.textSecondary).apply {
+                typeface = android.graphics.Typeface.MONOSPACE
+            }
+            val actionWidth = (area.width() - dp(28f)).coerceAtLeast(0f)
+
+            fun line(value: String, baseline: Float, width: Float, paint: TextPaint) {
+                if (baseline <= area.bottom && width > 0f) {
+                    canvas.drawText(ellipsize(value, paint, width), area.left, baseline, paint)
+                }
+            }
+
+            line("PR INBOX", area.top + dp(10f), actionWidth, heading)
+            val compact = hDp < 105f
+            val title = newest?.title ?: when {
+                inbox == null || inbox.username.isBlank() -> "Connect a GitHub profile"
+                inbox.failed -> "Inbox unavailable"
+                results == null -> "Checking for requests…"
+                results.total > 0 -> "Review requests found"
+                else -> "All caught up"
+            }
+            val titlePaint = text(if (compact) 15f else 22f, colors.textPrimary, bold = true)
+            val titleY = area.top + dp(if (compact) 31f else 39f)
+            line(title, titleY, if (compact) actionWidth else area.width(), titlePaint)
+            if (newest != null) {
+                line("${newest.repository} #${newest.number}", titleY + dp(17f), area.width(), heading)
+            }
+            if (area.bottom - titleY >= dp(35f)) {
+                val footer = when {
+                    inbox?.failed == true && results != null -> "Showing last check"
+                    results?.total == 1 -> "1 public PR waiting"
+                    results != null -> "${results.total} public PRs waiting"
+                    inbox?.failed == true -> "Tap refresh to try again"
+                    else -> "Public review requests"
+                }
+                line(footer, area.bottom - dp(1f), area.width(), heading)
             }
         }
 
