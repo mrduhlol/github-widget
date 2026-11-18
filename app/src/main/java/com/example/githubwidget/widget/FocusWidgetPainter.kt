@@ -36,6 +36,7 @@ internal object FocusWidgetPainter {
     }.distinctBy { it.url }.filterNot { it.url in design.profileHiddenLinks }
 
     const val PROFILE_LINK_SIZE = 48f
+    const val PROFILE_FOOTER_OFFSET = 10f
 
     data class DockItem(val label: String, val url: String?)
 
@@ -76,7 +77,8 @@ internal object FocusWidgetPainter {
              context: Context, font: NumberFont, data: UserData, avatar: Bitmap?,
              contentWidthDp: Float, contentHeightDp: Float) {
         val state = canvas.save()
-        canvas.clipRect(area)
+        val extraBottom = if (design.layout == WidgetLayout.PROFILE) PROFILE_FOOTER_OFFSET * scale else 0f
+        canvas.clipRect(area.left, area.top, area.right, area.bottom + extraBottom)
         Card(canvas, area, scale, design, colors, context, font, data, avatar, contentWidthDp, contentHeightDp).draw()
         canvas.restoreToCount(state)
     }
@@ -155,7 +157,7 @@ internal object FocusWidgetPainter {
             val name = data.profile?.displayName ?: data.contributions.username
             val login = "@${data.contributions.username}"
             val dock = profileDock(contentWidthDp, contentHeightDp, d, data)
-            val footerTop = if (dock.isEmpty()) r.bottom else r.bottom - dp(48f)
+            val footerTop = if (dock.isEmpty()) r.bottom else r.bottom - dp(PROFILE_LINK_SIZE - PROFILE_FOOTER_OFFSET)
             val wide = contentWidthDp >= 220f && contentHeightDp >= 125f
             val tall = r.height() > r.width() * 1.1f && r.height() >= dp(210f)
             val rule = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -189,6 +191,8 @@ internal object FocusWidgetPainter {
                     mono(label, left, top + dp(27f), column - dp(2f), if (column >= dp(55f)) 10f else 8f)
                 }
             }
+
+            if (wide || tall) drawProfileContours(footerTop)
 
             when {
                 wide -> {
@@ -244,14 +248,41 @@ internal object FocusWidgetPainter {
             }
 
             if (dock.isNotEmpty()) {
-                c.drawLine(r.left, footerTop + dp(4f), r.right, footerTop + dp(4f), rule)
+                c.drawLine(r.left, footerTop + dp(8f), r.right, footerTop + dp(8f), rule)
                 val slot = dp(PROFILE_LINK_SIZE)
-                val centerY = footerTop + dp(27f)
+                val centerY = footerTop + dp(28f)
                 dock.forEachIndexed { i, item ->
                     val centerX = r.left + slot * (i + .5f)
                     ProfileIcons.draw(c, item.url, centerX, centerY, dp(17f), colors.textSecondary)
                 }
             }
+        }
+
+        private fun drawProfileContours(bottom: Float) {
+            val width = r.width() * .44f
+            val left = r.right - width
+            val height = bottom - r.top
+            val ink = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                strokeWidth = dp(.65f)
+                val color = colors.textSecondary and 0x00FFFFFF
+                shader = LinearGradient(left, r.top, r.right, r.top,
+                    intArrayOf(color, color or 0x2A000000, color or 0x1C000000),
+                    floatArrayOf(0f, .75f, 1f), Shader.TileMode.CLAMP)
+            }
+            val clip = c.save()
+            c.clipRect(left, r.top, r.right, bottom)
+            for (index in -2..10) {
+                val y = r.top + index * height / 9f
+                val path = Path().apply {
+                    moveTo(left, y)
+                    cubicTo(left + width * .38f, y - height * .22f,
+                        left + width * .49f, y + height * .41f, left + width * .74f, y + height * .21f)
+                    quadTo(left + width * .92f, y + height * .06f, r.right, y + height * .13f)
+                }
+                c.drawPath(path, ink)
+            }
+            c.restoreToCount(clip)
         }
 
         fun avatar(x: Float, y: Float, size: Float) {

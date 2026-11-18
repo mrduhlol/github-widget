@@ -216,8 +216,10 @@ object WidgetUpdater {
             views.setViewVisibility(R.id.widget_connections, if (dock.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE)
             val px = (pad * context.resources.displayMetrics.density).toInt()
             val rightPad = (size.width - pad - dock.size * FocusWidgetPainter.PROFILE_LINK_SIZE).coerceAtLeast(pad)
+            val bottomPad = pad - FocusWidgetPainter.PROFILE_FOOTER_OFFSET
             views.setViewPadding(R.id.widget_connections, px, 0,
-                (rightPad * context.resources.displayMetrics.density).toInt(), px)
+                (rightPad * context.resources.displayMetrics.density).toInt(),
+                (bottomPad * context.resources.displayMetrics.density).toInt())
             dock.forEach { item ->
                 val button = RemoteViews(context.packageName, R.layout.widget_connection)
                 button.setContentDescription(R.id.widget_connection, item.url?.let { "Open ${ProfileIcons.label(it)}: $it" } ?: item.label)
