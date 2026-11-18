@@ -263,6 +263,8 @@ object WidgetUpdater {
             Intent(context, ContributionWidgetProvider::class.java).setAction(ContributionWidgetProvider.ACTION_REFRESH),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+        views.setViewVisibility(R.id.widget_refresh_icon,
+            if (kind == WidgetKind.PR_INBOX) android.view.View.INVISIBLE else android.view.View.VISIBLE)
         views.setOnClickPendingIntent(R.id.widget_refresh, refresh)
         return views
     }

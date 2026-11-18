@@ -6,12 +6,15 @@ import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Shader
+import android.graphics.Typeface
 import android.text.TextPaint
 import android.text.StaticLayout
 import android.text.TextUtils
 import androidx.core.graphics.ColorUtils
+import com.example.githubwidget.R
 import com.example.githubwidget.data.ReviewInboxState
 import com.example.githubwidget.data.Stats
 import com.example.githubwidget.data.UserData
@@ -71,7 +74,7 @@ object WidgetRenderer {
         val colors = base.copy(
             card = when {
                 design.background == Background.BLACK -> 0xFF000000.toInt()
-                isDark && design.layout == WidgetLayout.PROFILE -> 0xFF0D1013.toInt()
+                isDark && design.layout in listOf(WidgetLayout.PROFILE, WidgetLayout.PR_INBOX) -> 0xFF0D1013.toInt()
                 isDark -> 0xFF141618.toInt()
                 else -> 0xFFFAFAF7.toInt()
             },
@@ -134,21 +137,28 @@ object WidgetRenderer {
         }
 
         private fun drawReviewInbox(area: RectF, inbox: ReviewInboxState?) {
+            if (area.isEmpty) return
             val results = inbox?.results
             val newest = results?.requests?.firstOrNull()
-            val heading = text(11f, colors.textSecondary).apply {
-                typeface = android.graphics.Typeface.MONOSPACE
-            }
-            val actionWidth = (area.width() - dp(28f)).coerceAtLeast(0f)
+            val compact = hDp < 105f
+            val mono = text(11f, colors.textSecondary).apply { typeface = Typeface.MONOSPACE }
+            val open = text(11f, colors.textPrimary, bold = true)
+            val accent = colors.accent.takeIf { ColorUtils.calculateContrast(it, colors.card) >= 3.0 }
+                ?: colors.textSecondary
+            val markX = area.left + dp(8f)
+            val headerY = area.top + dp(12f)
+            val actionWidth = area.width() - dp(28f)
 
-            fun line(value: String, baseline: Float, width: Float, paint: TextPaint) {
+            fun line(value: String, x: Float, baseline: Float, width: Float, paint: TextPaint) {
                 if (baseline <= area.bottom && width > 0f) {
-                    canvas.drawText(ellipsize(value, paint, width), area.left, baseline, paint)
+                    canvas.drawText(ellipsize(value, paint, width), x, baseline, paint)
                 }
             }
 
-            line("PR INBOX", area.top + dp(10f), actionWidth, heading)
-            val compact = hDp < 105f
+            drawPullRequestMark(markX, headerY - dp(4f), accent)
+            line("PR INBOX", area.left + dp(22f), headerY, actionWidth - dp(22f), mono)
+            drawReviewRefresh()
+
             val title = newest?.title ?: when {
                 inbox == null || inbox.username.isBlank() -> "Connect a GitHub profile"
                 inbox.failed -> "Inbox unavailable"
@@ -156,44 +166,95 @@ object WidgetRenderer {
                 results.total > 0 -> "Review requests found"
                 else -> "All caught up"
             }
-            val titlePaint = text(if (compact) 15f else 22f, colors.textPrimary, bold = true)
-            val titleY = area.top + dp(if (compact) 31f else 39f)
-            line(title, titleY, if (compact) actionWidth else area.width(), titlePaint)
+            val titlePaint = text(if (compact || wDp < 180f) 16f else 24f, colors.textPrimary, bold = true)
+            val titleY = area.top + dp(if (compact) 32f else 42f)
+            line(title, area.left, titleY, if (compact) actionWidth else area.width(), titlePaint)
+
+            val repoY = titleY + dp(16f)
+            val footerY = area.bottom - dp(1f)
             if (newest != null) {
-                line("${newest.repository} #${newest.number}", titleY + dp(17f), area.width(), heading)
+                line("${newest.repository} #${newest.number}", area.left, repoY, area.width(), mono)
                 newest.excerpt?.let { excerpt ->
-                    drawReviewExcerpt(excerpt, RectF(area.left, titleY + dp(29f), area.right, area.bottom - dp(21f)))
+                    drawReviewExcerpt(excerpt, RectF(area.left, repoY + dp(10f), area.right, footerY - dp(21f)))
                 }
             }
-            if (area.bottom - titleY >= dp(35f)) {
-                val footer = when {
-                    results != null -> {
-                        val count = if (results.total == 1) "1 PR waiting" else "${results.total} PRs waiting"
-                        if (inbox.failed) "$count · last check" else count
-                    }
-                    inbox?.failed == true -> "Tap refresh to try again"
-                    else -> "Public review requests"
+
+            val footer = when {
+                results != null && (results.total > 0 || inbox.failed) -> {
+                    val count = "${numbers.format(results.total)} awaiting review"
+                    if (inbox.failed) "$count · last check" else count
                 }
-                line(footer, area.bottom - dp(1f), area.width(), heading)
+                inbox?.failed == true -> "Tap refresh to try again"
+                else -> null
+            }
+            if (footer != null && footerY - (if (newest == null) titleY else repoY) >= dp(18f)) {
+                val divider = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = colors.border
+                    strokeWidth = dp(1f)
+                }
+                canvas.drawLine(area.left, footerY - dp(14f), area.right, footerY - dp(14f), divider)
+
+                val action = "Open PR ↗"
+                val openWidth = open.measureText(action)
+                val showAction = newest != null && area.width() - openWidth >= dp(155f)
+                val footerWidth = if (showAction) area.width() - openWidth - dp(12f) else area.width()
+                line(footer, area.left, footerY, footerWidth, mono)
+                if (showAction) line(action, area.right - openWidth, footerY, openWidth + dp(1f), open)
             }
         }
 
+        private fun drawPullRequestMark(x: Float, y: Float, accent: Int) {
+            val ink = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = accent
+                style = Paint.Style.STROKE
+                strokeWidth = dp(1.25f)
+                strokeCap = Paint.Cap.ROUND
+            }
+            val left = x - dp(3.5f)
+            val right = x + dp(3.5f)
+            val top = y - dp(4.5f)
+            val bottom = y + dp(4.5f)
+            val radius = dp(1.65f)
+            canvas.drawLine(left, top + radius, left, bottom - radius, ink)
+            canvas.drawCircle(left, top, radius, ink)
+            canvas.drawCircle(left, bottom, radius, ink)
+            canvas.drawCircle(right, bottom, radius, ink)
+            canvas.drawPath(Path().apply {
+                moveTo(right, bottom - radius)
+                lineTo(right, y)
+                quadTo(right, top, x, top)
+            }, ink)
+        }
+
+        private fun drawReviewRefresh() {
+            val icon = context.getDrawable(R.drawable.ic_refresh)?.mutate() ?: return
+            val x = canvas.width - dp(24f)
+            val y = dp(24f)
+            val radius = dp(7f)
+            icon.setTint(colors.textSecondary)
+            icon.setBounds((x - radius).toInt(), (y - radius).toInt(), (x + radius).toInt(), (y + radius).toInt())
+            icon.draw(canvas)
+        }
+
         private fun drawReviewExcerpt(excerpt: String, area: RectF) {
-            val padding = dp(8f)
-            val width = (area.width() - 2 * padding).toInt()
+            val horizontalPadding = dp(10f)
+            val verticalPadding = dp(6f)
+            val width = (area.width() - 2 * horizontalPadding).toInt()
             val note = text(12f, colors.textSecondary)
             val lineHeight = note.fontMetrics.run { descent - ascent }
-            val maxLines = ((area.height() - 2 * padding) / lineHeight).toInt().coerceIn(0, 2)
+            val maxLines = ((area.height() - 2 * verticalPadding) / lineHeight).toInt().coerceIn(0, 2)
             if (width < 1 || maxLines == 0) return
             val layout = StaticLayout.Builder.obtain(excerpt, 0, excerpt.length, note, width)
                 .setIncludePad(false).setMaxLines(maxLines).setEllipsize(TextUtils.TruncateAt.END).build()
-            val panel = RectF(area.left, area.top, area.right, area.top + layout.height + 2 * padding)
+            val panel = RectF(area.left, area.top, area.right, area.top + layout.height + 2 * verticalPadding)
             val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = ColorUtils.setAlphaComponent(colors.textPrimary, if (colors.isDark) 14 else 12)
+                color = ColorUtils.setAlphaComponent(colors.textPrimary, if (colors.isDark) 10 else 9)
             }
-            canvas.drawRoundRect(panel, dp(6f), dp(6f), fill)
+            canvas.drawRect(panel, fill)
+            fill.color = colors.border
+            canvas.drawRect(panel.left, panel.top, panel.left + dp(2f), panel.bottom, fill)
             val state = canvas.save()
-            canvas.translate(panel.left + padding, panel.top + padding)
+            canvas.translate(panel.left + horizontalPadding, panel.top + verticalPadding)
             layout.draw(canvas)
             canvas.restoreToCount(state)
         }
@@ -203,8 +264,12 @@ object WidgetRenderer {
         fun drawCard() {
             val r = if (design.layout == WidgetLayout.PROFILE) 0f else dp(design.corners.dp)
             val rect = RectF(0f, 0f, canvas.width.toFloat(), canvas.height.toFloat())
-            if (design.opacity > 0 && design.layout == WidgetLayout.PROFILE && design.background != Background.BLACK) {
+            val textured = design.layout == WidgetLayout.PROFILE || design.layout == WidgetLayout.PR_INBOX
+            if (design.opacity > 0 && textured && design.background != Background.BLACK) {
+                val clip = canvas.save()
+                if (r > 0f) canvas.clipPath(Path().apply { addRoundRect(rect, r, r, Path.Direction.CW) })
                 ProfileTexture.drawSurface(canvas, rect, colors.card, colors.isDark, design.opacity, s)
+                canvas.restoreToCount(clip)
             } else if (design.opacity > 0) {
                 val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                     color = ColorUtils.setAlphaComponent(colors.card, design.opacity * 255 / 100)
