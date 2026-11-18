@@ -78,7 +78,7 @@ internal object FocusWidgetPainter {
              contentWidthDp: Float, contentHeightDp: Float) {
         val state = canvas.save()
         if (design.layout == WidgetLayout.PROFILE) {
-            canvas.clipRect(area.left, area.top, canvas.width - scale, area.bottom + PROFILE_FOOTER_OFFSET * scale)
+            canvas.clipRect(area.left, scale, canvas.width - scale, area.bottom + PROFILE_FOOTER_OFFSET * scale)
         } else {
             canvas.clipRect(area)
         }
@@ -196,10 +196,10 @@ internal object FocusWidgetPainter {
             }
 
             if (wide || tall) {
-                val left = r.right - r.width() * .50f
+                val left = r.right - r.width() * .56f
                 val right = c.width - dp(1f)
-                val bottom = footerTop + dp(2f)
-                val top = if (wide) r.top else maxOf(r.top, bottom - (right - left) * 1.4f)
+                val top = dp(1f)
+                val bottom = if (wide) c.height - dp(9f) else min(footerTop, top + (right - left) * 1.65f)
                 val texture = RectF(left, top, right, bottom)
                 ProfileTexture.drawContours(c, texture, colors.textSecondary, colors.isDark, s)
             }

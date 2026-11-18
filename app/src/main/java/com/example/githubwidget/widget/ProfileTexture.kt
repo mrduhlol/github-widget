@@ -18,20 +18,15 @@ internal object ProfileTexture {
     private const val CONTOUR_WIDTH = 160f
     private const val CONTOUR_HEIGHT = 128f
 
-    // Separate ridges and saddles, with their open ends beyond the right edge of the card.
+    // Open curves from the sketch. The inner contours enter through the top and turn right.
     private val contours = listOf(
-        "M16 2 C48 2 65 3 77 18 S89 45 108 47 C128 50 140 31 169 34",
-        "M9 8 C42 6 65 12 75 29 C87 49 99 56 115 55 S145 37 169 41",
-        "M3 16 C34 13 61 17 73 36 C88 56 102 66 119 62 S146 46 169 49",
-        "M4 24 C34 19 54 23 70 43 C88 63 104 74 123 69 C140 64 151 53 169 57",
-        "M10 32 C35 25 54 31 65 47 C79 65 98 81 119 78 C137 76 148 62 169 65",
-        "M-3 98 C25 98 32 61 57 59 C79 57 86 86 111 87 C134 90 148 70 169 73",
-        "M-2 108 C22 104 39 70 58 69 C76 67 83 93 110 96 C136 100 149 79 169 82",
-        "M11 119 C31 105 43 80 57 79 C74 77 79 100 101 105 C130 112 148 91 169 92",
-        "M26 131 C39 113 44 93 58 90 C71 88 74 111 96 119 C125 128 145 101 169 102",
-        "M42 135 C47 116 47 104 58 102 C67 100 70 117 83 125 C98 137 124 130 137 122 S155 110 169 112",
-        "M54 132 C50 124 52 113 58 112 C63 111 66 122 69 128 C72 136 62 140 54 132 Z",
-        "M119 136 C136 133 146 116 168 120",
+        "M18 28 C8 36 4 46 11 53 C19 62 24 73 22 88 C22 97 17 98 11 100 C3 103 11 113 38 115",
+        "M43 19 C27 17 34 33 36 44 C42 56 28 60 32 64 C39 68 47 77 65 79 C84 81 62 89 72 98 C78 104 91 104 97 105",
+        "M65 -4 C57 6 53 17 60 25 C65 32 73 33 71 44 C70 56 63 67 73 70 C80 73 87 70 82 79 C80 83 77 91 82 92 C92 94 107 91 121 94",
+        "M88 7 C79 14 79 22 84 30 C89 38 96 41 91 48 C88 53 84 60 88 64 C94 70 110 79 119 77 C134 73 139 83 156 83",
+        "M114 -3 C102 6 101 20 106 28 C111 33 113 42 109 47 C104 52 115 51 121 52 C129 53 129 60 136 64 C141 69 149 71 154 72",
+        "M133 -4 C124 3 127 11 129 19 C132 30 121 31 122 36 C122 45 125 47 133 46 C141 44 144 49 146 54 C148 59 155 54 165 60",
+        "M152 -3 C143 4 142 9 143 16 C144 22 136 27 139 28 C148 27 152 35 158 38 C162 40 166 36 170 37",
     ).map { requireNotNull(PathParser.createPathFromPathData(it)) }
 
     private val grain by lazy {
@@ -74,6 +69,7 @@ internal object ProfileTexture {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = .7f * scale
+            strokeCap = Paint.Cap.ROUND
             shader = LinearGradient(bounds.left, bounds.top, bounds.right, bounds.top,
                 intArrayOf(color, color or 0x08000000, color or edgeAlpha),
                 floatArrayOf(0f, .36f, 1f), Shader.TileMode.CLAMP)
@@ -83,7 +79,7 @@ internal object ProfileTexture {
         canvas.clipRect(bounds)
         contours.forEachIndexed { index, contour ->
             contour.transform(transform, path)
-            paint.alpha = if (index in 3..8) 255 else 146
+            paint.alpha = if (index < 2) 154 else 255
             canvas.drawPath(path, paint)
         }
         canvas.restoreToCount(clip)
