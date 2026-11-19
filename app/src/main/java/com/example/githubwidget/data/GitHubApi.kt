@@ -8,6 +8,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.time.LocalDate
+import java.time.ZoneOffset
 
 /**
  * Network access. No sign-in or token needed:
@@ -39,14 +40,15 @@ object GitHubApi {
         val root = JSONObject(body)
         val total = root.optJSONObject("total")?.optInt("lastYear", 0) ?: 0
         val arr = root.optJSONArray("contributions") ?: throw FetchError.Server(200)
-        val today = LocalDate.now()
+        val today = LocalDate.now(ZoneOffset.UTC)
         val days = ArrayList<Day>(arr.length())
         for (i in 0 until arr.length()) {
             val o = arr.getJSONObject(i)
             val date = runCatching { LocalDate.parse(o.getString("date")) }.getOrNull() ?: continue
-            // The API runs on UTC; never show days that haven't happened locally yet.
+            // The contribution calendar uses UTC dates.
             if (date.isAfter(today)) continue
-            days.add(Day(date, o.optInt("count", 0), o.optInt("level", 0).coerceIn(0, 4)))
+            val count = o.optInt("count", -1).takeIf { it >= 0 } ?: continue
+            days.add(Day(date, count, o.optInt("level", 0).coerceIn(0, 4)))
         }
         days.sortBy { it.date }
         return Contributions(username, total, days)

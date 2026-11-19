@@ -1,13 +1,14 @@
 package com.example.githubwidget.data
 
 import java.time.LocalDate
+import java.time.ZoneOffset
 import kotlin.random.Random
 
 /** A believable, deterministic year of activity for previews and illustrations. */
 object SampleData {
     val contributions: Contributions by lazy {
         val rnd = Random(7)
-        val today = LocalDate.now()
+        val today = LocalDate.now(ZoneOffset.UTC)
         val days = (370 downTo 0).map { back ->
             val date = today.minusDays(back.toLong())
             val weekend = date.dayOfWeek.value >= 6

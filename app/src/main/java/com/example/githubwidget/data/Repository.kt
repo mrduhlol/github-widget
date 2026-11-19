@@ -8,6 +8,7 @@ import com.example.githubwidget.design.NumberFont
 import com.example.githubwidget.design.WidgetDesign
 import com.example.githubwidget.widget.RefreshWorker
 import com.example.githubwidget.widget.WidgetUpdater
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -198,10 +199,14 @@ object Repository {
             _refreshState.value = RefreshState.Idle
             WidgetUpdater.updateAll(app)
             true
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
+            if (_username.value != name) return false
             _refreshState.value = RefreshState.Failed(
                 (e as? FetchError)?.message ?: FetchError.Offline.message
             )
+            WidgetUpdater.update(app, WidgetUpdater.streakIds(app))
             false
         }
     }

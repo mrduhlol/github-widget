@@ -14,11 +14,86 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 import java.time.LocalDate
+import java.time.Instant
+import java.time.ZoneOffset
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class FocusWidgetTest {
+    @Test fun streakCalendarStatesFollowUtcAndPreserveTheOpenDay() {
+        val today = LocalDate.of(2026, 11, 20)
+        val now = today.atStartOfDay().toInstant(ZoneOffset.UTC)
+        val none = WidgetRenderer.Placeholder.NONE
+        fun snapshot(vararg counts: Int, at: Instant = now): StreakWidgetPainter.Snapshot {
+            val days = counts.mapIndexed { index, count -> Day(today.minusDays(index.toLong()), count, 0) }
+            return StreakWidgetPainter.snapshot(data(days).copy(fetchedAt = at.toEpochMilli()), none, today)
+        }
+        val active = snapshot(4, 2, 1, 0)
+        assertEquals(StreakWidgetPainter.Snapshot(StreakWidgetPainter.State.ACTIVE, 3), active)
+        assertEquals(StreakWidgetPainter.Snapshot(StreakWidgetPainter.State.PENDING, 2), snapshot(0, 2, 1, 0))
+        assertEquals(StreakWidgetPainter.Snapshot(StreakWidgetPainter.State.BROKEN, 0), snapshot(0, 0, 1))
+        assertEquals(StreakWidgetPainter.Snapshot(StreakWidgetPainter.State.ZERO, 0), snapshot(0, 0, 0))
+        assertEquals(StreakWidgetPainter.Snapshot(StreakWidgetPainter.State.CHECKING), snapshot(0, 0, 1, at = now.minusSeconds(1)))
+        assertEquals(StreakWidgetPainter.Snapshot(StreakWidgetPainter.State.CHECKING), snapshot(0))
+        assertEquals(StreakWidgetPainter.Snapshot(StreakWidgetPainter.State.ACTIVE, 2, lowerBound = true), snapshot(1, 1))
+        val roll = data(listOf(Day(today.minusDays(1), 2, 0), Day(today.minusDays(2), 0, 0)))
+            .copy(fetchedAt = now.minusSeconds(60).toEpochMilli())
+        assertEquals(StreakWidgetPainter.Snapshot(StreakWidgetPainter.State.PENDING, 1),
+            StreakWidgetPainter.snapshot(roll, none, today))
+        assertEquals(StreakWidgetPainter.Snapshot(StreakWidgetPainter.State.FAILED, 1),
+            StreakWidgetPainter.snapshot(roll, WidgetRenderer.Placeholder.FAILED, today))
+        assertEquals(StreakWidgetPainter.State.CHECKING,
+            StreakWidgetPainter.snapshot(null, WidgetRenderer.Placeholder.LOADING, today).state)
+        assertNull(StreakWidgetPainter.snapshot(null, WidgetRenderer.Placeholder.FAILED, today).count)
+        assertEquals(now, StreakRolloverWorker.nextBoundary(now.minusSeconds(1)))
+        assertEquals(now.plusSeconds(86400), StreakRolloverWorker.nextBoundary(now))
+    }
+
+    @Test fun renderAdaptiveStreakStatesWithThemeContrast() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val design = WidgetDesign(layout = WidgetLayout.STREAK)
+        val today = LocalDate.now(ZoneOffset.UTC)
+        val out = File("build/widget-renders").apply { mkdirs() }
+        fun withDays(first: Int, count: Int): UserData = data(
+            (0..count + 1).map { index -> Day(today.minusDays(index.toLong()),
+                if (index == 0) first else if (index <= count) 1 else 0, 0) }
+        )
+        val active = withDays(1, 141)
+        val pending = withDays(0, 142)
+        val longRun = data((0 until 366).map { Day(today.minusDays(it.toLong()), 1, 1) })
+        assertEquals(StreakWidgetPainter.Snapshot(StreakWidgetPainter.State.ACTIVE, 366, lowerBound = true),
+            StreakWidgetPainter.snapshot(longRun, WidgetRenderer.Placeholder.NONE, today))
+        WidgetRenderer.render(context, design, longRun, null, 110f, 60f, dark = true)
+        assertEquals(142, StreakWidgetPainter.snapshot(active, WidgetRenderer.Placeholder.NONE, today).count)
+        val sizes = listOf(170f to 170f, 340f to 170f, 340f to 260f, 170f to 340f, 110f to 60f)
+        for ((width, height) in sizes) {
+            for ((label, user) in listOf("active" to active, "pending" to pending)) {
+                val rendered = WidgetRenderer.render(context, design, user, null, width, height, dark = true)
+                val light = WidgetRenderer.render(context, design.copy(background = Background.LIGHT), user, null,
+                    width, height, dark = false)
+                assertTrue(rendered.sameAs(light))
+                assertEquals(StreakWidgetPainter.SURFACE, rendered.getPixel(rendered.width / 2, 5))
+                File(out, "streak_redesign_${label}_${width.toInt()}x${height.toInt()}.png")
+                    .outputStream().use { assertTrue(rendered.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+            }
+        }
+        val broken = data(listOf(Day(today, 0, 0), Day(today.minusDays(1), 0, 0), Day(today.minusDays(2), 3, 0)))
+        for ((label, user, placeholder) in listOf(
+            Triple("broken", broken, WidgetRenderer.Placeholder.NONE),
+            Triple("zero", withDays(0, 0), WidgetRenderer.Placeholder.NONE),
+            Triple("loading", null, WidgetRenderer.Placeholder.LOADING),
+            Triple("failed", null, WidgetRenderer.Placeholder.FAILED),
+        )) {
+            val rendered = WidgetRenderer.render(context, design, user, null, 340f, 170f, true, placeholder)
+            File(out, "streak_redesign_${label}_340x170.png")
+                .outputStream().use { assertTrue(rendered.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+        }
+        for (ink in listOf(StreakWidgetPainter.ACTIVE, StreakWidgetPainter.MUTED, android.graphics.Color.WHITE)) {
+            assertTrue(androidx.core.graphics.ColorUtils.calculateContrast(ink, StreakWidgetPainter.SURFACE) >= 4.5)
+        }
+    }
+
     private val today = LocalDate.of(2026, 11, 17)
     private fun data(days: List<Day> = listOf(Day(today.minusDays(1), 4, 2), Day(today, 0, 0))) = UserData(
         Contributions("octocat", 1234, days),

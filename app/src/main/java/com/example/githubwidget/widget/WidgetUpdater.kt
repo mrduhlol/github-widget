@@ -15,6 +15,7 @@ import com.example.githubwidget.ContributionWidgetProvider
 import com.example.githubwidget.MainActivity
 import com.example.githubwidget.R
 import com.example.githubwidget.data.Repository
+import com.example.githubwidget.data.RefreshState
 import com.example.githubwidget.data.ReviewInbox
 import com.example.githubwidget.design.Background
 
@@ -32,6 +33,9 @@ object WidgetUpdater {
 
     fun hasWidgets(context: Context) = widgetIds(context).isNotEmpty()
 
+    internal fun streakIds(context: Context): IntArray =
+        AppWidgetManager.getInstance(context).getAppWidgetIds(WidgetKind.STREAK.component(context))
+
     internal fun reviewInboxIds(context: Context): IntArray =
         AppWidgetManager.getInstance(context).getAppWidgetIds(WidgetKind.PR_INBOX.component(context))
 
@@ -43,12 +47,15 @@ object WidgetUpdater {
         val mgr = AppWidgetManager.getInstance(context)
         // Widgets of the same size look identical, so each bitmap is drawn once per pass.
         val drawn = HashMap<RenderKey, Bitmap>()
+        var hasStreak = false
         for (id in ids) {
             val component = mgr.getAppWidgetInfo(id)?.provider
             val kind = WidgetKind.entries.firstOrNull { it.component(context) == component } ?: WidgetKind.CONTRIBUTIONS
+            if (kind == WidgetKind.STREAK) hasStreak = true
             runCatching { mgr.updateAppWidget(id, build(context, mgr.getAppWidgetOptions(id), drawn, kind)) }
                 .onFailure { Log.e("GHWidget", "Could not render widget $id", it) }
         }
+        if (hasStreak && Repository.hasUser) StreakRolloverWorker.schedule(context)
         markDrawn(context, ids)
     }
 
@@ -179,6 +186,8 @@ object WidgetUpdater {
         val data = Repository.data.value
         val inbox = if (kind == WidgetKind.PR_INBOX) ReviewInbox.cached(context, Repository.username.value) else null
         val placeholder = when {
+            kind == WidgetKind.STREAK && Repository.hasUser && Repository.refreshState.value is RefreshState.Failed ->
+                WidgetRenderer.Placeholder.FAILED
             data != null -> WidgetRenderer.Placeholder.NONE
             Repository.hasUser -> WidgetRenderer.Placeholder.LOADING
             else -> WidgetRenderer.Placeholder.SIGNED_OUT
@@ -202,7 +211,7 @@ object WidgetUpdater {
             views.setImageViewBitmap(R.id.widget_image_dark, bmp)
         }
         val latestReview = inbox?.results?.requests?.firstOrNull()
-        val desc = inbox?.let {
+        val desc = if (kind == WidgetKind.STREAK) StreakWidgetPainter.snapshot(data, placeholder).description() else inbox?.let {
             val total = it.results?.total
             when {
                 total != null -> "PR Inbox. $total public review requests." +
@@ -264,7 +273,7 @@ object WidgetUpdater {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         views.setViewVisibility(R.id.widget_refresh_icon,
-            if (kind == WidgetKind.PR_INBOX) android.view.View.INVISIBLE else android.view.View.VISIBLE)
+            if (kind == WidgetKind.PR_INBOX || kind == WidgetKind.STREAK) android.view.View.INVISIBLE else android.view.View.VISIBLE)
         views.setOnClickPendingIntent(R.id.widget_refresh, refresh)
         return views
     }

@@ -38,7 +38,7 @@ import kotlin.math.sqrt
 object WidgetRenderer {
 
     /** What to draw when there's no real data yet. */
-    enum class Placeholder { NONE, SIGNED_OUT, LOADING }
+    enum class Placeholder { NONE, SIGNED_OUT, LOADING, FAILED }
 
     /** Keeps bitmaps under the RemoteViews memory budget on every device. */
     private const val MAX_PIXELS = 1_100_000f
@@ -126,10 +126,17 @@ object WidgetRenderer {
             val area = RectF(pad, pad, canvas.width - pad, canvas.height - pad)
             when {
                 design.layout == WidgetLayout.PR_INBOX -> drawReviewInbox(area, inbox)
+                design.layout == WidgetLayout.STREAK -> {
+                    val streakInset = dp(if (hDp < 125f) 7f else 14f)
+                    val streakArea = RectF(streakInset, streakInset, canvas.width - streakInset, canvas.height - streakInset)
+                    StreakWidgetPainter.draw(canvas, streakArea, s, context, font,
+                        StreakWidgetPainter.snapshot(data, placeholder), wDp, hDp)
+                    drawRefreshIcon(StreakWidgetPainter.MUTED)
+                }
                 data == null -> drawPlaceholder(area, placeholder)
                 design.layout == WidgetLayout.GRAPH -> drawGraphOnly(area, data)
                 design.layout == WidgetLayout.NUMBERS -> drawNumbers(area, data)
-                design.layout in listOf(WidgetLayout.STREAK, WidgetLayout.WEEKLY_GOAL, WidgetLayout.PROFILE) ->
+                design.layout in listOf(WidgetLayout.WEEKLY_GOAL, WidgetLayout.PROFILE) ->
                     FocusWidgetPainter.draw(canvas, area, s, design, colors, context, font, data, avatar,
                         wDp - 2 * padDp, hDp - 2 * padDp)
                 else -> drawClassic(area, data, avatar)
@@ -157,7 +164,7 @@ object WidgetRenderer {
 
             drawPullRequestMark(markX, headerY - dp(4f), accent)
             line("PR INBOX", area.left + dp(22f), headerY, actionWidth - dp(22f), mono)
-            drawReviewRefresh()
+            drawRefreshIcon(colors.textSecondary)
 
             val title = newest?.title ?: when {
                 inbox == null || inbox.username.isBlank() -> "Connect a GitHub profile"
@@ -226,12 +233,12 @@ object WidgetRenderer {
             }, ink)
         }
 
-        private fun drawReviewRefresh() {
+        private fun drawRefreshIcon(color: Int) {
             val icon = context.getDrawable(R.drawable.ic_refresh)?.mutate() ?: return
             val x = canvas.width - dp(24f)
             val y = dp(24f)
             val radius = dp(7f)
-            icon.setTint(colors.textSecondary)
+            icon.setTint(color)
             icon.setBounds((x - radius).toInt(), (y - radius).toInt(), (x + radius).toInt(), (y + radius).toInt())
             icon.draw(canvas)
         }
@@ -262,7 +269,12 @@ object WidgetRenderer {
         // ------------------------------------------------------------ card
 
         fun drawCard() {
-            val r = if (design.layout == WidgetLayout.PROFILE) 0f else dp(design.corners.dp)
+            val streak = design.layout == WidgetLayout.STREAK
+            val r = when (design.layout) {
+                WidgetLayout.PROFILE -> 0f
+                WidgetLayout.STREAK -> dp(12f)
+                else -> dp(design.corners.dp)
+            }
             val rect = RectF(0f, 0f, canvas.width.toFloat(), canvas.height.toFloat())
             val textured = design.layout == WidgetLayout.PROFILE || design.layout == WidgetLayout.PR_INBOX
             if (design.opacity > 0 && textured && design.background != Background.BLACK) {
@@ -272,7 +284,7 @@ object WidgetRenderer {
                 canvas.restoreToCount(clip)
             } else if (design.opacity > 0) {
                 val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = ColorUtils.setAlphaComponent(colors.card, design.opacity * 255 / 100)
+                    color = ColorUtils.setAlphaComponent(if (streak) StreakWidgetPainter.SURFACE else colors.card, design.opacity * 255 / 100)
                 }
                 canvas.drawRoundRect(rect, r, r, fill)
             }
@@ -282,7 +294,7 @@ object WidgetRenderer {
                 val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                     style = Paint.Style.STROKE
                     strokeWidth = dp(1f)
-                    color = colors.border
+                    color = if (streak) StreakWidgetPainter.BORDER else colors.border
                 }
                 canvas.drawRoundRect(rect, r, r, stroke)
             }

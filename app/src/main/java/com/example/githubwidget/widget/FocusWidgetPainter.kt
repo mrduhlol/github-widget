@@ -74,10 +74,7 @@ internal object FocusWidgetPainter {
     fun accessibilityText(design: WidgetDesign, data: UserData): String {
         val username = data.contributions.username
         return when (design.layout) {
-            WidgetLayout.STREAK -> {
-                val a = activity(data)
-                "$username: ${a.streak} day streak, ${a.today} contributions today. Best streak ${Stats.from(data.contributions).longestStreak} days."
-            }
+            WidgetLayout.STREAK -> StreakWidgetPainter.snapshot(data, WidgetRenderer.Placeholder.NONE).description()
             WidgetLayout.WEEKLY_GOAL -> "$username: ${activity(data).week} of ${design.weeklyGoal} contributions this week."
             WidgetLayout.PROFILE -> buildList {
                 if (design.profileShowName) data.profile?.displayName?.let { add(it) }
@@ -125,27 +122,7 @@ internal object FocusWidgetPainter {
         }
         fun draw() = when (d.layout) {
             WidgetLayout.PROFILE -> profile()
-            WidgetLayout.STREAK -> streak()
             else -> goal()
-        }
-        fun streak() {
-            val a = activity(data)
-            val compact = r.height() < dp(80f)
-            val numberSize = if (compact) 28f else min(58f, r.height() / s * .40f)
-            val base = r.top + dp(numberSize)
-            val number = nf.format(a.streak)
-            val numberWidth = min(r.width() * .53f, paint(numberSize, numeric = true).measureText(number) + dp(8f))
-            line(number, r.left, base, numberWidth, numberSize, colors.accent, numeric = true)
-            line("day streak", r.left + numberWidth, base - dp(4f), r.width() - numberWidth - dp(20f), 12f)
-            if (compact) {
-                line(if (a.today > 0) "${nf.format(a.today)} today" else "No contributions today", r.left, r.bottom - dp(2f), r.width(), 10f, colors.textSecondary)
-            } else {
-                var y = base + dp(23f)
-                line(if (a.today > 0) "${nf.format(a.today)} contributions today" else "No contributions today", r.left, y, r.width(), 12f, colors.textSecondary)
-                y += dp(22f)
-                line("Best · ${nf.format(Stats.from(data.contributions).longestStreak)} days", r.left, y, r.width(), 12f, colors.textSecondary)
-                if (r.bottom - y > dp(23f)) line(WidgetRenderer.updatedAgo(data.fetchedAt), r.left, r.bottom - dp(2f), r.width(), 9f, colors.textSecondary)
-            }
         }
         fun goal() {
             val a = activity(data)

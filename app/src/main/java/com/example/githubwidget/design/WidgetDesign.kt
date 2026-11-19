@@ -7,7 +7,7 @@ enum class WidgetLayout(val label: String, val description: String) {
     CLASSIC("Classic", "Name, graph and stats"),
     GRAPH("Graph only", "Just the squares"),
     NUMBERS("Numbers", "Big stats, small graph"),
-    STREAK("Streak", "Current streak, best streak and today"),
+    STREAK("Streak", "Current streak and today’s status"),
     WEEKLY_GOAL("Weekly goal", "This week’s contributions and your target"),
     PROFILE("Profile card", "Your GitHub ID · landscape or portrait"),
     PR_INBOX("PR Inbox", "Open pull requests awaiting your review"),

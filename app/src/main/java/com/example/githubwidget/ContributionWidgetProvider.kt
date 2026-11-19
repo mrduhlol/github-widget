@@ -33,7 +33,9 @@ open class ContributionWidgetProvider : AppWidgetProvider() {
         Repository.init(context)
         if (Repository.hasUser) {
             RefreshWorker.schedule(context, Repository.refreshHours.value)
-            if (this is ReviewInboxWidgetProvider || Repository.isStale()) RefreshWorker.runOnce(context)
+            if (this is ReviewInboxWidgetProvider || this is StreakWidgetProvider || Repository.isStale()) {
+                RefreshWorker.runOnce(context)
+            }
         }
     }
 
