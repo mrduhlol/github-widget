@@ -94,14 +94,15 @@ internal object FocusWidgetPainter {
 
     fun draw(canvas: Canvas, area: RectF, scale: Float, design: WidgetDesign, colors: ColorSet,
              context: Context, font: NumberFont, data: UserData, avatar: Bitmap?,
-             contentWidthDp: Float, contentHeightDp: Float) {
+             contentWidthDp: Float, contentHeightDp: Float, weeklyGoalPreviewDate: LocalDate? = null) {
         val state = canvas.save()
         if (design.layout == WidgetLayout.PROFILE) {
             canvas.clipRect(area.left, scale, canvas.width - scale, area.bottom + PROFILE_FOOTER_OFFSET * scale)
         } else {
             canvas.clipRect(area)
         }
-        Card(canvas, area, scale, design, colors, context, font, data, avatar, contentWidthDp, contentHeightDp).draw()
+        Card(canvas, area, scale, design, colors, context, font, data, avatar, contentWidthDp, contentHeightDp)
+            .draw(weeklyGoalPreviewDate)
         canvas.restoreToCount(state)
     }
 
@@ -126,12 +127,12 @@ internal object FocusWidgetPainter {
             val actualX = if (center) x + (width - p.measureText(shown)) / 2 else x
             c.drawText(shown, actualX, y, p)
         }
-        fun draw() = when (d.layout) {
+        fun draw(weeklyGoalPreviewDate: LocalDate?) = when (d.layout) {
             WidgetLayout.PROFILE -> profile()
-            else -> goal()
+            else -> goal(weeklyGoalPreviewDate)
         }
-        fun goal() {
-            val today = LocalDate.now()
+        private fun goal(weeklyGoalPreviewDate: LocalDate?) {
+            val today = weeklyGoalPreviewDate ?: LocalDate.now()
             val dayIndex = today.dayOfWeek.value - 1
             val monday = today.minusDays(dayIndex.toLong())
             val byDate = data.contributions.days.associate { it.date to it.count }
@@ -150,7 +151,8 @@ internal object FocusWidgetPainter {
                 val format = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
                 val sunday = monday.plusDays(6)
                 val end = if (monday.month == sunday.month) nf.format(sunday.dayOfMonth) else format.format(sunday)
-                goalEnd("${format.format(monday)}–$end", r.right - dp(28f), header, colors.textSecondary)
+                val dateLabel = if (weeklyGoalPreviewDate != null) "Example week" else "${format.format(monday)}–$end"
+                goalEnd(dateLabel, r.right - dp(28f), header, colors.textSecondary)
             }
             if (r.height() < dp(62f)) {
                 line("$count / $targetLabel", r.left, r.bottom - dp(2f), r.width(), 22f, colors.accent, numeric = true, center = true)

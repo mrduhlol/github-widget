@@ -442,12 +442,16 @@ fun WidgetPreview(
     dark: Boolean = AppTheme.colors.isDark,
     inbox: ReviewInboxState? = null,
     contentDescription: String? = "Widget preview",
+    weeklyGoalPreviewDate: java.time.LocalDate? = null,
 ) {
     val context = LocalContext.current
     val font by Repository.numberFont.collectAsState()
-    val bitmap by produceState<ImageBitmap?>(null, design, data, avatar, widthDp, heightDp, dark, font, inbox) {
+    val bitmap by produceState<ImageBitmap?>(null, design, data, avatar, widthDp, heightDp, dark, font, inbox, weeklyGoalPreviewDate) {
         value = withContext(Dispatchers.Default) {
-            WidgetRenderer.render(context, design, data, avatar, widthDp, heightDp, dark, font = font, inbox = inbox).asImageBitmap()
+            WidgetRenderer.render(
+                context, design, data, avatar, widthDp, heightDp, dark, font = font, inbox = inbox,
+                weeklyGoalPreviewDate = weeklyGoalPreviewDate,
+            ).asImageBitmap()
         }
     }
     BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {

@@ -37,4 +37,14 @@ object SampleData {
     val userData: UserData by lazy {
         UserData(contributions, Profile("mrduhlol", "mrduhlol", ""), System.currentTimeMillis())
     }
+
+    const val WEEKLY_GOAL_THUMBNAIL_TARGET = 20
+
+    /** A partial week with a quiet day so the gallery shows how each visualization fills. */
+    val weeklyGoalThumbnail: UserData by lazy {
+        val monday = LocalDate.of(2026, 11, 16)
+        val counts = listOf(3, 0, 5, 4, 2)
+        val days = counts.mapIndexed { index, count -> Day(monday.plusDays(index.toLong()), count, 0) }
+        UserData(Contributions("octocat", counts.sum(), days), null, 0L)
+    }
 }

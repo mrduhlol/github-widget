@@ -26,6 +26,7 @@ import com.example.githubwidget.design.Palettes
 import com.example.githubwidget.design.WidgetDesign
 import com.example.githubwidget.design.WidgetLayout
 import java.text.NumberFormat
+import java.time.LocalDate
 import kotlin.math.sqrt
 
 /**
@@ -56,6 +57,7 @@ object WidgetRenderer {
         maxPixels: Int = MAX_PIXELS.toInt(),
         inbox: ReviewInboxState? = null,
         replayElapsedMs: Long? = null,
+        weeklyGoalPreviewDate: LocalDate? = null,
     ): Bitmap {
         val density = context.resources.displayMetrics.density
         var scale = density
@@ -93,7 +95,7 @@ object WidgetRenderer {
             textSecondary = if (isDark) 0xFFA9B0AB.toInt() else 0xFF59635C.toInt(),
         )
         Painter(Canvas(bmp), scale, widthDp, heightDp, design, colors, context, font, replayElapsedMs)
-            .draw(data, avatar, placeholder, inbox)
+            .draw(data, avatar, placeholder, inbox, weeklyGoalPreviewDate)
         return bmp
     }
 
@@ -127,7 +129,8 @@ object WidgetRenderer {
             typeface = NumberFont.typeface(context, font, 700)
         }
 
-        fun draw(data: UserData?, avatar: Bitmap?, placeholder: Placeholder, inbox: ReviewInboxState?) {
+        fun draw(data: UserData?, avatar: Bitmap?, placeholder: Placeholder, inbox: ReviewInboxState?,
+                 weeklyGoalPreviewDate: LocalDate?) {
             val streak = if (design.layout == WidgetLayout.STREAK) StreakWidgetPainter.snapshot(data, placeholder) else null
             drawCard(streak)
             val padDp = if (wDp < 180 || hDp < 100) 12f else 16f
@@ -147,7 +150,7 @@ object WidgetRenderer {
                 design.layout == WidgetLayout.NUMBERS -> drawNumbers(area, data)
                 design.layout.isWeeklyGoal || design.layout == WidgetLayout.PROFILE ->
                     FocusWidgetPainter.draw(canvas, area, s, design, colors, context, font, data, avatar,
-                        wDp - 2 * padDp, hDp - 2 * padDp)
+                        wDp - 2 * padDp, hDp - 2 * padDp, weeklyGoalPreviewDate)
                 else -> drawClassic(area, data, avatar)
             }
         }

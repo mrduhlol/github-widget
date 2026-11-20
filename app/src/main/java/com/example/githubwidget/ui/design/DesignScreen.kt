@@ -480,15 +480,20 @@ internal fun WidgetCatalog(onOpen: (WidgetLayout, PreviewSize) -> Unit) {
         gridItems(widgets, key = { (layout, size) -> "${layout.name}-${size.name}" }) { (layout, size) ->
             val portrait = size == PreviewSize.PORTRAIT
             val shape = MaterialTheme.shapes.medium
+            val example = if (layout.isWeeklyGoal) SampleData.weeklyGoalThumbnail else null
+            val previewDesign = if (example != null) {
+                design.copy(layout = layout, weeklyGoal = SampleData.WEEKLY_GOAL_THUMBNAIL_TARGET)
+            } else design.copy(layout = layout)
             Column(
                 Modifier.fillMaxWidth().clip(shape).clickable(role = Role.Button) { onOpen(layout, size) },
             ) {
                 WidgetPreview(
-                    design.copy(layout = layout), realData ?: SampleData.userData, avatar, size.widthDp, size.heightDp,
+                    previewDesign, example ?: realData ?: SampleData.userData, avatar, size.widthDp, size.heightDp,
                     modifier = Modifier.fillMaxWidth().aspectRatio(1.4f).clip(shape)
                         .background(AppTheme.colors.raised).padding(8.dp),
                     inbox = if (layout == WidgetLayout.PR_INBOX) inbox?.takeIf { it.username == username } ?: cachedInbox else null,
-                    contentDescription = null,
+                    contentDescription = example?.let { "Example week" },
+                    weeklyGoalPreviewDate = example?.contributions?.days?.lastOrNull()?.date,
                 )
                 Text(
                     if (portrait) "Portrait profile" else layout.label,
