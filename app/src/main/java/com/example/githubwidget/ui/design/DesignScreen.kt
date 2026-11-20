@@ -3,6 +3,7 @@ package com.example.githubwidget.ui.design
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -60,12 +61,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.example.githubwidget.R
 import com.example.githubwidget.data.Repository
 import com.example.githubwidget.data.Day
 import com.example.githubwidget.data.SampleData
@@ -480,21 +483,31 @@ internal fun WidgetCatalog(onOpen: (WidgetLayout, PreviewSize) -> Unit) {
         gridItems(widgets, key = { (layout, size) -> "${layout.name}-${size.name}" }) { (layout, size) ->
             val portrait = size == PreviewSize.PORTRAIT
             val shape = MaterialTheme.shapes.medium
-            val example = if (layout.isWeeklyGoal) SampleData.weeklyGoalThumbnail else null
-            val previewDesign = if (example != null) {
-                design.copy(layout = layout, weeklyGoal = SampleData.WEEKLY_GOAL_THUMBNAIL_TARGET)
-            } else design.copy(layout = layout)
+            val thumbnailModifier = Modifier.widthIn(max = size.widthDp.dp).fillMaxWidth()
+                .aspectRatio(size.widthDp / size.heightDp).clip(shape)
             Column(
                 Modifier.fillMaxWidth().clip(shape).clickable(role = Role.Button) { onOpen(layout, size) },
             ) {
-                WidgetPreview(
-                    previewDesign, example ?: realData ?: SampleData.userData, avatar, size.widthDp, size.heightDp,
-                    modifier = Modifier.widthIn(max = size.widthDp.dp).fillMaxWidth()
-                        .aspectRatio(size.widthDp / size.heightDp).clip(shape),
-                    inbox = if (layout == WidgetLayout.PR_INBOX) inbox?.takeIf { it.username == username } ?: cachedInbox else null,
-                    contentDescription = example?.let { "Example week" },
-                    weeklyGoalPreviewDate = example?.contributions?.days?.lastOrNull()?.date,
-                )
+                if (layout == WidgetLayout.WEEKLY_GOAL_WEEK) {
+                    Image(
+                        painter = painterResource(R.drawable.weekly_goal_week_preview),
+                        contentDescription = "Example week with 14 of 20 contributions",
+                        modifier = thumbnailModifier,
+                    )
+                } else {
+                    val example = if (layout.isWeeklyGoal) SampleData.weeklyGoalThumbnail else null
+                    val previewDesign = design.copy(
+                        layout = layout,
+                        weeklyGoal = if (example != null) SampleData.WEEKLY_GOAL_THUMBNAIL_TARGET else design.weeklyGoal,
+                    )
+                    WidgetPreview(
+                        previewDesign, example ?: realData ?: SampleData.userData, avatar, size.widthDp, size.heightDp,
+                        modifier = thumbnailModifier,
+                        inbox = if (layout == WidgetLayout.PR_INBOX) inbox?.takeIf { it.username == username } ?: cachedInbox else null,
+                        contentDescription = example?.let { "Example week" },
+                        weeklyGoalPreviewDate = example?.contributions?.days?.lastOrNull()?.date,
+                    )
+                }
                 Text(
                     if (portrait) "Portrait profile" else layout.label,
                     style = MaterialTheme.typography.titleMedium,
