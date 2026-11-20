@@ -51,8 +51,11 @@ import androidx.compose.ui.unit.dp
 import com.example.githubwidget.data.AppUpdate
 import com.example.githubwidget.data.AppUpdateInfo
 import com.example.githubwidget.data.Repository
+import com.example.githubwidget.design.WidgetLayout
 import com.example.githubwidget.ui.components.AppIcons
+import com.example.githubwidget.ui.components.PreviewSize
 import com.example.githubwidget.ui.design.DesignScreen
+import com.example.githubwidget.ui.design.WidgetCatalog
 import com.example.githubwidget.ui.onboarding.OnboardingScreen
 import com.example.githubwidget.ui.settings.SettingsScreen
 import com.example.githubwidget.ui.stats.StatsScreen
@@ -70,14 +73,19 @@ enum class Tab(val label: String, val icon: ImageVector) {
  *  - otherwise three tabs: Widget (design), Stats, Settings
  */
 @Composable
-fun AppRoot(widgetOpenRequest: Int = 0) {
+fun AppRoot(widgetOpenRequest: Int, requestedLayout: WidgetLayout?, requestedPortrait: Boolean) {
     val context = LocalContext.current
     val username by Repository.username.collectAsState()
     var changingAccount by rememberSaveable { mutableStateOf(false) }
     var tab by rememberSaveable { mutableStateOf(Tab.WIDGET) }
+    var widgetDetail by rememberSaveable { mutableStateOf<WidgetLayout?>(null) }
+    var widgetPreviewSize by rememberSaveable { mutableStateOf(PreviewSize.WIDE) }
+    BackHandler(tab == Tab.WIDGET && widgetDetail != null && username.isNotBlank() && !changingAccount) { widgetDetail = null }
     LaunchedEffect(widgetOpenRequest) {
         if (widgetOpenRequest > 0) {
             tab = Tab.WIDGET
+            widgetDetail = requestedLayout
+            widgetPreviewSize = if (requestedPortrait) PreviewSize.PORTRAIT else PreviewSize.WIDE
             changingAccount = false
         }
     }
@@ -114,7 +122,14 @@ fun AppRoot(widgetOpenRequest: Int = 0) {
                 onCancel = { changingAccount = false },
             )
         } else {
-            MainTabs(tab, onTab = { tab = it }, onChangeAccount = { changingAccount = true })
+            MainTabs(tab, onTab = {
+                if (it == Tab.WIDGET && tab == Tab.WIDGET) widgetDetail = null
+                tab = it
+            }, onChangeAccount = { changingAccount = true }, widgetDetail = widgetDetail,
+                widgetPreviewSize = widgetPreviewSize, onWidgetDetail = { layout, size ->
+                    widgetDetail = layout
+                    widgetPreviewSize = size
+                })
         }
     }
 
@@ -173,7 +188,14 @@ fun AppRoot(widgetOpenRequest: Int = 0) {
 }
 
 @Composable
-private fun MainTabs(tab: Tab, onTab: (Tab) -> Unit, onChangeAccount: () -> Unit) {
+private fun MainTabs(
+    tab: Tab,
+    onTab: (Tab) -> Unit,
+    onChangeAccount: () -> Unit,
+    widgetDetail: WidgetLayout?,
+    widgetPreviewSize: PreviewSize,
+    onWidgetDetail: (WidgetLayout?, PreviewSize) -> Unit,
+) {
     // Back from Stats/Settings goes to the Widget tab before leaving the app.
     BackHandler(enabled = tab != Tab.WIDGET) { onTab(Tab.WIDGET) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -227,7 +249,12 @@ private fun MainTabs(tab: Tab, onTab: (Tab) -> Unit, onChangeAccount: () -> Unit
                         label = "tab",
                     ) { destination ->
                         when (destination) {
-                            Tab.WIDGET -> DesignScreen(onOpenStats = { onTab(Tab.STATS) })
+                            Tab.WIDGET -> if (widgetDetail == null) {
+                                WidgetCatalog(onOpen = onWidgetDetail)
+                            } else {
+                                DesignScreen(widgetDetail, widgetPreviewSize, onBack = { onWidgetDetail(null, PreviewSize.WIDE) },
+                                    onOpenStats = { onTab(Tab.STATS) })
+                            }
                             Tab.STATS -> StatsScreen()
                             Tab.SETTINGS -> SettingsScreen(onChangeAccount = onChangeAccount)
                         }

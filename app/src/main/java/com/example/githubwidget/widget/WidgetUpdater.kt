@@ -233,6 +233,7 @@ object WidgetUpdater {
             context, 100 + kind.ordinal,
             Intent(context, MainActivity::class.java)
                 .putExtra(MainActivity.EXTRA_WIDGET_LAYOUT, design.layout.name)
+                .putExtra(MainActivity.EXTRA_WIDGET_PORTRAIT, kind == WidgetKind.PORTRAIT_PROFILE)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )

@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,11 +55,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -105,9 +101,10 @@ import com.example.githubwidget.widget.WidgetUpdater
  * widget immediately — there's no Save button to forget.
  */
 @Composable
-fun DesignScreen(onOpenStats: () -> Unit) {
+fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> Unit, onOpenStats: () -> Unit) {
     val context = LocalContext.current
-    val design by Repository.design.collectAsState()
+    val sharedDesign by Repository.design.collectAsState()
+    val design = sharedDesign.copy(layout = layout)
     val realData by Repository.data.collectAsState()
     val avatar by Repository.avatar.collectAsState()
     val data = realData ?: SampleData.userData
@@ -121,7 +118,7 @@ fun DesignScreen(onOpenStats: () -> Unit) {
         }
     }
     var profilePanel by rememberSaveable { mutableStateOf("Content") }
-    var previewSize by rememberSaveable { mutableStateOf(PreviewSize.WIDE) }
+    var previewSize by rememberSaveable(layout, initialSize) { mutableStateOf(initialSize) }
     var hasWidget by remember { mutableStateOf(WidgetUpdater.hasWidgets(context)) }
     var showHelp by remember { mutableStateOf(false) }
     var pickingColor by remember { mutableStateOf(false) }
@@ -132,9 +129,10 @@ fun DesignScreen(onOpenStats: () -> Unit) {
         onPauseOrDispose { }
     }
 
-    fun update(t: (WidgetDesign) -> WidgetDesign) = Repository.updateDesign(t)
+    fun update(t: (WidgetDesign) -> WidgetDesign) = Repository.updateDesign { t(it.copy(layout = layout)) }
     fun addWidget() {
-        if (!WidgetPinning.request(context, design.layout, previewSize == PreviewSize.PORTRAIT)) showHelp = true
+        update { it }
+        if (!WidgetPinning.request(context, layout, previewSize == PreviewSize.PORTRAIT)) showHelp = true
     }
 
     LazyColumn(
@@ -147,26 +145,13 @@ fun DesignScreen(onOpenStats: () -> Unit) {
                 Modifier
                     .fillMaxWidth(),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            buildAnnotatedString {
-                                withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Normal)) {
-                                    append("Your ")
-                                }
-                                withStyle(SpanStyle(color = AppTheme.colors.textPrimary, fontWeight = FontWeight.Bold)) {
-                                    append(if (design.layout == WidgetLayout.PROFILE) "profile card" else "widget")
-                                }
-                            },
-                            style = MaterialTheme.typography.headlineMedium,
-                        )
-                        Text(
-                            "Changes show up on your home screen right away.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = AppTheme.colors.textSecondary,
-                        )
-                    }
+                TextButton(onClick = onBack, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text("‹  All widgets")
                 }
+                Text(layout.label, style = MaterialTheme.typography.headlineMedium,
+                    color = AppTheme.colors.textPrimary)
+                Text(layout.description, style = MaterialTheme.typography.bodyMedium,
+                    color = AppTheme.colors.textSecondary)
                 Spacer(Modifier.height(14.dp))
                 WallpaperBackdrop {
                     WidgetPreview(
@@ -194,11 +179,6 @@ fun DesignScreen(onOpenStats: () -> Unit) {
         // ---------------------------------------------------------- controls
         item {
             AddWidgetCard(hasWidget, onAdd = ::addWidget, onHelp = { showHelp = true })
-        }
-        item {
-            SectionCard(title = "Style") {
-                LayoutChoices(design, data, inbox, onSelect = { l -> update { it.copy(layout = l) } })
-            }
         }
         if (design.layout == WidgetLayout.PROFILE) {
             item { SegmentedChoice(listOf("Content", "Appearance"), profilePanel, { it }, { profilePanel = it }) }
@@ -291,8 +271,8 @@ fun DesignScreen(onOpenStats: () -> Unit) {
                 if (realData != null) {
                     TextButton(onClick = onOpenStats, modifier = Modifier.heightIn(min = 48.dp)) { Text("See your full activity") }
                 }
-                if (design != WidgetDesign()) {
-                    TextButton(onClick = { Repository.resetDesign() }) {
+                if (design != WidgetDesign(layout = layout, contributionLayout = design.contributionLayout)) {
+                    TextButton(onClick = { update { WidgetDesign(layout = layout, contributionLayout = it.contributionLayout) } }) {
                         Text("Reset to the original look", color = AppTheme.colors.textSecondary)
                     }
                 }
@@ -444,33 +424,42 @@ private fun Cell(c: Color) {
     Box(Modifier.size(15.dp).clip(RoundedCornerShape(4.dp)).background(c))
 }
 
-// ------------------------------------------------------------------ style
-
 @Composable
-private fun LayoutChoices(
-    design: WidgetDesign,
-    data: com.example.githubwidget.data.UserData,
-    inbox: ReviewInboxState,
-    onSelect: (WidgetLayout) -> Unit,
-) {
+internal fun WidgetCatalog(onOpen: (WidgetLayout, PreviewSize) -> Unit) {
+    val context = LocalContext.current
+    val design by Repository.design.collectAsState()
+    val realData by Repository.data.collectAsState()
     val avatar by Repository.avatar.collectAsState()
-    val listState = rememberLazyListState()
-    LaunchedEffect(design.layout) { listState.animateScrollToItem(WidgetLayout.entries.indexOf(design.layout)) }
-    LazyRow(state = listState, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        items(WidgetLayout.entries) { layout ->
-            val selected = layout == design.layout
-            Column(
-                Modifier.width(148.dp).clip(MaterialTheme.shapes.medium)
-                    .border(selectionBorder(selected), if (selected) MaterialTheme.colorScheme.primary else AppTheme.colors.hairline, MaterialTheme.shapes.medium)
-                    .selectable(selected = selected, role = androidx.compose.ui.semantics.Role.RadioButton, onClick = { onSelect(layout) })
-                    .padding(10.dp),
-            ) {
-                WidgetPreview(design.copy(layout = layout), data, avatar, 340f, 170f,
-                    Modifier.fillMaxWidth().height(64.dp), inbox = inbox.takeIf { layout == WidgetLayout.PR_INBOX })
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(layout.label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
-                    if (selected) Icon(Icons.Rounded.Check, "Selected", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+    val username by Repository.username.collectAsState()
+    val inbox by ReviewInbox.state.collectAsState()
+    val cachedInbox = remember(username) { ReviewInbox.cached(context, username) }
+    val widgets = WidgetLayout.entries.map { it to PreviewSize.WIDE } + (WidgetLayout.PROFILE to PreviewSize.PORTRAIT)
+    LazyColumn(
+        Modifier.fillMaxSize().background(AppTheme.colors.canvas).statusBarsPadding(),
+        contentPadding = PaddingValues(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        item {
+            Text("Widgets", style = MaterialTheme.typography.headlineMedium, color = AppTheme.colors.textPrimary)
+            Text("Choose a widget to preview and customize.", style = MaterialTheme.typography.bodyMedium,
+                color = AppTheme.colors.textSecondary, modifier = Modifier.padding(top = 4.dp, bottom = 8.dp))
+        }
+        items(widgets, key = { (layout, size) -> "${layout.name}-${size.name}" }) { (layout, size) ->
+            val portrait = size == PreviewSize.PORTRAIT
+            Surface(onClick = { onOpen(layout, size) }, shape = MaterialTheme.shapes.large,
+                color = AppTheme.colors.card, border = BorderStroke(1.dp, AppTheme.colors.hairline)) {
+                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    WidgetPreview(design.copy(layout = layout), realData ?: SampleData.userData, avatar, size.widthDp, size.heightDp,
+                        Modifier.width(84.dp).height(48.dp),
+                        inbox = if (layout == WidgetLayout.PR_INBOX) inbox?.takeIf { it.username == username } ?: cachedInbox else null)
+                    Column(Modifier.weight(1f)) {
+                        Text(if (portrait) "Portrait profile" else layout.label, style = MaterialTheme.typography.titleMedium,
+                            color = AppTheme.colors.textPrimary)
+                        Text(if (portrait) "Your GitHub ID in a vertical layout" else layout.description, style = MaterialTheme.typography.bodySmall,
+                            color = AppTheme.colors.textSecondary)
+                    }
+                    Text("›", style = MaterialTheme.typography.titleLarge, color = AppTheme.colors.textSecondary)
                 }
             }
         }

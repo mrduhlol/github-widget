@@ -34,6 +34,7 @@ class WidgetConfigActivity : Activity() {
             val layout = kind?.resolvedLayout(Repository.design.value.layout, Repository.design.value.contributionLayout)
             startActivity(Intent(this, MainActivity::class.java)
                 .putExtra(MainActivity.EXTRA_WIDGET_LAYOUT, layout?.name)
+                .putExtra(MainActivity.EXTRA_WIDGET_PORTRAIT, kind == com.example.githubwidget.widget.WidgetKind.PORTRAIT_PROFILE)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
         finish()

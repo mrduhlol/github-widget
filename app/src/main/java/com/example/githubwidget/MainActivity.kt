@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import com.example.githubwidget.design.WidgetLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,14 +17,18 @@ import com.example.githubwidget.widget.RefreshWorker
 
 class MainActivity : ComponentActivity() {
     private var widgetOpenRequest by mutableIntStateOf(0)
+    private var requestedLayout by mutableStateOf<WidgetLayout?>(null)
+    private var requestedPortrait by mutableStateOf(false)
 
     companion object {
         const val EXTRA_WIDGET_LAYOUT = "widget_layout"
+        const val EXTRA_WIDGET_PORTRAIT = "widget_portrait"
     }
 
     private fun openWidget(intent: Intent?) {
         val layout = WidgetLayout.entries.firstOrNull { it.name == intent?.getStringExtra(EXTRA_WIDGET_LAYOUT) } ?: return
-        Repository.updateDesign { it.copy(layout = layout) }
+        requestedLayout = layout
+        requestedPortrait = intent?.getBooleanExtra(EXTRA_WIDGET_PORTRAIT, false) == true
         widgetOpenRequest++
     }
 
@@ -37,10 +42,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         Repository.init(this)
-        openWidget(intent)
+        if (savedInstanceState == null) openWidget(intent)
         setContent {
             GhTheme {
-                AppRoot(widgetOpenRequest)
+                AppRoot(widgetOpenRequest, requestedLayout, requestedPortrait)
             }
         }
     }
