@@ -489,8 +489,8 @@ internal fun WidgetCatalog(onOpen: (WidgetLayout, PreviewSize) -> Unit) {
             ) {
                 WidgetPreview(
                     previewDesign, example ?: realData ?: SampleData.userData, avatar, size.widthDp, size.heightDp,
-                    modifier = Modifier.fillMaxWidth().aspectRatio(1.4f).clip(shape)
-                        .background(AppTheme.colors.raised).padding(8.dp),
+                    modifier = Modifier.widthIn(max = size.widthDp.dp).fillMaxWidth()
+                        .aspectRatio(size.widthDp / size.heightDp).clip(shape),
                     inbox = if (layout == WidgetLayout.PR_INBOX) inbox?.takeIf { it.username == username } ?: cachedInbox else null,
                     contentDescription = example?.let { "Example week" },
                     weeklyGoalPreviewDate = example?.contributions?.days?.lastOrNull()?.date,
