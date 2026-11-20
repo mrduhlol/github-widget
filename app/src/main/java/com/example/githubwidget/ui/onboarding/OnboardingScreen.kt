@@ -1,6 +1,7 @@
 package com.example.githubwidget.ui.onboarding
 
 import android.graphics.BitmapFactory
+import android.os.SystemClock
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
@@ -308,7 +309,7 @@ private fun WelcomeStep(onNext: () -> Unit) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var widget by rememberSaveable { mutableStateOf(WelcomeWidget.CONTRIBUTIONS) }
-    var paused by rememberSaveable { mutableStateOf(false) }
+    var elapsedMs by rememberSaveable { mutableStateOf(0L) }
     val previews by produceState<Map<WelcomeWidget, ImageBitmap>>(emptyMap(), context) {
         val inbox = ReviewInboxState("octocat", ReviewResults(1, listOf(
             ReviewRequest("Improve search ordering", "octocat/hello-world", "42",
@@ -326,13 +327,26 @@ private fun WelcomeStep(onNext: () -> Unit) {
         }
     }
     val ready = previews.size == WelcomeWidget.entries.size
-    val motionEnabled = android.animation.ValueAnimator.areAnimatorsEnabled()
-    LaunchedEffect(lifecycle, paused, ready, motionEnabled) {
-        if (!paused && ready && motionEnabled) lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            while (true) {
-                delay(5_000)
-                if (!android.animation.ValueAnimator.areAnimatorsEnabled()) break
-                widget = widget.next()
+    val showcaseDuration = 7_000L
+    val unlocked = elapsedMs >= showcaseDuration
+    val secondsLeft = (showcaseDuration - elapsedMs + 999) / 1_000
+    LaunchedEffect(lifecycle, ready) {
+        if (!ready || unlocked) return@LaunchedEffect
+        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            val start = SystemClock.elapsedRealtime() - elapsedMs
+            try {
+                while (elapsedMs < showcaseDuration) {
+                    val count = WelcomeWidget.entries.size
+                    val index = (elapsedMs * count / showcaseDuration).toInt()
+                    widget = WelcomeWidget.entries[index]
+                    val nextSlide = ((index + 1) * showcaseDuration + count - 1) / count
+                    val nextSecond = (elapsedMs / 1_000 + 1) * 1_000
+                    val nextUpdate = minOf(nextSlide, nextSecond, showcaseDuration)
+                    delay((start + nextUpdate - SystemClock.elapsedRealtime()).coerceAtLeast(1L))
+                    elapsedMs = (SystemClock.elapsedRealtime() - start).coerceAtMost(showcaseDuration)
+                }
+            } finally {
+                elapsedMs = (SystemClock.elapsedRealtime() - start).coerceAtMost(showcaseDuration)
             }
         }
     }
@@ -397,26 +411,23 @@ private fun WelcomeStep(onNext: () -> Unit) {
                         }
                     }
                 }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    if (motionEnabled) TextButton(onClick = { paused = !paused }, enabled = ready) {
-                        Text(if (paused) "Resume" else "Pause", color = secondary)
-                    }
-                    TextButton(onClick = { paused = true; widget = widget.next() },
-                        enabled = previews.containsKey(widget.next())) {
-                        Text("Next widget", color = foreground)
-                    }
+                TextButton(onClick = { widget = widget.next() }, enabled = unlocked) {
+                    Text("Next widget")
                 }
             },
             actions = {
                 Button(
                     onClick = onNext,
+                    enabled = unlocked,
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFACDFB7),
                         contentColor = Color(0xFF132119),
+                        disabledContainerColor = Color(0xFF303632),
+                        disabledContentColor = Color(0xFFC5D0CA),
                     ),
-                ) { Text("Get started") }
+                ) { Text(if (unlocked) "Get started" else "Get started · ${secondsLeft}s") }
                 Spacer(Modifier.height(8.dp))
                 Text("Just your GitHub username", style = MaterialTheme.typography.bodySmall,
                     color = secondary, textAlign = TextAlign.Center)
