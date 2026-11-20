@@ -92,27 +92,34 @@ class WidgetRenderSnapshotTest {
     }
 
     @Test
-    fun replayRevealsOlderDaysFirstAndKeepsFutureDaysEmpty() {
+    fun replayStaggersCellPopsAndKeepsFutureDaysEmpty() {
         val first = LocalDate.of(2026, 11, 8)
         val days = listOf(Day(first, 1, 1), Day(first.plusDays(7), 2, 2), Day(first.plusDays(9), 3, 3))
         val levels = intArrayOf(Color.GRAY, Color.GREEN, Color.BLUE, Color.RED, Color.MAGENTA)
-        fun colorsAtProgress(progress: Float): List<Int> {
-            val bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+        fun colorsAt(elapsedMs: Long?): List<Int> {
+            val size = 260
+            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
             val grid = GraphPainter.draw(
-                Canvas(bitmap), RectF(0f, 0f, 100f, 100f), days,
-                GraphPainter.Spec(levels, 0f, false, 2, 100f, revealProgress = progress),
+                Canvas(bitmap), RectF(0f, 0f, size.toFloat(), size.toFloat()), days,
+                GraphPainter.Spec(levels, 0f, false, 2, 100f, replayElapsedMs = elapsedMs),
             )
-            val cell = GraphPainter.cellForHeight(100f)
+            val cell = GraphPainter.cellForHeight(size.toFloat())
             val step = cell * (1f + GraphPainter.GAP)
-            fun pixel(column: Int, row: Int) = bitmap.getPixel(
-                (grid.left + cell / 2 + step * column).toInt(),
+            fun pixel(column: Int, row: Int, xFraction: Float = 0.5f) = bitmap.getPixel(
+                (grid.left + cell * xFraction + step * column).toInt(),
                 (grid.top + cell / 2 + step * row).toInt(),
             )
-            return listOf(pixel(0, 0), pixel(1, 0), pixel(1, 2), pixel(1, 3))
+            return listOf(pixel(0, 0), pixel(0, 0, 1.04f), pixel(1, 0), pixel(1, 2), pixel(1, 3))
         }
-        assertEquals(listOf(Color.GRAY, Color.GRAY, Color.GRAY, Color.TRANSPARENT), colorsAtProgress(0f))
-        assertEquals(listOf(Color.GREEN, Color.BLUE, Color.GRAY, Color.TRANSPARENT), colorsAtProgress(0.8f))
-        assertEquals(listOf(Color.GREEN, Color.BLUE, Color.RED, Color.TRANSPARENT), colorsAtProgress(1f))
+        assertEquals(listOf(Color.GRAY, Color.TRANSPARENT, Color.GRAY, Color.GRAY, Color.TRANSPARENT), colorsAt(0))
+        assertEquals(listOf(Color.GREEN, Color.GREEN, Color.GRAY, Color.GRAY, Color.TRANSPARENT), colorsAt(126))
+        val nextColumnStarts = colorsAt(330)
+        assertEquals(Color.TRANSPARENT, nextColumnStarts[1])
+        assertTrue(nextColumnStarts[2] != Color.GRAY)
+        assertEquals(Color.GRAY, nextColumnStarts[3])
+        val settled = listOf(Color.GREEN, Color.TRANSPARENT, Color.BLUE, Color.RED, Color.TRANSPARENT)
+        assertEquals(settled, colorsAt(GraphPainter.REPLAY_DURATION_MS))
+        assertEquals(settled, colorsAt(null))
     }
 
     @Test

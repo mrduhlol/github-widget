@@ -29,9 +29,8 @@ object WidgetUpdater {
 
     private const val PREFS = "gh_widget_ids"
     private const val KEY_DRAWN = "drawn"
-    private const val REPLAY_STEPS = 8
-    private const val REPLAY_FRAME_MS = 65L
-    private const val REPLAY_PIXEL_BUDGET = 320_000L
+    private const val REPLAY_FRAME_MS = 40L
+    private const val REPLAY_PIXEL_BUDGET = 240_000L
     private val renderLock = Any()
     private val activeReplays = mutableMapOf<Int, Any>()
     private data class RenderKey(val layout: WidgetLayout, val width: Float, val height: Float, val dark: Boolean, val pixelBudget: Int)
@@ -83,15 +82,17 @@ object WidgetUpdater {
         synchronized(renderLock) { activeReplays[id] = replay }
         val started = SystemClock.uptimeMillis()
         try {
-            for (step in 0 until REPLAY_STEPS) {
-                delay((started + step * REPLAY_FRAME_MS - SystemClock.uptimeMillis()).coerceAtLeast(0L))
+            while (true) {
+                val elapsed = SystemClock.uptimeMillis() - started
+                if (elapsed >= GraphPainter.REPLAY_DURATION_MS) break
                 synchronized(renderLock) {
                     if (activeReplays[id] !== replay) return
-                    val frame = build(context, id, mgr.getAppWidgetOptions(id), HashMap(), kind, step.toFloat() / REPLAY_STEPS)
+                    val frame = build(context, id, mgr.getAppWidgetOptions(id), HashMap(), kind, elapsed)
                     mgr.updateAppWidget(id, frame)
                 }
+                val next = minOf(elapsed + REPLAY_FRAME_MS, GraphPainter.REPLAY_DURATION_MS)
+                delay((started + next - SystemClock.uptimeMillis()).coerceAtLeast(0L))
             }
-            delay((started + REPLAY_STEPS * REPLAY_FRAME_MS - SystemClock.uptimeMillis()).coerceAtLeast(0L))
         } catch (error: RuntimeException) {
             Log.e("GHWidget", "Could not replay contributions for widget $id", error)
         } finally {
@@ -186,7 +187,7 @@ object WidgetUpdater {
         options: Bundle?,
         drawn: MutableMap<RenderKey, Bitmap>,
         kind: WidgetKind,
-        revealProgress: Float = 1f,
+        replayElapsedMs: Long? = null,
     ): RemoteViews {
         val sizes = exactSizes(options)
         val variantCount = if (sizes.isEmpty()) 2 else sizes.size
@@ -196,7 +197,7 @@ object WidgetUpdater {
         // headroom under the host's 6 * screen pixels budget (ARGB uses 4 bytes).
         val screenPixels = dm.widthPixels.toLong() * dm.heightPixels
         // Keep the repeated bitmap transfers small while the launcher displays the replay.
-        val availablePixels = if (revealProgress < 1f) minOf(screenPixels, REPLAY_PIXEL_BUDGET) else screenPixels
+        val availablePixels = if (replayElapsedMs != null) minOf(screenPixels, REPLAY_PIXEL_BUDGET) else screenPixels
         val pixelBudget = (availablePixels / (variantCount * colorVariants))
             .coerceIn(1L, 1_100_000L).toInt()
         val portrait = legacySize(options, false)
@@ -208,7 +209,7 @@ object WidgetUpdater {
             if (normalized != size) {
                 Log.w("GHWidget", "Corrected launcher bitmap size $size to $normalized; host key retained")
             }
-            return buildSize(context, id, normalized, drawn, pixelBudget, kind, revealProgress)
+            return buildSize(context, id, normalized, drawn, pixelBudget, kind, replayElapsedMs)
         }
         return if (android.os.Build.VERSION.SDK_INT >= 31 && sizes.isNotEmpty()) {
             RemoteViews(sizes.associateWith { size ->
@@ -236,7 +237,7 @@ object WidgetUpdater {
         drawn: MutableMap<RenderKey, Bitmap>,
         pixelBudget: Int,
         kind: WidgetKind,
-        revealProgress: Float,
+        replayElapsedMs: Long?,
     ): RemoteViews {
         val shared = Repository.design.value
         val design = shared.copy(layout = kind.resolvedLayout(shared.layout, shared.contributionLayout))
@@ -252,7 +253,7 @@ object WidgetUpdater {
         fun render(dark: Boolean) = drawn.getOrPut(RenderKey(design.layout, size.width, size.height, dark, pixelBudget)) {
             WidgetRenderer.render(
                 context, design, data, Repository.avatar.value, size.width, size.height, dark, placeholder,
-                Repository.numberFont.value, maxPixels = pixelBudget, inbox = inbox, revealProgress = revealProgress,
+                Repository.numberFont.value, maxPixels = pixelBudget, inbox = inbox, replayElapsedMs = replayElapsedMs,
             )
         }
 
