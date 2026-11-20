@@ -1,5 +1,6 @@
 package com.example.githubwidget.ui.onboarding
 
+import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
@@ -99,6 +100,7 @@ import com.example.githubwidget.data.SampleData
 import com.example.githubwidget.data.ReviewInboxState
 import com.example.githubwidget.data.ReviewRequest
 import com.example.githubwidget.data.ReviewResults
+import com.example.githubwidget.design.NumberFont
 import com.example.githubwidget.design.WidgetDesign
 import com.example.githubwidget.design.WidgetLayout
 import com.example.githubwidget.widget.WidgetRenderer
@@ -118,6 +120,7 @@ import com.example.githubwidget.ui.components.WidgetPinning
 import com.example.githubwidget.ui.components.WidgetPreview
 import com.example.githubwidget.ui.theme.AppTheme
 import com.example.githubwidget.ui.theme.GhTheme
+import com.example.githubwidget.ui.theme.numberFontFamily
 import com.example.githubwidget.widget.WidgetUpdater
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -281,9 +284,16 @@ private fun StepPage(
 
 // ------------------------------------------------------------------ step 1: welcome
 
-private enum class WelcomeWidget(val layout: WidgetLayout, val art: Int, val label: String = layout.label) {
+private enum class WelcomeWidget(
+    val layout: WidgetLayout,
+    val art: Int,
+    val label: String = layout.label,
+    val example: Int? = null,
+) {
     CONTRIBUTIONS(WidgetLayout.CLASSIC, R.drawable.onboarding_contribution_tiles, "Contributions"),
-    STREAK(WidgetLayout.STREAK, R.drawable.onboarding_streak),
+    STREAK_ACTIVE(WidgetLayout.STREAK, R.drawable.onboarding_streak, "Streak · Active today", R.drawable.onboarding_aurora_active),
+    STREAK_PENDING(WidgetLayout.STREAK, R.drawable.onboarding_streak, "Streak · Pending", R.drawable.onboarding_aurora_pending),
+    STREAK_BROKEN(WidgetLayout.STREAK, R.drawable.onboarding_streak, "Streak · Broken", R.drawable.onboarding_aurora_broken),
     GOAL(WidgetLayout.WEEKLY_GOAL, R.drawable.onboarding_goal),
     PROFILE(WidgetLayout.PROFILE, R.drawable.onboarding_profile),
     INBOX(WidgetLayout.PR_INBOX, R.drawable.onboarding_inbox),
@@ -306,10 +316,12 @@ private fun WelcomeStep(onNext: () -> Unit) {
         ), 0L))
         withContext(Dispatchers.Default) {
             for (slide in WelcomeWidget.entries) {
-                val preview = WidgetRenderer.render(context, WidgetDesign(layout = slide.layout),
-                    SampleData.userData, null, 340f, 170f, dark = true, maxPixels = 120_000,
-                    inbox = inbox.takeIf { slide == WelcomeWidget.INBOX }).asImageBitmap()
-                withContext(Dispatchers.Main) { value = value + (slide to preview) }
+                val preview = slide.example?.let { BitmapFactory.decodeResource(context.resources, it) }
+                    ?: WidgetRenderer.render(context, WidgetDesign(layout = slide.layout, opacity = 58),
+                        SampleData.userData, null, 340f, 170f, dark = true, maxPixels = 120_000,
+                        inbox = inbox.takeIf { slide == WelcomeWidget.INBOX })
+                val image = preview.asImageBitmap()
+                withContext(Dispatchers.Main) { value = value + (slide to image) }
             }
         }
     }
@@ -329,9 +341,9 @@ private fun WelcomeStep(onNext: () -> Unit) {
     val foreground = Color(0xFFF3F8F5)
     val secondary = Color(0xFFC5D0CA)
     Box(Modifier.fillMaxSize().background(Color(0xFF080E0D))) {
-        Crossfade(widget, modifier = Modifier.matchParentSize(), animationSpec = fade, label = "widget artwork") { slide ->
+        Crossfade(widget.art, modifier = Modifier.matchParentSize(), animationSpec = fade, label = "widget artwork") { art ->
             Image(
-                painter = painterResource(slide.art),
+                painter = painterResource(art),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
@@ -352,6 +364,7 @@ private fun WelcomeStep(onNext: () -> Unit) {
                 Text(
                     "Your GitHub. At a glance.",
                     style = MaterialTheme.typography.displaySmall,
+                    fontFamily = numberFontFamily(context, NumberFont.SPACE_GROTESK),
                     color = foreground,
                     modifier = Modifier.semantics { heading() },
                 )
@@ -365,8 +378,8 @@ private fun WelcomeStep(onNext: () -> Unit) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
-                    color = Color(0xC4101A18),
-                    border = BorderStroke(1.dp, Color(0x50738B7B)),
+                    color = Color(0x40101A18),
+                    border = BorderStroke(1.dp, Color(0x438EB6A6)),
                 ) {
                     Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Crossfade(widget, animationSpec = fade, label = "widget example") { slide ->
@@ -379,7 +392,7 @@ private fun WelcomeStep(onNext: () -> Unit) {
                                         }
                                     }
                                 }
-                                Text(slide.label, style = MaterialTheme.typography.bodySmall, color = secondary)
+                                Text("${slide.label} · Example", style = MaterialTheme.typography.bodySmall, color = secondary)
                             }
                         }
                     }
