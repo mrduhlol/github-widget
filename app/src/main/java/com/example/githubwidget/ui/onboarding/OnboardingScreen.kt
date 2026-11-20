@@ -14,6 +14,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +37,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -43,6 +45,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -65,6 +69,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -79,6 +87,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.githubwidget.R
 import com.example.githubwidget.data.Lookup
 import com.example.githubwidget.data.Repository
 import com.example.githubwidget.data.SampleData
@@ -258,63 +267,77 @@ private fun StepPage(
 @Composable
 private fun WelcomeStep(onNext: () -> Unit) {
     val design by Repository.design.collectAsState()
-    StepPage(
-        content = {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Icon(AppIcons.Octocat, null, Modifier.size(28.dp), tint = AppTheme.colors.textPrimary)
-                Text("GH-widgets", style = MaterialTheme.typography.titleMedium, color = AppTheme.colors.textPrimary, modifier = Modifier.weight(1f))
-            }
-            Spacer(Modifier.height(30.dp))
-            Text(
-                "Your GitHub.\nAt a glance.",
-                style = MaterialTheme.typography.displaySmall,
-                color = AppTheme.colors.textPrimary,
-                modifier = Modifier.semantics { heading() },
-            )
-            Spacer(Modifier.height(12.dp))
-            Text(
-                "Your contribution graph, right on your home screen. Set it up with just your username.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = AppTheme.colors.textSecondary,
-            )
-            Spacer(Modifier.height(28.dp))
-            WallpaperBackdrop {
-                WidgetPreview(
-                    design = design,
-                    data = SampleData.userData,
-                    avatar = null,
-                    widthDp = 340f,
-                    heightDp = 170f,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
-                        .semantics { contentDescription = "Example contribution widget with sample data" },
+    // The wallpaper is intentionally dark in either system theme.
+    val foreground = Color(0xFFF3F8F5)
+    val secondary = Color(0xFFC5D0CA)
+    Box(Modifier.fillMaxSize().background(Color(0xFF080E0D))) {
+        Image(
+            painter = painterResource(R.drawable.onboarding_contribution_tiles),
+            contentDescription = null,
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.Crop,
+        )
+        Box(Modifier.matchParentSize().background(Brush.verticalGradient(
+            0f to Color(0xE5080E0D),
+            .48f to Color(0x35080E0D),
+            1f to Color(0xF0080E0D),
+        )))
+        StepPage(
+            content = {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(AppIcons.Octocat, null, Modifier.size(20.dp), tint = foreground)
+                    Text("GH Widgets", style = MaterialTheme.typography.titleMedium, color = foreground)
+                }
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    "Your GitHub. At a glance.",
+                    style = MaterialTheme.typography.displaySmall,
+                    color = foreground,
+                    modifier = Modifier.semantics { heading() },
                 )
-            }
-            Spacer(Modifier.height(10.dp))
-            Text(
-                "Example widget · Your activity comes next",
-                style = MaterialTheme.typography.bodySmall,
-                color = AppTheme.colors.textSecondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(Modifier.height(24.dp))
-            Text(
-                "Choose your style. Add your widget. Make it yours.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = AppTheme.colors.textSecondary,
-            )
-        },
-        actions = {
-            PrimaryButton("Set up my widget", onNext)
-            Spacer(Modifier.height(12.dp))
-            Text(
-                "No sign-in. No token. Just your username.",
-                style = MaterialTheme.typography.bodySmall,
-                color = AppTheme.colors.textSecondary,
-                textAlign = TextAlign.Center,
-            )
-        },
-    )
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    "See your contributions without opening GitHub.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = secondary,
+                )
+                Spacer(Modifier.height(20.dp))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color(0xC4101A18),
+                    border = BorderStroke(1.dp, Color(0x50738B7B)),
+                ) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        WidgetPreview(
+                            design = design,
+                            data = SampleData.userData,
+                            avatar = null,
+                            widthDp = 340f,
+                            heightDp = 170f,
+                            dark = true,
+                            modifier = Modifier.fillMaxWidth().heightIn(max = 170.dp),
+                        )
+                        Text("Example widget", style = MaterialTheme.typography.bodySmall, color = secondary)
+                    }
+                }
+            },
+            actions = {
+                Button(
+                    onClick = onNext,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFACDFB7),
+                        contentColor = Color(0xFF132119),
+                    ),
+                ) { Text("Get started") }
+                Spacer(Modifier.height(8.dp))
+                Text("Just your GitHub username", style = MaterialTheme.typography.bodySmall,
+                    color = secondary, textAlign = TextAlign.Center)
+            },
+        )
+    }
 }
 
 // ------------------------------------------------------------------ step 2: username
