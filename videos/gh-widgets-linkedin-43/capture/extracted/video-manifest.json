@@ -1,0 +1,16 @@
+[
+  {
+    "index": 0,
+    "url": "https://gh.abhishek-a.in/assets/promo.mp4",
+    "filename": "promo.mp4",
+    "width": 1310,
+    "height": 737,
+    "sourceWidth": 1920,
+    "sourceHeight": 1080,
+    "heading": "Try the widget.",
+    "caption": "This is the real layout at real size. Flip the switches and it answers at once.",
+    "ariaLabel": "",
+    "preview": "assets/videos/previews/video-0-preview.png",
+    "localPath": "assets/videos/promo.mp4"
+  }
+]

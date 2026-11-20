@@ -57,10 +57,11 @@ class FocusWidgetTest {
         val out = File("build/widget-renders").apply { mkdirs() }
         fun withDays(first: Int, count: Int): UserData = data(
             (0..count + 1).map { index -> Day(today.minusDays(index.toLong()),
-                if (index == 0) first else if (index <= count) 1 else 0, 0) }
+                if (index == 0) first else if (index <= count) 1 + (index * 7) % 5 else 0, 0) }
         )
         val active = withDays(1, 141)
         val pending = withDays(0, 142)
+        val broken = data(listOf(Day(today, 0, 0), Day(today.minusDays(1), 0, 0), Day(today.minusDays(2), 3, 0)))
         val longRun = data((0 until 366).map { Day(today.minusDays(it.toLong()), 1, 1) })
         assertEquals(StreakWidgetPainter.Snapshot(StreakWidgetPainter.State.ACTIVE, 366, lowerBound = true),
             StreakWidgetPainter.snapshot(longRun, WidgetRenderer.Placeholder.NONE, today))
@@ -68,7 +69,7 @@ class FocusWidgetTest {
         assertEquals(142, StreakWidgetPainter.snapshot(active, WidgetRenderer.Placeholder.NONE, today).count)
         val sizes = listOf(170f to 170f, 340f to 170f, 340f to 260f, 170f to 340f, 110f to 60f)
         for ((width, height) in sizes) {
-            for ((label, user) in listOf("active" to active, "pending" to pending)) {
+            for ((label, user) in listOf("active" to active, "pending" to pending, "broken" to broken)) {
                 val rendered = WidgetRenderer.render(context, design, user, null, width, height, dark = true)
                 val light = WidgetRenderer.render(context, design.copy(background = Background.LIGHT), user, null,
                     width, height, dark = false)
@@ -78,9 +79,7 @@ class FocusWidgetTest {
                     .outputStream().use { assertTrue(rendered.compress(Bitmap.CompressFormat.PNG, 100, it)) }
             }
         }
-        val broken = data(listOf(Day(today, 0, 0), Day(today.minusDays(1), 0, 0), Day(today.minusDays(2), 3, 0)))
         for ((label, user, placeholder) in listOf(
-            Triple("broken", broken, WidgetRenderer.Placeholder.NONE),
             Triple("zero", withDays(0, 0), WidgetRenderer.Placeholder.NONE),
             Triple("loading", null, WidgetRenderer.Placeholder.LOADING),
             Triple("failed", null, WidgetRenderer.Placeholder.FAILED),

@@ -1,0 +1,41 @@
+{
+  "provider": "kokoro",
+  "speed": "1.0",
+  "lines": [
+    {
+      "id": "01",
+      "text": "Still opening the app — just to check your streak?"
+    },
+    {
+      "id": "02",
+      "text": "Meet GH-widgets. Your graph — on your home screen."
+    },
+    {
+      "id": "03",
+      "text": "Set up in under a minute. Type your username — that's all it asks."
+    },
+    {
+      "id": "04",
+      "text": "Confirm it's you — tap Add to home screen — done."
+    },
+    {
+      "id": "05",
+      "text": "Three styles. Nine palettes — plus wallpaper match, and your own color."
+    },
+    {
+      "id": "06",
+      "text": "Streaks, best day, weekly and monthly charts — and it works offline."
+    },
+    {
+      "id": "07",
+      "text": "Free. No sign-in. Get GH-widgets — at gh.abhishek-a.in."
+    }
+  ],
+  "bgm": {
+    "mode": "retrieve",
+    "query": "soft calm minimal tech underscore, professional and unobtrusive",
+    "blob": "Your GitHub graph on your home screen in under a minute — free, no sign-in, just your username.",
+    "arc": "BAB (Before → After tease → Bridge → Steps → Wow → CTA) with feature-benefit progression"
+  },
+  "voice": "am_michael"
+}

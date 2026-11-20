@@ -1,0 +1,109 @@
+[a] Skip to content
+[a] WIDGETS
+[a] Widget
+[a] Setup
+[a] Features
+[a] Download
+[span] Figures are demo
+[a] Download
+[p] Free Android widget · No sign-in
+[span] Your
+[span] GitHub
+[span] graph,
+[span] your
+[span] home
+[span] screen.
+[p] GH-widgets puts your contribution graph on your Android home screen. Free, no sign-in, just your username.
+[a] Download free
+[a] Source
+[p] Installs from GitHub releases — allow unknown apps once.
+[a] All releases
+[span] GH-WIDGET · LIVE
+[span] SIM
+[span] @mrduhlol
+[b] 1,248
+[div] total
+[div] streak
+[div] today
+[div] Version
+[div] v3.1.1
+[div] Size
+[div] ~11 MB
+[div] Android
+[div] 8.0+
+[div] License
+[div] MIT
+[h2] Try the widget.
+[p] This is the real layout at real size. Flip the switches and it answers at once.
+[span] CONFIGURE · LIVE
+[span] 3 STYLES / 9 PALETTES
+[span] @mrduhlol
+[b] 1,248
+[div] total
+[div] streak
+[div] today
+[span] Style
+[button] Classic
+[button] Graph
+[button] Numbers
+[span] Palette
+[span] Font
+[option] System
+[option] Inter
+[option] Space Grotesk
+[option] Manrope
+[option] Outfit
+[option] Figtree
+[option] Plus Jakarta
+[span] Shape
+[button] Square
+[button] Rounded
+[button] Circle
+[span] Cell gap
+[b] 5px
+[span] Name
+[span] Total
+[span] Streak
+[span] Today
+[p] Nine palettes ship in the app, plus Match wallpaper and your own custom color.
+[a] Get this on your phone
+[h2] Set up in under a minute.
+[p] Type your username.
+[p] Paste your profile link if that is easier. Nothing else is asked.
+[p] Confirm it is you.
+[p] Your photo and graph show up so you know it found the right person.
+[div] mrduhlol
+[div] That is you —
+[b] 1,248 contributions
+[div] this year.
+[p] Add it to your home screen.
+[p] Your phone asks where to put it. Change colors anytime after.
+[span] @mrduhlol
+[b] 1,248
+[div] total
+[div] streak
+[div] today
+[p] No sign-in, no token.
+[span] Your username is the only thing the app ever asks for.
+[p] Works offline.
+[span] The last graph stays on screen and refreshes every 1 to 12 hours, your call.
+[p] Nine palettes, plus your own color.
+[span] Match wallpaper follows your phone on Android 12 and newer.
+[p] Fits any size.
+[span] The graph fills the widget. Make it wider to see more weeks.
+[p] Stats worth glancing at.
+[span] Streaks, best day, weekly and monthly charts, plain-language insights.
+[p] Resizes from phone to tablet.
+[span] Wider shows more weeks — 3 at 180 dp, 7 at 320, 12 at 480.
+[span] INSTALL
+[span] APK · SIGNED
+[span] Get
+[span] GH-widgets.
+[a] Download free APK
+[p] Android 8.0+ · v3.1.1 · about 11 MB · signed release
+[p] Allow unknown apps once when Android asks — that is the whole install.
+[a] All releases
+[a] Source on GitHub
+[a] Report a bug
+[span] Free. No sign-in. Just your username.
+[span] v3.1.1 · MIT licensed · @mrduhlol

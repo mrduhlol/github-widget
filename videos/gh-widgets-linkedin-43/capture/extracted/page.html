@@ -1,0 +1,1188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+  :root {
+    --bg: #060a07;
+    --panel: #0b110c;
+    --panel2: #0e1510;
+    --line: #1e2c20;
+    --ink: #e9f5ea;
+    --muted: #7f917f;
+    --acc: #3dff6e;
+    --acc-ink: #031207;
+    --acc-btn: #2be05c;
+    --org: #ff5a1f;
+    --amb: #ffb224;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --disp: "Anton", "Arial Narrow", sans-serif;
+    --body: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+    --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+    --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+    --step-head: clamp(2rem, 1.3rem + 3.2vw, 4rem);
+    --margin: clamp(16px, 4vw, 64px);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: var(--body);
+    font-size: var(--step-body); line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--acc); color: var(--acc-ink); }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--acc); outline-offset: 3px; }
+
+  .wrap { padding-left: var(--margin); padding-right: var(--margin); max-width: 1440px; margin: 0 auto; }
+  .micro { font-family: var(--mono); font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+
+  .skip { position: absolute; left: -9999px; top: 0; background: var(--acc); color: var(--acc-ink); font-weight: 800; padding: 12px 24px; z-index: 99; }
+  .skip:focus { left: 0; }
+
+  /* Status bar */
+  .topbar { border-bottom: 1px solid var(--line); }
+  .topbar-inner { display: flex; align-items: center; gap: 34px; padding-top: 18px; padding-bottom: 18px; }
+  .wordmark { font-family: var(--disp); font-size: 26px; letter-spacing: 0.01em; color: var(--acc); text-decoration: none; }
+  .wordmark span { color: var(--ink); }
+  .nav-links { display: flex; gap: 28px; margin-left: 12px; }
+  .nav-links a { font-family: var(--mono); font-size: 13px; letter-spacing: 0.14em; text-decoration: none; color: var(--muted); }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+  .pillchip { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; color: var(--amb); border: 1px solid var(--line); padding: 8px 14px; white-space: nowrap; }
+  .btn {
+    display: inline-block; background: var(--acc); color: var(--acc-ink);
+    font-weight: 800; text-decoration: none; border: 0; cursor: pointer;
+    padding: 18px 46px; border-radius: 2px; font-size: 19px; min-height: 44px;
+    font-family: var(--body);
+  }
+  .btn.small { padding: 12px 26px; font-size: 16px; font-family: var(--mono); letter-spacing: 0.08em; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .btn,.chip,.dot,.toggle,.band .disc { transition: transform 140ms cubic-bezier(0.23,1,0.32,1), background-color 150ms cubic-bezier(0.23,1,0.32,1), border-color 150ms; }
+  .btn:active,.chip:active,.dot:active { transform: scale(0.97); }
+
+  /* Hero */
+  .hero { padding-top: 64px; padding-bottom: 0; }
+  .hero h1 {
+    font-family: var(--disp); font-weight: 400;
+    font-size: clamp(58px, 9vw, 148px); line-height: 0.94; letter-spacing: 0.005em;
+    text-transform: uppercase;
+  }
+
+  .mask { display: block; overflow: hidden; }
+  .mask .w { display: inline-block; overflow: hidden; vertical-align: top; }
+  .mask .w > span { display: inline-block; animation: rise 0.85s cubic-bezier(0.23, 1, 0.32, 1) both; animation-delay: var(--d, 0s); padding-right: 0.24em; }
+  .mask .w:last-child > span { padding-right: 0; }
+  .mask.green .w > span { color: var(--acc); }
+  .mask.static .w > span { animation: none; }
+  @keyframes rise { from { transform: translateY(110%); } to { transform: none; } }
+  .hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; margin-top: 48px; }
+  .hero-row > *, .steps > *, .demo-panel > * { min-width: 0; }
+  .hero .lede { font-size: var(--step-lead); color: var(--ink); max-width: 34ch; margin-bottom: 36px; animation: fadeup 0.7s cubic-bezier(0.23,1,0.32,1) 0.55s both; }
+  .hero-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; animation: fadeup 0.7s cubic-bezier(0.23,1,0.32,1) 0.65s both; }
+  .hero .term { animation: fadeup 0.8s cubic-bezier(0.23,1,0.32,1) 0.7s both; }
+  .hero .meta { margin-top: 22px; animation: fadeup 0.7s cubic-bezier(0.23,1,0.32,1) 0.75s both; }
+  .ghost-link { color: var(--muted); font-weight: 600; }
+  @keyframes fadeup { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+
+  .statstrip { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); margin-top: 56px; }
+  .statstrip > div { padding: 18px 22px; border-left: 1px solid var(--line); }
+  .statstrip > div:first-child { border-left: 0; }
+  .statstrip .k { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; color: var(--muted); }
+  .statstrip .v { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--acc); margin-top: 6px; font-variant-numeric: tabular-nums; }
+
+  /* Terminal panel + live widget */
+  .term { border: 1px solid var(--line); background: var(--panel); animation: fadeup 0.8s ease 0.6s both; }
+  .term-head { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); padding: 12px 20px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; color: var(--muted); }
+  .term-head .live { width: 8px; height: 8px; background: var(--acc); animation: blink 1.4s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0.15; } }
+  .term-head .right { margin-left: auto; color: var(--muted); }
+  .term-body { padding: 36px 32px; }
+  .widget { background: var(--bg); border: 1px solid var(--line); padding: 28px 26px; min-height: 280px; }
+  .widget .w-user { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .widget .w-user img { width: 44px; height: 44px; border-radius: 50%; display: block; background: var(--panel2); }
+  .widget .w-nametext { font-weight: 800; font-size: 24px; }
+  .widget .w-graph { display: grid; grid-template-rows: repeat(7, var(--cell, 15px)); grid-auto-flow: column; column-gap: var(--gap, 5px); row-gap: 4px; margin-bottom: 20px; }
+  .widget .w-cell { width: var(--cell, 15px); height: var(--cell, 15px); border-radius: 3px; }
+  .widget .w-stats { display: flex; gap: 34px; color: var(--muted); font-size: 14px; font-weight: 600; font-family: var(--mono); }
+  .widget .w-stats b { display: block; color: var(--ink); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .widget .w-bignum { font-family: var(--disp); font-size: 84px; color: var(--acc); line-height: 1; }
+  .widget[data-style="numbers"] { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 28px; align-items: center; }
+  .widget[data-style="numbers"] .w-graph { grid-column: 2; grid-row: 1 / span 2; margin-bottom: 0; min-width: 0; }
+  .widget[data-style="numbers"] { --cell: 11px; }
+  .widget[data-style="numbers"] [data-stat="total"] { display: none; }
+  .widget[data-style="numbers"] .w-stats { flex-direction: column; gap: 12px; }
+  .widget[data-style="numbers"] .w-bignum { font-size: 72px; }
+  .widget.pop { animation: pop 0.35s ease; }
+  @keyframes pop { from { opacity: 0.25; transform: scale(0.985); } to { opacity: 1; transform: none; } }
+  .chips { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  .chip {
+    background: transparent; color: var(--ink); border: 1px solid var(--line); cursor: pointer;
+    border-radius: 2px; padding: 12px 24px; font-family: var(--mono); font-size: 13px; letter-spacing: 0.1em; min-height: 44px;
+  }
+  .chip[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); color: var(--acc-ink); font-weight: 700; }
+  .dots { display: flex; gap: 10px; margin-top: 16px; align-items: center; }
+  .dot { width: 32px; height: 32px; border-radius: 2px; border: 1px solid var(--line); cursor: pointer; padding: 0; }
+  .dot[aria-pressed="true"] { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .widget { --wfont: inherit; }
+  .widget .w-nametext, .widget .w-stats, .widget .w-bignum { font-family: var(--wfont); }
+  .widget[data-shape="square"] .w-cell { border-radius: 2px; }
+  .widget[data-shape="circle"] .w-cell { border-radius: 50%; }
+  .range-row { display: flex; align-items: center; gap: 12px; }
+  .range-row input[type="range"] { width: 130px; accent-color: var(--acc); height: 44px; }
+  .range-row b { font-family: var(--mono); font-size: 13px; min-width: 48px; text-align: right; font-weight: 400; }
+  .fontsel { background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 2px; font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; padding: 12px 12px; min-height: 44px; max-width: 230px; }
+
+  section.block { padding-top: 110px; padding-bottom: 110px; }
+  .sec-head { font-family: var(--disp); font-weight: 400; font-size: clamp(44px, 6vw, 96px); line-height: 0.95; text-transform: uppercase; max-width: 22ch; }
+  .sec-sub { color: var(--ink); font-size: var(--step-lead); margin-top: 18px; max-width: 52ch; }
+  .hero h1,.sec-head,.band p.sentence,.cta h2,footer .giant,.step-card .step-k { text-wrap: balance; }
+
+  .demo-panel { margin-top: 48px; }
+  .demo-grid { display: grid; grid-template-columns: 62fr 38fr; }
+  .demo-left { padding: 48px; border-right: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
+  .demo-left .widget { width: 100%; max-width: 520px; }
+  .demo-right { padding: 40px 36px; display: flex; flex-direction: column; gap: 20px; }
+  .ctl { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 52px; }
+  .ctl .row-label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; color: var(--muted); }
+  .toggle { position: relative; width: 58px; height: 30px; border-radius: 2px; background: var(--panel2); background: var(--panel2); background: #101812; border: 1px solid var(--line); cursor: pointer; flex: none; }
+  .toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 2px; background: var(--muted); transition: left 180ms cubic-bezier(0.32,0.72,0,1), background-color 180ms; }
+  .toggle[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); }
+  .toggle[aria-pressed="true"]::after { left: 31px; background: var(--acc-ink); }
+  .demo-note { margin-top: 22px; color: var(--muted); font-size: var(--step-small); font-family: var(--mono); letter-spacing: 0.02em; }
+  .demo-link { margin-top: 8px; font-weight: 600; color: var(--acc); font-family: var(--mono); font-size: 14px; letter-spacing: 0.06em; }
+
+  .clip-block { margin-top: 64px; }
+  .clip-block video { width: 100%; display: block; background: #000; border-left: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+
+  /* Setup cells */
+  .steps { display: grid; grid-template-columns: 1fr 1fr 1fr; border: 1px solid var(--line); margin-top: 48px; }
+  .step-card { padding: 40px 36px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 26px; }
+  .step-card:first-child { border-left: 0; }
+  .step-card .idx { font-family: var(--mono); font-size: 13px; letter-spacing: 0.14em; color: var(--acc); }
+  .step-card .step-k { font-family: var(--disp); font-size: 30px; line-height: 1; text-transform: uppercase; margin-top: 12px; }
+  .step-card .step-k + p { color: var(--ink); margin-top: 12px; font-size: 17px; }
+  .field { background: var(--bg); border: 1px solid var(--line); padding: 18px 20px; font-size: 18px; color: var(--muted); font-weight: 600; font-family: var(--mono); }
+  .field.filled { color: var(--ink); }
+  input.field { width: 100%; font: inherit; color: var(--ink); caret-color: var(--acc); }
+  input.field::placeholder { color: var(--muted); }
+  .confirm { margin-top: 12px; border: 1px solid var(--line); padding: 16px 20px; font-weight: 600; font-size: 17px; }
+  .confirm b { color: var(--acc); }
+
+  /* Feature rows */
+  .bands { margin-top: 48px; border-top: 1px solid var(--line); }
+  .band { padding: 34px var(--margin); border-bottom: 1px solid var(--line); }
+  .band.on { background: var(--panel); }
+  .band-inner { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: center; }
+  .band p.sentence { font-family: var(--disp); font-size: clamp(26px, 3.4vw, 52px); line-height: 1; text-transform: uppercase; color: var(--muted); }
+  .band.on p.sentence { color: var(--ink); }
+  .band .consequence { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 220ms cubic-bezier(0.23,1,0.32,1), opacity 200ms; font-size: 17px; color: var(--ink); max-width: 60ch; }
+  .band .consequence > span { overflow: hidden; min-height: 0; }
+  .band.on .consequence { grid-template-rows: 1fr; opacity: 1; }
+  .band .disc { width: 46px; height: 46px; border-radius: 2px; background: transparent; border: 1px solid var(--line); color: var(--acc); font-family: var(--mono); font-size: 24px; font-weight: 700; cursor: pointer; flex: none; line-height: 1; }
+  .band .disc[aria-pressed="false"]::after { content: "+"; }
+  .band .disc[aria-pressed="true"]::after { content: "–"; }
+
+  /* CTA */
+  .cta-panel { border: 1px solid var(--line); background: var(--panel); margin-top: 48px; }
+  .cta-panel .term-body { padding: 64px 56px; }
+  .cta h2 { font-family: var(--disp); font-weight: 400; font-size: clamp(56px, 8vw, 130px); line-height: 0.94; text-transform: uppercase; }
+  .cta h2 .l2 { color: var(--acc); }
+  .cta .btn { margin-top: 40px; font-size: 22px; padding: 22px 64px; }
+  .cta .meta { margin-top: 24px; }
+  .cta .links { margin-top: 14px; display: flex; gap: 28px; font-weight: 600; flex-wrap: wrap; }
+
+  footer { padding: 110px 0 56px; border-top: 1px solid var(--line); margin-top: 40px; }
+  footer .giant { font-family: var(--disp); font-weight: 400; font-size: clamp(64px, 12.5vw, 220px); line-height: 0.9; text-transform: uppercase; }
+  footer .giant span { color: var(--acc); }
+  footer .foot-row { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 44px; font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; color: var(--muted); }
+  footer .foot-row a:hover { color: var(--ink); }
+
+  /* Scroll entrances */
+  .rv { animation: rv-in 0.65s cubic-bezier(0.23, 1, 0.32, 1) both; animation-timeline: view(); animation-range: entry 5% cover 28%; }
+  @keyframes rv-in { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+  @supports not (animation-timeline: view()) { .rv { animation: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .mask .w > span { animation: none; }
+    .term-head .live { animation: none; }
+    .hero .lede, .hero-actions, .hero .meta, .hero .term { animation: none; }
+    .rv { animation: none; }
+    .widget.pop { animation: none; }
+    .band .consequence { transition: none; }
+    .band .disc,.band .disc::after { transition: none; }
+  }
+  @media (hover: hover) and (pointer: fine) {
+  .nav-links a:hover { color: var(--ink); }
+  .btn:hover { background: var(--acc-btn); }
+  .ghost-link:hover { color: var(--ink); }
+  footer .foot-row a:hover { color: var(--ink); }
+  .chip:hover { border-color: var(--acc); }
+  }
+
+  @media (max-width: 900px) {
+    .nav-links { display: none; }
+    .pillchip { display: none; }
+    .hero { padding-top: 40px; padding-bottom: 0; }
+    .hero h1 { font-size: 15.5vw; }
+    .hero-row { grid-template-columns: 1fr; margin-top: 40px; }
+    .hero-actions { flex-direction: column; align-items: flex-start; }
+    .statstrip { grid-template-columns: 1fr 1fr; }
+    .statstrip > div:nth-child(3) { border-left: 0; }
+    .statstrip > div { border-top: 1px solid var(--line); }
+    .statstrip > div:nth-child(-n+2) { border-top: 0; }
+    .demo-grid { grid-template-columns: 1fr; }
+    .demo-left { border-right: 0; border-bottom: 1px solid var(--line); padding: 28px 20px; }
+    .demo-right { padding: 24px 20px; }
+    .widget { padding: 22px 20px; }
+    .widget .w-graph { grid-template-rows: repeat(7, 12px); }
+    .widget[data-style="numbers"] { grid-template-columns: 1fr; }
+    .widget[data-style="numbers"] .w-graph { grid-column: 1; grid-row: auto; }
+    .widget[data-style="numbers"] .w-stats { flex-direction: row; }
+    .widget .w-cell { width: 12px; height: 12px; }
+    .steps { grid-template-columns: 1fr; }
+    .step-card { border-left: 0; border-top: 1px solid var(--line); padding: 32px 24px; }
+    .step-card:first-child { border-top: 0; }
+    section.block { padding-top: 70px; padding-bottom: 70px; }
+  }
+</style>
+<style>/* vietnamese */
+@font-face {
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/1Ptgg87LROyAm3K8-C8CSKlvPfE.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/1Ptgg87LROyAm3K9-C8CSKlvPfE.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/1Ptgg87LROyAm3Kz-C8CSKlv.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/xn7gYHE41ni1AdIRggqxSvfedN62Zw.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/xn7gYHE41ni1AdIRggOxSvfedN62Zw.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/xn7gYHE41ni1AdIRggSxSvfedN62Zw.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/xn7gYHE41ni1AdIRggixSvfedN62Zw.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/xn7gYHE41ni1AdIRggmxSvfedN62Zw.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/xn7gYHE41ni1AdIRggexSvfedN4.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/xn7gYHE41ni1AdIRggqxSvfedN62Zw.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/xn7gYHE41ni1AdIRggOxSvfedN62Zw.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/xn7gYHE41ni1AdIRggSxSvfedN62Zw.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/xn7gYHE41ni1AdIRggixSvfedN62Zw.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/xn7gYHE41ni1AdIRggmxSvfedN62Zw.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/xn7gYHE41ni1AdIRggexSvfedN4.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko70yygg_vbd-E.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko50yygg_vbd-E.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko40yygg_vbd-E.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yygg_vb.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko70yygg_vbd-E.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko50yygg_vbd-E.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko40yygg_vbd-E.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yygg_vb.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/Jqz55SSPQuCQF3t8uOwiUL-taUTtap9IayojdSFOd1I.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/Jqz55SSPQuCQF3t8uOwiUL-taUTtap9GayojdSFO.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(assets/fonts/Jqz55SSPQuCQF3t8uOwiUL-taUTtap9IayojdSFOd1I.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(assets/fonts/Jqz55SSPQuCQF3t8uOwiUL-taUTtap9GayojdSFO.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/Jqz55SSPQuCQF3t8uOwiUL-taUTtap9IayojdSFOd1I.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/Jqz55SSPQuCQF3t8uOwiUL-taUTtap9GayojdSFO.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/V8mDoQDjQSkFtoMM3T6r8E7mPb54C_k3HqUtEw.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/V8mDoQDjQSkFtoMM3T6r8E7mPb94C_k3HqUtEw.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/V8mDoQDjQSkFtoMM3T6r8E7mPb54C_k3HqUtEw.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/V8mDoQDjQSkFtoMM3T6r8E7mPb94C_k3HqUtEw.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+
+</head>
+<body>
+
+<a class="skip" href="#widget">Skip to content</a>
+
+<div class="topbar"><div class="wrap topbar-inner">
+  <a class="wordmark" href="#">GH<span>-</span>WIDGETS</a>
+  <div class="nav-links">
+    <a href="#widget">Widget</a>
+    <a href="#setup">Setup</a>
+    <a href="#features">Features</a>
+    <a href="#download">Download</a>
+  </div>
+  <div class="topbar-right">
+    <span class="pillchip">Figures are demo</span>
+    <a class="btn small" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download</a>
+  </div>
+</div></div>
+
+<header class="wrap hero">
+  <p class="micro rv">Free Android widget · No sign-in</p>
+  <h1 style="margin-top:22px">
+    <span class="mask"><span class="w" style="--d:.05s"><span>Your</span></span><span class="w" style="--d:.12s"><span>GitHub</span></span><span class="w" style="--d:.19s"><span>graph,</span></span></span>
+    <span class="mask green"><span class="w" style="--d:.32s"><span>on</span></span><span class="w" style="--d:.39s"><span>your</span></span><span class="w" style="--d:.46s"><span>home</span></span><span class="w" style="--d:.53s"><span>screen.</span></span></span>
+  </h1>
+  <div class="hero-row">
+    <div>
+      <p class="lede">GH-widgets puts your contribution graph on your Android home screen. Free, no sign-in, just your username.</p>
+      <div class="hero-actions">
+        <a class="btn" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download free</a>
+        <a class="btn ghost" href="https://github.com/mrduhlol/github-widget">Source</a>
+      </div>
+      <p class="micro" style="margin-top:26px">Installs from GitHub releases — allow unknown apps once. <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/releases">All releases</a></p>
+    </div>
+    <div class="term">
+      <div class="term-head"><span class="live"></span><span data-decode="" aria-label="GH-WIDGET · LIVE">GH-WIDGET · LIVE</span><span class="right">SIM</span></div>
+      <div class="term-body">
+        <div class="widget pop" data-ui="" data-widget="" data-style="classic" data-palette="green">
+          <div class="w-user" data-part="name"><img src="https://gh.abhishek-a.in/assets/avatar.png" width="88" height="88" alt="mrduhlol’s GitHub avatar" loading="eager" fetchpriority="high" decoding="async"><span class="w-nametext" data-part="nametext">@mrduhlol</span></div>
+          <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
+          <div class="w-bignum" data-part="bignum" hidden style="color: rgb(61, 255, 110);">1,248</div>
+          <div class="w-stats" data-part="stats">
+            <div data-stat="total"><b>1,248</b>total</div>
+            <div data-stat="streak"><b>23</b>streak</div>
+            <div data-stat="today"><b>31</b>today</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="statstrip rv">
+    <div><div class="k">Version</div><div class="v">v3.1.1</div></div>
+    <div><div class="k">Size</div><div class="v">~11 MB</div></div>
+    <div><div class="k">Android</div><div class="v">8.0+</div></div>
+    <div><div class="k">License</div><div class="v">MIT</div></div>
+  </div>
+</header>
+
+<section class="wrap block" id="widget">
+  <h2 class="sec-head rv">Try the widget.</h2>
+  <p class="sec-sub rv">This is the real layout at real size. Flip the switches and it answers at once.</p>
+  <div class="term rv" style="margin-top:48px">
+    <div class="term-head"><span class="live"></span><span data-decode="" aria-label="CONFIGURE · LIVE">CONFIGURE · LIVE</span><span class="right">3 STYLES / 9 PALETTES</span></div>
+    <div class="demo-grid">
+      <div class="demo-left">
+        <div class="widget pop" data-ui="" data-widget="" data-style="classic" data-palette="green" data-shape="rounded">
+          <div class="w-user" data-part="name"><img src="https://gh.abhishek-a.in/assets/avatar.png" width="88" height="88" alt="mrduhlol’s GitHub avatar" loading="lazy" decoding="async"><span class="w-nametext" data-part="nametext">@mrduhlol</span></div>
+          <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
+          <div class="w-bignum" data-part="bignum" hidden style="color: rgb(61, 255, 110);">1,248</div>
+          <div class="w-stats" data-part="stats">
+            <div data-stat="total"><b>1,248</b>total</div>
+            <div data-stat="streak"><b>23</b>streak</div>
+            <div data-stat="today"><b>31</b>today</div>
+          </div>
+        </div>
+      </div>
+      <div class="demo-right">
+        <div class="ctl"><span class="row-label">Style</span>
+          <span class="chips" style="margin-top:0" role="group" aria-label="Widget style">
+            <button class="chip" data-demo-style="classic" aria-pressed="true">Classic</button>
+            <button class="chip" data-demo-style="graph" aria-pressed="false">Graph</button>
+            <button class="chip" data-demo-style="numbers" aria-pressed="false">Numbers</button>
+          </span>
+        </div>
+        <div class="ctl"><span class="row-label">Palette</span>
+          <span class="dots" role="group" aria-label="Palette">
+            <button class="dot" data-demo-palette="green" aria-pressed="true" aria-label="Classic green" style="background:#3dff6e"></button>
+            <button class="dot" data-demo-palette="blue" aria-pressed="false" aria-label="Ocean blue" style="background:#58a6ff"></button>
+            <button class="dot" data-demo-palette="amber" aria-pressed="false" aria-label="Amber" style="background:#d29922"></button>
+            <button class="dot" data-demo-palette="rose" aria-pressed="false" aria-label="Rose" style="background:#f778ba"></button>
+          </span>
+        </div>
+        <div class="ctl"><span class="row-label">Font</span><select class="fontsel" id="demo-font" aria-label="Number font"><option value="SYSTEM">System</option><option value="INTER">Inter</option><option value="SPACE_GROTESK">Space Grotesk</option><option value="MANROPE">Manrope</option><option value="OUTFIT">Outfit</option><option value="FIGTREE">Figtree</option><option value="PLUS_JAKARTA">Plus Jakarta</option></select></div>
+      <div class="ctl"><span class="row-label">Shape</span><span class="chips" style="margin-top:0" role="group" aria-label="Cell shape"><button class="chip" data-demo-shape="square" aria-pressed="false">Square</button><button class="chip" data-demo-shape="rounded" aria-pressed="true">Rounded</button><button class="chip" data-demo-shape="circle" aria-pressed="false">Circle</button></span></div>
+      <div class="ctl"><span class="row-label">Cell gap</span><span class="range-row"><input type="range" id="demo-gap" min="2" max="8" step="1" value="5" aria-label="Gap between cells in pixels"><b id="demo-gap-val">5px</b></span></div>
+      <div class="ctl"><span class="row-label">Name</span><button class="toggle" data-demo-toggle="name" aria-pressed="true" aria-label="Show name"></button></div>
+        <div class="ctl"><span class="row-label">Total</span><button class="toggle" data-demo-toggle="total" aria-pressed="true" aria-label="Show total"></button></div>
+        <div class="ctl"><span class="row-label">Streak</span><button class="toggle" data-demo-toggle="streak" aria-pressed="true" aria-label="Show streak"></button></div>
+        <div class="ctl"><span class="row-label">Today</span><button class="toggle" data-demo-toggle="today" aria-pressed="false" aria-label="Show today"></button></div>
+        <p class="demo-note">Nine palettes ship in the app, plus Match wallpaper and your own custom color.</p>
+        <a class="demo-link" href="#download">Get this on your phone</a>
+      </div>
+    </div>
+  </div>
+  <div class="term rv" style="margin-top:48px">
+    <video src="assets/promo.mp4" muted loop playsinline autoplay preload="metadata" style="display:block;width:100%;background:#000"></video>
+  </div>
+</section>
+
+<section class="wrap block" id="setup">
+  <h2 class="sec-head rv">Set up in under a minute.</h2>
+  <div class="steps rv">
+    <div class="step-card">
+      <div class="idx">01</div>
+      <div><p class="step-k">Type your username.</p><p>Paste your profile link if that is easier. Nothing else is asked.</p></div>
+      <input class="field" id="try-user" maxlength="39" value="" placeholder="github.com/…" aria-label="Your GitHub username">
+    </div>
+    <div class="step-card">
+      <div class="idx">02</div>
+      <div><p class="step-k">Confirm it is you.</p><p>Your photo and graph show up so you know it found the right person.</p></div>
+      <div><div class="field filled">mrduhlol</div><div class="confirm">That is you — <b>1,248 contributions</b> this year.</div></div>
+    </div>
+    <div class="step-card">
+      <div class="idx">03</div>
+      <div><p class="step-k">Add it to your home screen.</p><p>Your phone asks where to put it. Change colors anytime after.</p></div>
+      <div class="widget pop" data-ui="" data-widget="" data-style="classic" data-palette="green">
+        <div class="w-user" data-part="name"><img src="https://gh.abhishek-a.in/assets/avatar.png" width="88" height="88" alt="mrduhlol’s GitHub avatar" loading="lazy" decoding="async"><span class="w-nametext" data-part="nametext">@mrduhlol</span></div>
+        <div class="w-graph" data-part="graph"><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#006d32"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#3dff6e"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#152219"></div><div class="w-cell" style="background:#26a641"></div><div class="w-cell" style="background:#0e4429"></div><div class="w-cell" style="background:#0e4429"></div></div>
+        <div class="w-stats" data-part="stats">
+          <div><b>1,248</b>total</div>
+          <div><b>23</b>streak</div>
+          <div><b>31</b>today</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="features" style="padding-left:0;padding-right:0">
+  <div class="wrap"><h2 class="sec-head rv">Nothing to sign into.</h2></div>
+  <div class="bands">
+    <div class="band on">
+      <div class="band-inner">
+        <div><p class="sentence">No sign-in, no token.</p><p class="consequence"><span>Your username is the only thing the app ever asks for.</span></p></div>
+        <button class="disc" aria-pressed="true" aria-label="Toggle section"></button>
+      </div>
+    </div>
+    <div class="band on">
+      <div class="band-inner">
+        <div><p class="sentence">Works offline.</p><p class="consequence"><span>The last graph stays on screen and refreshes every 1 to 12 hours, your call.</span></p></div>
+        <button class="disc" aria-pressed="true" aria-label="Toggle section"></button>
+      </div>
+    </div>
+    <div class="band on">
+      <div class="band-inner">
+        <div><p class="sentence">Nine palettes, plus your own color.</p><p class="consequence"><span>Match wallpaper follows your phone on Android 12 and newer.</span></p></div>
+        <button class="disc" aria-pressed="true" aria-label="Toggle section"></button>
+      </div>
+    </div>
+    <div class="band on">
+      <div class="band-inner">
+        <div><p class="sentence">Fits any size.</p><p class="consequence"><span>The graph fills the widget. Make it wider to see more weeks.</span></p></div>
+        <button class="disc" aria-pressed="true" aria-label="Toggle section"></button>
+      </div>
+    </div>
+    <div class="band on">
+      <div class="band-inner">
+        <div><p class="sentence">Stats worth glancing at.</p><p class="consequence"><span>Streaks, best day, weekly and monthly charts, plain-language insights.</span></p></div>
+        <button class="disc" aria-pressed="true" aria-label="Toggle section"></button>
+      </div>
+    </div>
+    <div class="band on">
+      <div class="band-inner">
+        <div><p class="sentence">Resizes from phone to tablet.</p><p class="consequence"><span>Wider shows more weeks — 3 at 180 dp, 7 at 320, 12 at 480.</span></p></div>
+        <button class="disc" aria-pressed="true" aria-label="Toggle section"></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap block cta" id="download">
+  <div class="term rv">
+    <div class="term-head"><span class="live"></span><span data-decode="" aria-label="INSTALL">INSTALL</span><span class="right">APK · SIGNED</span></div>
+    <div class="term-body" style="padding:64px 56px">
+      <h2><span class="mask static"><span class="w"><span>Get</span></span><span class="w"><span>GH-widgets.</span></span></span></h2>
+      <div><a class="btn" style="margin-top:40px" href="https://github.com/mrduhlol/github-widget/releases/latest/download/GH-widget.apk">Download free APK</a></div>
+      <p class="micro" style="margin-top:24px">Android 8.0+ · v3.1.1 · about 11 MB · signed release</p>
+      <p class="micro" style="margin-top:10px">Allow unknown apps once when Android asks — that is the whole install.</p>
+      <div class="links" style="margin-top:14px;display:flex;gap:28px;font-weight:600;flex-wrap:wrap">
+        <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/releases">All releases</a>
+        <a class="ghost-link" href="https://github.com/mrduhlol/github-widget">Source on GitHub</a>
+        <a class="ghost-link" href="https://github.com/mrduhlol/github-widget/issues">Report a bug</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="wrap">
+  <div class="giant rv">GH<span>-</span>WIDGETS</div>
+  <div class="foot-row">
+    <span>Free. No sign-in. Just your username.</span>
+    <span>v3.1.1 · MIT licensed · @mrduhlol</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  function mulberry32(seed) {
+    return function () {
+      seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  var palettes = {
+    green: ["#152219", "#0e4429", "#006d32", "#26a641", "#3dff6e"],
+    blue:  ["#152219", "#0c2d6b", "#0a4db3", "#1f6feb", "#58a6ff"],
+    amber: ["#152219", "#5a3a00", "#9e6a03", "#d29922", "#e3b341"],
+    rose:  ["#152219", "#5e1042", "#a60f6c", "#e2599b", "#f778ba"]
+  };
+  function paint(widget) {
+    var pal = palettes[widget.dataset.palette] || palettes.green;
+    widget.querySelectorAll("[data-part='graph']").forEach(function (g) {
+      var cells = g.children;
+      var rand = mulberry32(42);
+      for (var i = 0; i < cells.length; i++) {
+        var v = rand();
+        cells[i].style.background = pal[v < 0.18 ? 0 : v < 0.42 ? 1 : v < 0.65 ? 2 : v < 0.85 ? 3 : 4];
+      }
+    });
+    var big = widget.querySelector("[data-part='bignum']");
+    if (big) big.style.color = pal[4];
+  }
+  function applyStyle(widget, style) {
+    widget.dataset.style = style;
+    widget.classList.remove("pop"); void widget.offsetWidth; widget.classList.add("pop");
+    var g = widget.querySelector("[data-part='graph']"); if (g) g.style.display = "";
+    var st = widget.querySelector("[data-part='stats']"); if (st) st.style.display = (style === "classic" || style === "numbers") ? "" : "none";
+    var bn = widget.querySelector("[data-part='bignum']"); if (bn) bn.hidden = style !== "numbers";
+    var nm = widget.querySelector("[data-part='name']"); if (nm) nm.style.display = widget.dataset.showName !== "0" && style !== "numbers" ? "" : "none";
+    paint(widget);
+  }
+  document.querySelectorAll("[data-widget]").forEach(function (w) {
+    applyStyle(w, w.dataset.style || "classic");
+  });
+
+  function press(group, btn) {
+    group.querySelectorAll("[aria-pressed]").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
+    btn.setAttribute("aria-pressed", "true");
+  }
+  var demoWidget = document.querySelector(".demo-grid [data-widget]");
+  document.querySelectorAll("[data-demo-style]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      press(btn.parentElement, btn);
+      applyStyle(demoWidget, btn.dataset.demoStyle);
+    });
+  });
+  var fontStacks = {SYSTEM: "ui-sans-serif,system-ui,sans-serif", INTER: "'Inter',sans-serif", SPACE_GROTESK: "'Space Grotesk',sans-serif", MANROPE: "'Manrope',sans-serif", OUTFIT: "'Outfit',sans-serif", FIGTREE: "'Figtree',sans-serif", PLUS_JAKARTA: "'Plus Jakarta Sans',sans-serif"};
+  var demoFont = document.getElementById("demo-font");
+  if (demoFont) {
+    demoFont.addEventListener("change", function () {
+      demoWidget.style.setProperty("--wfont", fontStacks[demoFont.value] || fontStacks.SYSTEM);
+    });
+  }
+  document.querySelectorAll("[data-demo-shape]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      press(btn.parentElement, btn);
+      demoWidget.dataset.shape = btn.dataset.demoShape;
+    });
+  });
+  function bindRange(id, valId, prop) {
+    var r = document.getElementById(id), lab = document.getElementById(valId);
+    if (!r) return;
+    r.addEventListener("input", function () {
+      demoWidget.style.setProperty(prop, r.value + "px");
+      if (lab) lab.textContent = r.value + "px";
+    });
+  }
+  bindRange("demo-gap", "demo-gap-val", "--gap");
+  document.querySelectorAll("[data-demo-palette]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      press(btn.parentElement, btn);
+      demoWidget.dataset.palette = btn.dataset.demoPalette;
+      paint(demoWidget);
+    });
+  });
+  document.querySelectorAll("[data-demo-toggle]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var on = btn.getAttribute("aria-pressed") !== "true";
+      btn.setAttribute("aria-pressed", String(on));
+      var key = btn.dataset.demoToggle;
+      if (key === "name") {
+        demoWidget.dataset.showName = on ? "1" : "0";
+        applyStyle(demoWidget, demoWidget.dataset.style);
+      } else {
+        var cell = demoWidget.querySelector("[data-stat='" + key + "']");
+        if (cell) cell.style.display = on ? "" : "none";
+      }
+    });
+  });
+
+  document.querySelectorAll(".band .disc").forEach(function (btn) {
+    function flip() {
+      var on = btn.getAttribute("aria-pressed") !== "true";
+      btn.setAttribute("aria-pressed", String(on));
+      btn.closest(".band").classList.toggle("on", on);
+    }
+    btn.addEventListener("click", flip);
+    btn.addEventListener("keydown", function (e) {
+      if (e.key === " " || e.key === "Enter") { e.preventDefault(); flip(); }
+    });
+  });
+
+  var tryUser = document.getElementById("try-user");
+  var stepName = document.querySelector(".step-card [data-widget] [data-part='nametext']");
+  if (tryUser && stepName) {
+    tryUser.addEventListener("input", function () {
+      var v = tryUser.value.trim().replace(/^@/, "");
+      stepName.textContent = "@" + (v || "mrduhlol");
+    });
+  }
+
+  var glyphs = "\u2588\u2593\u2592\u2591<>/\\|\u250001";
+  function seededRand(seed) {
+    return function () {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+  }
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function decode(el) {
+    var text = el.textContent;
+    var rand = seededRand(text.length * 7919 + 13);
+    var i = 0;
+    el.setAttribute("aria-label", text);
+    var timer = setInterval(function () {
+      i++;
+      var out = text.slice(0, i);
+      for (var k = i; k < text.length; k++) {
+        out += (text[k] === " " || text[k] === "\u00b7") ? text[k] : glyphs[Math.floor(rand() * glyphs.length)];
+      }
+      el.textContent = out;
+      if (i >= text.length) { clearInterval(timer); el.textContent = text; }
+    }, 45);
+  }
+  if (!reduceMotion && "IntersectionObserver" in window) {
+    var dObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { decode(en.target); dObs.unobserve(en.target); }
+      });
+    }, { threshold: 0.4 });
+    document.querySelectorAll("[data-decode]").forEach(function (el) { dObs.observe(el); });
+  }
+})();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;b0c55aee9dbe468081d2f3d6e0ec36af&quot;,&quot;r&quot;:1,&quot;spa&quot;:2}" crossorigin="anonymous"></script>
+
+
+
+</body>
+</html>

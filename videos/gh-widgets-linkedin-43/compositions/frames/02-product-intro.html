@@ -1,0 +1,269 @@
+<template>
+<style>
+@font-face{
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/captured-1Ptgg87LROyAm3Kz-C8CSKlv.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/captured-V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/captured-V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+#root{
+  width: 1280px;
+  height: 960px;
+  position: relative;
+  overflow: hidden;
+  container-type: size;
+  font-family: 'Anton', sans-serif;
+}
+.o2pi-bg{
+  position: absolute;
+  inset: 0;
+  background: #060A07;
+}
+.o2pi-camera{
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+.o2pi-stage{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.o2pi-titleblock{
+  margin-top: 118px;
+  text-align: center;
+}
+.o2pi-word{
+  display: block;
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  text-transform: lowercase;
+}
+.o2pi-word-meet{
+  font-size: 5.2cqw;
+  color: #E9F5EA;
+}
+.o2pi-word-name{
+  font-size: 9.5cqw;
+  color: #3DFF6E;
+}
+.o2pi-cardwrap{
+  margin-top: 26px;
+  perspective: 1100px;
+}
+.o2pi-card{
+  width: 620px;
+  background: #0B110C;
+  border: 1px solid #1E2C20;
+  padding: 24px 28px 20px 28px;
+}
+.o2pi-card-head{
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.o2pi-avatar{
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  display: block;
+  border: 1px solid #1E2C20;
+}
+.o2pi-who{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.o2pi-who-name{
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: 2.6cqw;
+  color: #E9F5EA;
+  text-transform: lowercase;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+.o2pi-who-tag{
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  font-size: 1.15cqw;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7F917F;
+}
+.o2pi-grid{
+  display: grid;
+  grid-template-columns: repeat(26, 1fr);
+  gap: 5px;
+}
+.o2pi-cell{
+  aspect-ratio: 1 / 1;
+  background: #1E2C20;
+}
+.o2pi-card-stats{
+  display: flex;
+  gap: 28px;
+  margin-top: 18px;
+}
+.o2pi-stat{
+  flex: 1;
+  border-top: 1px solid #1E2C20;
+  padding-top: 10px;
+}
+.o2pi-stat-num{
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: 3.4cqw;
+  color: #3DFF6E;
+  line-height: 1;
+}
+.o2pi-stat-label{
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  font-size: 1.05cqw;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7F917F;
+  margin-top: 6px;
+}
+.o2pi-kicker{
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.o2pi-rule{
+  width: 36px;
+  height: 2px;
+  background: #3DFF6E;
+}
+.o2pi-kicker-text{
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  font-size: 1.5cqw;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #3DFF6E;
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<div data-hf-id="hf-wfp2" id="root" data-composition-id="02-product-intro" data-width="1280" data-height="960" data-duration="4.063">
+  <div data-hf-id="hf-66s0" class="clip o2pi-bg" id="f02-product-intro-bg" data-start="0" data-duration="4.063" data-track-index="0"></div>
+  <div data-hf-id="hf-etit" class="clip o2pi-camera" id="f02-product-intro-camera" data-start="0" data-duration="4.063" data-track-index="1">
+    <div data-hf-id="hf-s66f" class="o2pi-stage">
+      <div data-hf-id="hf-k406" class="clip o2pi-titleblock" id="f02-product-intro-titleblock" data-start="0" data-duration="4.063" data-track-index="2">
+        <span data-hf-id="hf-orrk" class="o2pi-word o2pi-word-meet" id="f02-product-intro-w1">meet</span>
+        <span data-hf-id="hf-1lp7" class="o2pi-word o2pi-word-name" id="f02-product-intro-w2">gh-widgets</span>
+      </div>
+      <div data-hf-id="hf-cplv" class="clip o2pi-cardwrap" id="f02-product-intro-cardwrap" data-start="0" data-duration="4.063" data-track-index="3">
+        <div data-hf-id="hf-96lt" class="o2pi-card" id="f02-product-intro-card">
+          <div data-hf-id="hf-hzm8" class="o2pi-card-head">
+            <img data-hf-id="hf-4f01" class="o2pi-avatar" id="f02-product-intro-avatar" src="assets/mrduhlols-github-avatar.png" alt="mrduhlol avatar" />
+            <div data-hf-id="hf-lvsl" class="o2pi-who">
+              <div data-hf-id="hf-wmug" class="o2pi-who-name">mrduhlol</div>
+              <div data-hf-id="hf-lx0p" class="o2pi-who-tag">contributions</div>
+            </div>
+          </div>
+          <div data-hf-id="hf-u411" class="o2pi-grid" id="f02-product-intro-grid"></div>
+          <div data-hf-id="hf-2viv" class="o2pi-card-stats">
+            <div data-hf-id="hf-zqk2" class="o2pi-stat" id="f02-product-intro-stat1">
+              <div data-hf-id="hf-tiz7" class="o2pi-stat-num">1,248</div>
+              <div data-hf-id="hf-jzzy" class="o2pi-stat-label">total</div>
+            </div>
+            <div data-hf-id="hf-vsg1" class="o2pi-stat" id="f02-product-intro-stat2">
+              <div data-hf-id="hf-du3a" class="o2pi-stat-num">23-day</div>
+              <div data-hf-id="hf-ns0e" class="o2pi-stat-label">streak</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-hf-id="hf-tqts" class="clip o2pi-kicker" id="f02-product-intro-kicker" data-start="0" data-duration="4.063" data-track-index="4">
+        <div data-hf-id="hf-je55" class="o2pi-rule"></div>
+        <div data-hf-id="hf-nbwl" class="o2pi-kicker-text">on your home screen</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var camera = document.getElementById("f02-product-intro-camera");
+  var grid = document.getElementById("f02-product-intro-grid");
+  var COLS = 26, ROWS = 7;
+  var palette = ["#1E2C20", "#1E2C20", "#23402A", "#2E7D43", "#3DFF6E"];
+  for (var r = 0; r < ROWS; r++){
+    for (var c = 0; c < COLS; c++){
+      var i = r * COLS + c;
+      var h = (i * 7919 + 13) % 100;
+      var lvl = h < 34 ? 0 : (h < 58 ? 1 : (h < 76 ? 2 : (h < 92 ? 3 : 4)));
+      var d = document.createElement("div");
+      d.className = "o2pi-cell";
+      d.style.background = palette[lvl];
+      grid.appendChild(d);
+    }
+  }
+  var tl = gsap.timeline({ paused: true });
+  // Scene 1 (0.0-1.3s): display type builds centered, per-word staggered reveal
+  tl.fromTo("#f02-product-intro-w1",
+    { opacity: 0, y: 44 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.08);
+  tl.fromTo("#f02-product-intro-w2",
+    { opacity: 0, y: 56 }, { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 0.22);
+  // Scene 2 (1.3-2.5s): widget card rises with 3D tilt settling flat
+  tl.fromTo("#f02-product-intro-card",
+    { opacity: 0, y: 90, rotationX: 16 },
+    { opacity: 1, y: 0, rotationX: 0, duration: 0.9, ease: "power3.out" }, 1.3);
+  tl.fromTo("#f02-product-intro-grid .o2pi-cell",
+    { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out", stagger: 0.0025 }, 1.55);
+  tl.fromTo("#f02-product-intro-stat1",
+    { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, 1.95);
+  tl.fromTo("#f02-product-intro-stat2",
+    { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, 2.08);
+  // Camera: slow push underneath Scene 2 only (multi-phase-camera), still hold in Scene 3
+  var phase = { scale: 1.0 };
+  tl.to(phase, { scale: 1.06, duration: 1.2, ease: "power2.inOut" }, 1.3);
+  var drift = { p: 0 };
+  tl.to(drift, {
+    p: Math.PI * 2 * 1,
+    duration: 2.5,
+    ease: "none",
+    onUpdate: function(){
+      var dx = Math.sin(drift.p) * 4;
+      var dy = Math.sin(drift.p * 1.3) * 2.5;
+      camera.style.transform = "scale(" + phase.scale + ") translate(" + dx + "px," + dy + "px)";
+    }
+  }, 0);
+  tl.set(camera, { clearProps: "transform" }, 2.5);
+  tl.set(camera, { scale: 1.06 }, 2.5);
+  // Scene 3 (2.5-3.563s): mono kicker locks beneath the card, hold still
+  tl.fromTo("#f02-product-intro-kicker",
+    { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 2.5);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["02-product-intro"] = tl;
+  tl.seek(0);
+})();
+</script>
+</template>

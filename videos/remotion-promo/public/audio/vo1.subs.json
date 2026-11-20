@@ -1,0 +1,42 @@
+[
+  {
+    "part": "Your ",
+    "start": 55,
+    "end": 305
+  },
+  {
+    "part": "GitHub ",
+    "start": 319,
+    "end": 736
+  },
+  {
+    "part": "graph, ",
+    "start": 750,
+    "end": 1208
+  },
+  {
+    "part": "live ",
+    "start": 1444,
+    "end": 1763
+  },
+  {
+    "part": "on ",
+    "start": 1777,
+    "end": 1930
+  },
+  {
+    "part": "your ",
+    "start": 1944,
+    "end": 2083
+  },
+  {
+    "part": "home ",
+    "start": 2097,
+    "end": 2361
+  },
+  {
+    "part": "screen.",
+    "start": 2375,
+    "end": 2944
+  }
+]

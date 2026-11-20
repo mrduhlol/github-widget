@@ -1,0 +1,22 @@
+{
+  "name": "remotion-promo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "remotion studio",
+    "render": "remotion render",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.403",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "remotion": "^4.0.403"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "@types/web": "^0.0.283",
+    "node-edge-tts": "^1.2.11",
+    "typescript": "^5.9.2"
+  }
+}

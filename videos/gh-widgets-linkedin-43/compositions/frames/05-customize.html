@@ -1,0 +1,496 @@
+<template>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+@font-face{
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/captured-1Ptgg87LROyAm3Kz-C8CSKlv.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/captured-V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/captured-V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/captured-_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("assets/fonts/captured-_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+#root{
+  position: relative;
+  width: 1280px;
+  height: 960px;
+  container-type: size;
+  overflow: hidden;
+  background: #060A07;
+  font-family: "Anton", system-ui, sans-serif;
+  color: #E9F5EA;
+}
+.f05c-bg{
+  position: absolute;
+  inset: 0;
+  background-color: #060A07;
+  background-image: radial-gradient(circle, #16231a 1.2px, transparent 1.3px);
+  background-size: 34px 34px;
+}
+.f05c-cam{
+  position: absolute;
+  inset: 0;
+  padding: 44px 56px 0 56px;
+  will-change: transform;
+}
+.f05c-chrome{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #1E2C20;
+  border-bottom: 1px solid #1E2C20;
+  padding: 10px 2px;
+}
+.f05c-kicker{
+  font-family: "Space Grotesk", ui-monospace, monospace;
+  font-weight: 500;
+  font-size: 17px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #3DFF6E;
+}
+.f05c-meta{
+  font-family: "Space Grotesk", ui-monospace, monospace;
+  font-weight: 500;
+  font-size: 17px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7F917F;
+}
+.f05c-head{
+  margin-top: 14px;
+  font-size: 78px;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  text-transform: lowercase;
+  color: #E9F5EA;
+}
+.f05c-head em{
+  font-style: normal;
+  color: #3DFF6E;
+}
+.f05c-rule{
+  width: 36px;
+  height: 2px;
+  background: #3DFF6E;
+  margin-top: 12px;
+}
+.f05c-cards{
+  margin-top: 24px;
+  display: flex;
+  gap: 24px;
+  align-items: stretch;
+}
+.f05c-card{
+  background: #0B110C;
+  border: 1px solid #1E2C20;
+  padding: 18px 20px 16px 20px;
+  will-change: transform, opacity;
+}
+.f05c-card.hero{ flex: 1.45; }
+.f05c-card.side{ flex: 1; }
+.f05c-cardtag{
+  display: inline-block;
+  font-family: "Space Grotesk", ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #060A07;
+  background: #3DFF6E;
+  padding: 4px 10px;
+}
+.f05c-cardtag.ghost{
+  color: #7F917F;
+  background: transparent;
+  border: 1px solid #1E2C20;
+  padding: 3px 9px;
+}
+.f05c-namerow{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+.f05c-avatar{
+  width: 26px;
+  height: 26px;
+  background: #3DFF6E;
+  flex: none;
+}
+.f05c-name{
+  font-family: "Figtree", system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 19px;
+  color: #E9F5EA;
+}
+.f05c-bignum{
+  font-size: 66px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  margin-top: 8px;
+  color: #E9F5EA;
+}
+.f05c-bignum.orange{ color: #3DFF6E; }
+.f05c-sub{
+  font-family: "Space Grotesk", ui-monospace, monospace;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7F917F;
+  margin-top: 4px;
+}
+.f05c-bars{
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 74px;
+  margin-top: 12px;
+}
+.f05c-bars i{
+  display: block;
+  flex: 1;
+  background: #2A3B2E;
+}
+.f05c-bars i.lit{ background: #3DFF6E; }
+.f05c-streak{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  border-top: 1px solid #1E2C20;
+  padding-top: 10px;
+}
+.f05c-flame{
+  width: 14px;
+  height: 14px;
+  background: #3DFF6E;
+  flex: none;
+}
+.f05c-streak span{
+  font-family: "Space Grotesk", ui-monospace, monospace;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #E9F5EA;
+}
+.f05c-grid{
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 6px;
+  margin-top: 14px;
+}
+.f05c-grid i{
+  display: block;
+  aspect-ratio: 1;
+  background: #22301f;
+}
+.f05c-grid i.lit{ background: #3DFF6E; }
+.f05c-statrows{ margin-top: 14px; }
+.f05c-statrow{
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-top: 1px solid #1E2C20;
+  padding: 8px 0;
+}
+.f05c-statrow b{
+  font-size: 34px;
+  letter-spacing: -0.02em;
+  color: #E9F5EA;
+  font-weight: 400;
+}
+.f05c-statrow b.orange{ color: #3DFF6E; }
+.f05c-statrow span{
+  font-family: "Space Grotesk", ui-monospace, monospace;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7F917F;
+}
+.f05c-palzone{ margin-top: 26px; }
+.f05c-pallabel{
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.f05c-pallabel b{
+  font-family: "Space Grotesk", ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #3DFF6E;
+}
+.f05c-pallabel span{
+  font-family: "Space Grotesk", ui-monospace, monospace;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7F917F;
+}
+.f05c-dots{
+  display: flex;
+  gap: 18px;
+  margin-top: 12px;
+  perspective: 1400px;
+}
+.f05c-dot{
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2px solid rgba(233,245,234,0.25);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  position: relative;
+  flex: none;
+}
+.f05c-dotring{
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  border: 2px solid #E9F5EA;
+  opacity: 0;
+}
+.f05c-chips{
+  margin-top: 24px;
+  display: flex;
+  gap: 14px;
+}
+.f05c-chip{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #1E2C20;
+  background: #0B110C;
+  padding: 12px 18px;
+  will-change: transform, opacity;
+}
+.f05c-chip .sw{
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex: none;
+}
+.f05c-chip span{
+  font-family: "Space Grotesk", ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #E9F5EA;
+  white-space: nowrap;
+}
+.f05c-toggles{
+  margin-top: 14px;
+  display: flex;
+  gap: 12px;
+}
+.f05c-toggle{
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #1E2C20;
+  padding: 10px 14px;
+  will-change: transform, opacity;
+}
+.f05c-toggle i{
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #3DFF6E;
+  flex: none;
+}
+.f05c-toggle span{
+  font-family: "Space Grotesk", ui-monospace, monospace;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #E9F5EA;
+}
+</style>
+<div data-hf-id="hf-f4c1" id="root" data-composition-id="05-customize" data-width="1280" data-height="960" data-duration="5.001">
+  <div data-hf-id="hf-lv9a" id="f05c-bg" class="clip f05c-bg" data-start="0" data-duration="5.001" data-track-index="0"></div>
+  <div data-hf-id="hf-2cac" id="f05c-stage" class="clip" data-start="0" data-duration="5.001" data-track-index="1">
+    <div data-hf-id="hf-zi6q" class="f05c-cam" id="f05c-cam">
+      <div data-hf-id="hf-58kd" class="f05c-chrome">
+        <div data-hf-id="hf-ld71" class="f05c-kicker">no. 05 — make it yours</div>
+        <div data-hf-id="hf-09op" class="f05c-meta">styles / palettes / toggles</div>
+      </div>
+      <div data-hf-id="hf-usf3" class="f05c-head" id="f05c-head">make it <em data-hf-id="hf-0b85">yours</em></div>
+      <div data-hf-id="hf-4r0d" class="f05c-rule"></div>
+      <div data-hf-id="hf-as14" class="f05c-cards">
+        <div data-hf-id="hf-cb0q" class="f05c-card hero" id="f05c-card0">
+          <div data-hf-id="hf-ydcd" class="f05c-cardtag">classic</div>
+          <div data-hf-id="hf-amb6" class="f05c-namerow">
+            <div data-hf-id="hf-epd4" class="f05c-avatar"></div>
+            <div data-hf-id="hf-ijdl" class="f05c-name">mrduhlol</div>
+          </div>
+          <div data-hf-id="hf-q3je" class="f05c-bignum orange">1,248</div>
+          <div data-hf-id="hf-px9a" class="f05c-sub">contributions</div>
+          <div data-hf-id="hf-uq51" class="f05c-bars">
+            <i data-hf-id="hf-4wfp" style="height:28%"></i><i data-hf-id="hf-5qmo" style="height:52%"></i><i data-hf-id="hf-dlaa" class="f05c-acc lit" style="height:74%"></i><i data-hf-id="hf-zau7" style="height:44%"></i><i data-hf-id="hf-cm56" class="f05c-acc lit" style="height:92%"></i><i data-hf-id="hf-p6mx" style="height:60%"></i><i data-hf-id="hf-sdf3" class="f05c-acc lit" style="height:82%"></i><i data-hf-id="hf-fwuq" style="height:36%"></i><i data-hf-id="hf-tu5x" style="height:64%"></i><i data-hf-id="hf-coh6" class="f05c-acc lit" style="height:100%"></i>
+          </div>
+          <div data-hf-id="hf-8uhp" class="f05c-streak">
+            <div data-hf-id="hf-roby" class="f05c-flame f05c-acc"></div>
+            <span data-hf-id="hf-9jka">23 day streak</span>
+          </div>
+        </div>
+        <div data-hf-id="hf-euxy" class="f05c-card side" id="f05c-card1">
+          <div data-hf-id="hf-af14" class="f05c-cardtag ghost">graph only</div>
+          <div data-hf-id="hf-18bb" class="f05c-grid">
+            <i data-hf-id="hf-wt6k"></i><i data-hf-id="hf-i04h" class="f05c-acc lit"></i><i data-hf-id="hf-zeb8"></i><i data-hf-id="hf-y7e5"></i><i data-hf-id="hf-xcfp" class="f05c-acc lit"></i><i data-hf-id="hf-ylp6"></i><i data-hf-id="hf-0l8b"></i><i data-hf-id="hf-yjcs" class="f05c-acc lit"></i><i data-hf-id="hf-0zjc"></i><i data-hf-id="hf-zsm9"></i><i data-hf-id="hf-y51r" class="f05c-acc lit"></i><i data-hf-id="hf-06xa"></i><i data-hf-id="hf-26gf"></i><i data-hf-id="hf-2krg"></i><i data-hf-id="hf-zbyu" class="f05c-acc lit"></i><i data-hf-id="hf-oz7w"></i><i data-hf-id="hf-okwv"></i><i data-hf-id="hf-yxnt" class="f05c-acc lit"></i><i data-hf-id="hf-o6lu"></i><i data-hf-id="hf-jqbp"></i><i data-hf-id="hf-qkg0"></i><i data-hf-id="hf-04kw" class="f05c-acc lit"></i><i data-hf-id="hf-q64z"></i><i data-hf-id="hf-prty"></i><i data-hf-id="hf-zq9v" class="f05c-acc lit"></i><i data-hf-id="hf-pdix"></i><i data-hf-id="hf-hqsk"></i><i data-hf-id="hf-hchj"></i><i data-hf-id="hf-ukai" class="f05c-acc lit"></i><i data-hf-id="hf-8d0n"></i>
+          </div>
+          <div data-hf-id="hf-kqfp" class="f05c-sub">pure graph</div>
+        </div>
+        <div data-hf-id="hf-awtx" class="f05c-card side" id="f05c-card2">
+          <div data-hf-id="hf-g250" class="f05c-cardtag ghost">numbers</div>
+          <div data-hf-id="hf-zp5m" class="f05c-statrows">
+            <div data-hf-id="hf-hg1n" class="f05c-statrow"><b data-hf-id="hf-9woo" class="orange">1,248</b><span data-hf-id="hf-o175">total</span></div>
+            <div data-hf-id="hf-oyt7" class="f05c-statrow"><b data-hf-id="hf-jprm">23</b><span data-hf-id="hf-a8m7">streak</span></div>
+            <div data-hf-id="hf-oki6" class="f05c-statrow"><b data-hf-id="hf-iy3t">31</b><span data-hf-id="hf-rhpm">today</span></div>
+          </div>
+        </div>
+      </div>
+      <div data-hf-id="hf-03cg" class="f05c-palzone">
+        <div data-hf-id="hf-8c12" class="f05c-pallabel" id="f05c-pallabel"><b data-hf-id="hf-20mu">09 palettes</b><span data-hf-id="hf-zbec">pick one — watch it apply</span></div>
+        <div data-hf-id="hf-5tq8" class="f05c-dots" id="f05c-dots">
+          <div data-hf-id="hf-71t3" class="f05c-dot" style="background:#3DFF6E"></div>
+          <div data-hf-id="hf-ys48" class="f05c-dot" style="background:#4CC9F0"><div data-hf-id="hf-jgzp" class="f05c-dotring" id="f05c-ring"></div></div>
+          <div data-hf-id="hf-5ioh" class="f05c-dot" style="background:#8B7CFF"></div>
+          <div data-hf-id="hf-vy78" class="f05c-dot" style="background:#FF6B8A"></div>
+          <div data-hf-id="hf-c10x" class="f05c-dot" style="background:#FFB020"></div>
+          <div data-hf-id="hf-8sfc" class="f05c-dot" style="background:#FF5C38"></div>
+          <div data-hf-id="hf-rkai" class="f05c-dot" style="background:#38E1FF"></div>
+          <div data-hf-id="hf-xqm2" class="f05c-dot" style="background:#B8FF3D"></div>
+          <div data-hf-id="hf-lh2m" class="f05c-dot" style="background:#E9F5EA"></div>
+        </div>
+      </div>
+      <div data-hf-id="hf-ujyw" class="f05c-chips">
+        <div data-hf-id="hf-7zcc" class="f05c-chip" id="f05c-chip0"><div data-hf-id="hf-oih1" class="sw" style="background:linear-gradient(135deg,#3DFF6E 50%,#4CC9F0 50%)"></div><span data-hf-id="hf-aggg">match wallpaper</span></div>
+        <div data-hf-id="hf-8r05" class="f05c-chip" id="f05c-chip1"><div data-hf-id="hf-jmp6" class="sw" style="background:#FF6B8A"></div><span data-hf-id="hf-57u9">custom color</span></div>
+      </div>
+      <div data-hf-id="hf-wod6" class="f05c-toggles">
+        <div data-hf-id="hf-c1de" class="f05c-toggle" id="f05c-tog0"><i data-hf-id="hf-8rbo"></i><span data-hf-id="hf-jfkq">name</span></div>
+        <div data-hf-id="hf-i737" class="f05c-toggle" id="f05c-tog1"><i data-hf-id="hf-7kel"></i><span data-hf-id="hf-p4qn">photo</span></div>
+        <div data-hf-id="hf-7blk" class="f05c-toggle" id="f05c-tog2"><i data-hf-id="hf-7ypm"></i><span data-hf-id="hf-5uh1">total</span></div>
+        <div data-hf-id="hf-839d" class="f05c-toggle" id="f05c-tog3"><i data-hf-id="hf-9y8r"></i><span data-hf-id="hf-gexr">streak</span></div>
+        <div data-hf-id="hf-zfdi" class="f05c-toggle" id="f05c-tog4"><i data-hf-id="hf-acjs"></i><span data-hf-id="hf-v9ri">today</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  window.__timelines = window.__timelines || {};
+  var tl = gsap.timeline({ paused: true });
+  var DUR = 4.501;
+
+  // slow camera drift underneath the whole shot
+  tl.fromTo("#f05c-cam",
+    { scale: 1, y: 0 },
+    { scale: 1.045, y: -12, duration: DUR, ease: "none" }, 0);
+
+  // headline hook fills in first
+  tl.fromTo("#f05c-head",
+    { opacity: 0, y: 26 },
+    { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0);
+
+  // Scene 1 (0.0-1.3s): three style cards self-assemble, center-outward cascade, hero first
+  var cards = ["#f05c-card0", "#f05c-card1", "#f05c-card2"];
+  var fromX = [0, 110, -110];
+  cards.forEach(function(sel, i){
+    tl.fromTo(sel,
+      { opacity: 0, x: fromX[i], y: 30, scale: 0.9 },
+      { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.55, ease: "power3.out" },
+      0.06 + i * 0.14);
+  });
+
+  // Scene 2 (1.3-2.9s): nine palette dots depth-scatter-assemble into a row
+  var dots = Array.prototype.slice.call(document.querySelectorAll("#f05c-dots .f05c-dot"));
+  var n = dots.length;
+  var GOLDEN = Math.PI * (3 - Math.sqrt(5));
+  var RADIUS = 130, Z_NEAR = 180, Z_FAR = -220, TUMBLE = 70;
+  var scatter = dots.map(function(el, i){
+    var a = i * GOLDEN;
+    var depthT = n > 1 ? i / (n - 1) : 0;
+    return {
+      x: Math.cos(a) * RADIUS,
+      y: Math.sin(a) * RADIUS,
+      z: Z_NEAR - depthT * (Z_NEAR - Z_FAR),
+      rotationX: Math.sin(a) * TUMBLE,
+      rotationY: Math.cos(a) * TUMBLE
+    };
+  });
+  dots.forEach(function(el, i){
+    gsap.set(el, { x: scatter[i].x, y: scatter[i].y, z: scatter[i].z,
+      rotationX: scatter[i].rotationX, rotationY: scatter[i].rotationY, opacity: 0 });
+  });
+  tl.fromTo("#f05c-pallabel",
+    { opacity: 0, y: 14 },
+    { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 1.3);
+  dots.forEach(function(el, i){
+    tl.to(el,
+      { x: 0, y: 0, z: 0, rotationX: 0, rotationY: 0, opacity: 1,
+        duration: 0.7, ease: "power3.out" },
+      1.35 + i * 0.055);
+  });
+
+  // control-target-sync: active swatch glows + hero card re-tints in the SAME beat
+  tl.addLabel("tint", 2.15);
+  tl.fromTo("#f05c-ring",
+    { opacity: 0, scale: 0.6 },
+    { opacity: 1, scale: 1, duration: 0.9, ease: "power1.inOut" }, "tint");
+  tl.to(".f05c-acc",
+    { backgroundColor: "#4CC9F0", duration: 0.9, ease: "power1.inOut" }, "tint");
+
+  // Scene 3 (2.9-4.5s): feature chips + toggles pop in one per cue
+  tl.fromTo("#f05c-chip0",
+    { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(1.6)" }, 2.95);
+  tl.fromTo("#f05c-chip1",
+    { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(1.6)" }, 3.12);
+  ["#f05c-tog0","#f05c-tog1","#f05c-tog2","#f05c-tog3","#f05c-tog4"].forEach(function(sel, i){
+    tl.fromTo(sel,
+      { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.32, ease: "back.out(1.6)" }, 3.28 + i * 0.13);
+  });
+
+  tl.to({}, { duration: DUR }, 0);
+  window.__timelines["05-customize"] = tl;
+})();
+</script>
+</template>

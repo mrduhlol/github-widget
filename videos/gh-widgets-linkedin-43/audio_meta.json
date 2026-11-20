@@ -1,0 +1,405 @@
+{
+  "bgm": {
+    "path": "assets/bgm/soft-pad.wav",
+    "volume": 0.12,
+    "source": "host"
+  },
+  "bgm_pending": false,
+  "voices": [
+    {
+      "frame": 1,
+      "path": "assets/voice/01.wav",
+      "duration_s": 2.901,
+      "words": [
+        {
+          "text": "Still",
+          "start": 0.0,
+          "end": 0.322
+        },
+        {
+          "text": "opening",
+          "start": 0.322,
+          "end": 0.645
+        },
+        {
+          "text": "the",
+          "start": 0.645,
+          "end": 0.967
+        },
+        {
+          "text": "app",
+          "start": 0.967,
+          "end": 1.289
+        },
+        {
+          "text": "just",
+          "start": 1.289,
+          "end": 1.612
+        },
+        {
+          "text": "to",
+          "start": 1.612,
+          "end": 1.934
+        },
+        {
+          "text": "check",
+          "start": 1.934,
+          "end": 2.256
+        },
+        {
+          "text": "your",
+          "start": 2.256,
+          "end": 2.579
+        },
+        {
+          "text": "streak",
+          "start": 2.579,
+          "end": 2.901
+        }
+      ]
+    },
+    {
+      "frame": 2,
+      "path": "assets/voice/02.wav",
+      "duration_s": 3.563,
+      "words": [
+        {
+          "text": "Meet",
+          "start": 0.0,
+          "end": 0.445
+        },
+        {
+          "text": "GH-widgets.",
+          "start": 0.445,
+          "end": 0.891
+        },
+        {
+          "text": "Your",
+          "start": 0.891,
+          "end": 1.336
+        },
+        {
+          "text": "graph",
+          "start": 1.336,
+          "end": 1.782
+        },
+        {
+          "text": "on",
+          "start": 1.782,
+          "end": 2.227
+        },
+        {
+          "text": "your",
+          "start": 2.227,
+          "end": 2.672
+        },
+        {
+          "text": "home",
+          "start": 2.672,
+          "end": 3.118
+        },
+        {
+          "text": "screen",
+          "start": 3.118,
+          "end": 3.563
+        }
+      ]
+    },
+    {
+      "frame": 3,
+      "path": "assets/voice/03.wav",
+      "duration_s": 3.925,
+      "words": [
+        {
+          "text": "Set",
+          "start": 0.0,
+          "end": 0.302
+        },
+        {
+          "text": "up",
+          "start": 0.302,
+          "end": 0.604
+        },
+        {
+          "text": "in",
+          "start": 0.604,
+          "end": 0.906
+        },
+        {
+          "text": "under",
+          "start": 0.906,
+          "end": 1.208
+        },
+        {
+          "text": "a",
+          "start": 1.208,
+          "end": 1.51
+        },
+        {
+          "text": "minute.",
+          "start": 1.51,
+          "end": 1.812
+        },
+        {
+          "text": "Type",
+          "start": 1.812,
+          "end": 2.113
+        },
+        {
+          "text": "your",
+          "start": 2.113,
+          "end": 2.415
+        },
+        {
+          "text": "username",
+          "start": 2.415,
+          "end": 2.717
+        },
+        {
+          "text": "that's",
+          "start": 2.717,
+          "end": 3.019
+        },
+        {
+          "text": "all",
+          "start": 3.019,
+          "end": 3.321
+        },
+        {
+          "text": "it",
+          "start": 3.321,
+          "end": 3.623
+        },
+        {
+          "text": "asks",
+          "start": 3.623,
+          "end": 3.925
+        }
+      ]
+    },
+    {
+      "frame": 4,
+      "path": "assets/voice/04.wav",
+      "duration_s": 2.859,
+      "words": [
+        {
+          "text": "Confirm",
+          "start": 0.0,
+          "end": 0.286
+        },
+        {
+          "text": "it",
+          "start": 0.286,
+          "end": 0.572
+        },
+        {
+          "text": "is",
+          "start": 0.572,
+          "end": 0.858
+        },
+        {
+          "text": "you",
+          "start": 0.858,
+          "end": 1.144
+        },
+        {
+          "text": "tap",
+          "start": 1.144,
+          "end": 1.429
+        },
+        {
+          "text": "Add",
+          "start": 1.429,
+          "end": 1.715
+        },
+        {
+          "text": "to",
+          "start": 1.715,
+          "end": 2.001
+        },
+        {
+          "text": "home",
+          "start": 2.001,
+          "end": 2.287
+        },
+        {
+          "text": "screen",
+          "start": 2.287,
+          "end": 2.573
+        },
+        {
+          "text": "done",
+          "start": 2.573,
+          "end": 2.859
+        }
+      ]
+    },
+    {
+      "frame": 5,
+      "path": "assets/voice/05.wav",
+      "duration_s": 4.501,
+      "words": [
+        {
+          "text": "Three",
+          "start": 0.0,
+          "end": 0.409
+        },
+        {
+          "text": "styles.",
+          "start": 0.409,
+          "end": 0.818
+        },
+        {
+          "text": "Nine",
+          "start": 0.818,
+          "end": 1.228
+        },
+        {
+          "text": "palettes",
+          "start": 1.228,
+          "end": 1.637
+        },
+        {
+          "text": "plus",
+          "start": 1.637,
+          "end": 2.046
+        },
+        {
+          "text": "wallpaper",
+          "start": 2.046,
+          "end": 2.455
+        },
+        {
+          "text": "match",
+          "start": 2.455,
+          "end": 2.864
+        },
+        {
+          "text": "and",
+          "start": 2.864,
+          "end": 3.273
+        },
+        {
+          "text": "your",
+          "start": 3.273,
+          "end": 3.683
+        },
+        {
+          "text": "own",
+          "start": 3.683,
+          "end": 4.092
+        },
+        {
+          "text": "color",
+          "start": 4.092,
+          "end": 4.501
+        }
+      ]
+    },
+    {
+      "frame": 6,
+      "path": "assets/voice/06.wav",
+      "duration_s": 4.416,
+      "words": [
+        {
+          "text": "Streaks",
+          "start": 0.0,
+          "end": 0.401
+        },
+        {
+          "text": "best",
+          "start": 0.401,
+          "end": 0.803
+        },
+        {
+          "text": "day",
+          "start": 0.803,
+          "end": 1.204
+        },
+        {
+          "text": "weekly",
+          "start": 1.204,
+          "end": 1.606
+        },
+        {
+          "text": "and",
+          "start": 1.606,
+          "end": 2.007
+        },
+        {
+          "text": "monthly",
+          "start": 2.007,
+          "end": 2.409
+        },
+        {
+          "text": "charts",
+          "start": 2.409,
+          "end": 2.81
+        },
+        {
+          "text": "and",
+          "start": 2.81,
+          "end": 3.212
+        },
+        {
+          "text": "it",
+          "start": 3.212,
+          "end": 3.613
+        },
+        {
+          "text": "works",
+          "start": 3.613,
+          "end": 4.015
+        },
+        {
+          "text": "offline",
+          "start": 4.015,
+          "end": 4.416
+        }
+      ]
+    },
+    {
+      "frame": 7,
+      "path": "assets/voice/07.wav",
+      "duration_s": 4.992,
+      "words": [
+        {
+          "text": "Free.",
+          "start": 0.0,
+          "end": 0.713
+        },
+        {
+          "text": "No",
+          "start": 0.713,
+          "end": 1.426
+        },
+        {
+          "text": "sign-in.",
+          "start": 1.426,
+          "end": 2.139
+        },
+        {
+          "text": "Get",
+          "start": 2.139,
+          "end": 2.853
+        },
+        {
+          "text": "GH-widgets",
+          "start": 2.853,
+          "end": 3.566
+        },
+        {
+          "text": "at",
+          "start": 3.566,
+          "end": 4.279
+        },
+        {
+          "text": "gh.abhishek-a.in",
+          "start": 4.279,
+          "end": 4.992
+        }
+      ]
+    }
+  ],
+  "sfx": []
+}

@@ -1,0 +1,415 @@
+<template>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+@font-face{
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/captured-1Ptgg87LROyAm3K8-C8CSKlvPfE.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+@font-face{
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/captured-1Ptgg87LROyAm3K9-C8CSKlvPfE.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/captured-1Ptgg87LROyAm3Kz-C8CSKlv.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/captured-V8mDoQDjQSkFtoMM3T6r8E7mPb54C_k3HqUtEw.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+@font-face{
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/captured-V8mDoQDjQSkFtoMM3T6r8E7mPb94C_k3HqUtEw.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/captured-V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/captured-V8mDoQDjQSkFtoMM3T6r8E7mPb54C_k3HqUtEw.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+@font-face{
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/captured-V8mDoQDjQSkFtoMM3T6r8E7mPb94C_k3HqUtEw.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/captured-V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+#root {
+  width: 1280px;
+  height: 960px;
+  position: relative;
+  overflow: hidden;
+  container-type: size;
+  font-family: "Anton", system-ui, sans-serif;
+}
+.f06-stats-offline-bg {
+  position: absolute;
+  inset: 0;
+  background: #060A07;
+}
+.f06-stats-offline-chrome {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 70px;
+  border-bottom: 1px solid #1E2C20;
+}
+.f06-stats-offline-kicker {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 19px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #3DFF6E;
+}
+.f06-stats-offline-catnum {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 19px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #93A29A;
+}
+.f06-stats-offline-camera {
+  position: absolute;
+  inset: 0;
+}
+.f06-stats-offline-ring-group {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1280px;
+  height: 960px;
+}
+.f06-stats-offline-ring-stage {
+  position: absolute;
+  left: 440px;
+  top: 104px;
+  width: 400px;
+  height: 400px;
+}
+.f06-stats-offline-ring-stage svg {
+  position: absolute;
+  left: 30px;
+  top: 30px;
+  display: block;
+}
+.f06-stats-offline-ring-fg {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: rotate(-90deg);
+}
+.f06-stats-offline-hero-num {
+  position: absolute;
+  left: 0;
+  top: 118px;
+  width: 400px;
+  text-align: center;
+  font-weight: 900;
+  font-size: 148px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: #E9F5EA;
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+  transform-origin: center center;
+}
+.f06-stats-offline-hero-label {
+  position: absolute;
+  left: 0;
+  top: 276px;
+  width: 400px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 34px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #E9F5EA;
+}
+.f06-stats-offline-strip {
+  position: absolute;
+  left: 0;
+  top: 544px;
+  width: 1280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.f06-stats-offline-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid #3DFF6E;
+  display: block;
+}
+.f06-stats-offline-strip-text {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 21px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7F917F;
+}
+.f06-stats-offline-stat-group {
+  position: absolute;
+  left: 112px;
+  top: 470px;
+  width: 1056px;
+  display: flex;
+  gap: 48px;
+}
+.f06-stats-offline-card {
+  width: 320px;
+  border-top: 1px solid #1E2C20;
+  padding-top: 18px;
+}
+.f06-stats-offline-stat-num {
+  font-weight: 900;
+  font-size: 88px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: #3DFF6E;
+  font-variant-numeric: tabular-nums;
+}
+.f06-stats-offline-stat-label {
+  margin-top: 10px;
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-transform: lowercase;
+  color: #E9F5EA;
+}
+.f06-stats-offline-stat-note {
+  margin-top: 8px;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 18px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #93A29A;
+}
+.f06-stats-offline-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 108px;
+  margin-top: 6px;
+}
+.f06-stats-offline-bar {
+  width: 26px;
+  background: #55645A;
+  transform-origin: bottom center;
+}
+.f06-stats-offline-bar-accent {
+  background: #3DFF6E;
+}
+.f06-stats-offline-press-stage {
+  position: absolute;
+  left: 0;
+  top: 694px;
+  width: 1280px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.f06-stats-offline-bgglow {
+  position: absolute;
+  left: 290px;
+  top: -70px;
+  width: 700px;
+  height: 210px;
+  background: radial-gradient(closest-side, rgba(61, 255, 110, 0.55), rgba(61, 255, 110, 0));
+  opacity: 0;
+}
+.f06-stats-offline-burst {
+  position: absolute;
+  left: 390px;
+  top: 8px;
+  width: 500px;
+  height: 64px;
+  background: radial-gradient(closest-side, rgba(61, 255, 110, 0.7), rgba(61, 255, 110, 0));
+  opacity: 0;
+}
+.f06-stats-offline-badge {
+  position: relative;
+  background: #3DFF6E;
+  color: #060A07;
+  font-weight: 700;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+  text-transform: lowercase;
+  padding: 14px 34px;
+  transform-origin: 50% 50%;
+  white-space: nowrap;
+}
+</style>
+<div data-hf-id="hf-36yf" id="root" data-composition-id="06-stats-offline" data-start="0" data-duration="4.816" data-width="1280" data-height="960">
+  <div data-hf-id="hf-n30n" id="f06-stats-offline-bg" class="clip f06-stats-offline-bg" data-start="0" data-duration="4.816" data-track-index="0"></div>
+  <div data-hf-id="hf-r1jw" class="clip f06-stats-offline-chrome" id="f06-stats-offline-chrome" data-start="0" data-duration="4.816" data-track-index="3">
+    <span data-hf-id="hf-fzv9" class="f06-stats-offline-kicker">proof · stats</span>
+    <span data-hf-id="hf-5cyb" class="f06-stats-offline-catnum">no. 06</span>
+  </div>
+  <div data-hf-id="hf-67xa" class="clip f06-stats-offline-camera" id="f06-stats-offline-camera" data-start="0" data-duration="4.816" data-track-index="1">
+    <div data-hf-id="hf-28cu" id="f06-stats-offline-ring-group" class="f06-stats-offline-ring-group">
+      <div data-hf-id="hf-0li6" class="f06-stats-offline-ring-stage">
+        <svg data-hf-id="hf-mlci" width="340" height="340" viewBox="0 0 340 340">
+          <circle data-hf-id="hf-1sp0" cx="170" cy="170" r="150" fill="none" stroke="#1E2C20" stroke-width="14"></circle>
+          <circle data-hf-id="hf-r23x" id="f06-stats-offline-ring-fg" class="f06-stats-offline-ring-fg" cx="170" cy="170" r="150" fill="none" stroke="#3DFF6E" stroke-width="14" stroke-linecap="butt"></circle>
+        </svg>
+        <div data-hf-id="hf-dev2" id="f06-stats-offline-hero-num" class="f06-stats-offline-hero-num">0</div>
+        <div data-hf-id="hf-djr0" id="f06-stats-offline-hero-label" class="f06-stats-offline-hero-label">total</div>
+      </div>
+      <div data-hf-id="hf-iy5c" id="f06-stats-offline-strip" class="f06-stats-offline-strip">
+        <img data-hf-id="hf-kd3u" id="f06-stats-offline-avatar" class="f06-stats-offline-avatar" src="assets/mrduhlols-github-avatar.png" alt="" />
+        <span data-hf-id="hf-zu8y" class="f06-stats-offline-strip-text">mrduhlol · demo figures</span>
+      </div>
+    </div>
+    <div data-hf-id="hf-ep9u" id="f06-stats-offline-stat-group" class="f06-stats-offline-stat-group">
+      <div data-hf-id="hf-49gr" class="f06-stats-offline-card">
+        <div data-hf-id="hf-1oe6" id="f06-stats-offline-streak-num" class="f06-stats-offline-stat-num">0</div>
+        <div data-hf-id="hf-ovk2" class="f06-stats-offline-stat-label">day streak</div>
+        <div data-hf-id="hf-76k3" class="f06-stats-offline-stat-note">demo</div>
+      </div>
+      <div data-hf-id="hf-bop7" class="f06-stats-offline-card">
+        <div data-hf-id="hf-grga" id="f06-stats-offline-best-num" class="f06-stats-offline-stat-num">0</div>
+        <div data-hf-id="hf-o63e" class="f06-stats-offline-stat-label">best day</div>
+        <div data-hf-id="hf-1drq" class="f06-stats-offline-stat-note">commits · demo</div>
+      </div>
+      <div data-hf-id="hf-bae6" class="f06-stats-offline-card">
+        <div data-hf-id="hf-qg0z" class="f06-stats-offline-bars">
+          <div data-hf-id="hf-s5d5" class="f06-stats-offline-bar" style="height: 34px;"></div>
+          <div data-hf-id="hf-kc1x" class="f06-stats-offline-bar" style="height: 52px;"></div>
+          <div data-hf-id="hf-uvrq" class="f06-stats-offline-bar" style="height: 44px;"></div>
+          <div data-hf-id="hf-3l7c" class="f06-stats-offline-bar" style="height: 68px;"></div>
+          <div data-hf-id="hf-ufdv" class="f06-stats-offline-bar" style="height: 58px;"></div>
+          <div data-hf-id="hf-j6ne" class="f06-stats-offline-bar" style="height: 84px;"></div>
+          <div data-hf-id="hf-8j6m" class="f06-stats-offline-bar f06-stats-offline-bar-accent" style="height: 100px;"></div>
+        </div>
+        <div data-hf-id="hf-uz1h" class="f06-stats-offline-stat-label">weekly / monthly</div>
+        <div data-hf-id="hf-sehf" class="f06-stats-offline-stat-note">demo</div>
+      </div>
+    </div>
+  </div>
+  <div data-hf-id="hf-sp1d" class="clip f06-stats-offline-press-stage" id="f06-stats-offline-press-stage" data-start="0" data-duration="4.816" data-track-index="2">
+    <div data-hf-id="hf-g9j6" id="f06-stats-offline-bgglow" class="f06-stats-offline-bgglow"></div>
+    <div data-hf-id="hf-dv8g" id="f06-stats-offline-burst" class="f06-stats-offline-burst"></div>
+    <div data-hf-id="hf-rjem" id="f06-stats-offline-badge" class="f06-stats-offline-badge">works offline · refreshes every 1–12 hours</div>
+  </div>
+</div>
+<script>
+(function () {
+  window.__timelines = window.__timelines || {};
+  var tl = gsap.timeline({ paused: true });
+
+  gsap.set("#f06-stats-offline-camera", { transformOrigin: "50% 40%" });
+  gsap.set("#f06-stats-offline-badge", { transformOrigin: "50% 50%" });
+
+  // ── Scene 1 (0.0–1.7s): count-up ring + hero number 0→1,248, scale grows with value ──
+  var hero = document.getElementById("f06-stats-offline-hero-num");
+  var heroState = { value: 0 };
+  tl.to(heroState, {
+    value: 1248, duration: 1.5, ease: "power3.out",
+    onUpdate: function () { hero.textContent = Math.round(heroState.value).toLocaleString("en-US"); }
+  }, 0);
+  tl.fromTo("#f06-stats-offline-hero-num", { scale: 0.5 }, { scale: 1, duration: 1.5, ease: "power3.out" }, 0);
+
+  var ring = document.getElementById("f06-stats-offline-ring-fg");
+  var LEN = ring.getTotalLength();
+  ring.style.strokeDasharray = String(LEN);
+  ring.style.strokeDashoffset = String(LEN);
+  tl.to(ring, { strokeDashoffset: LEN * (1 - 0.86), duration: 1.5, ease: "power3.out" }, 0);
+
+  tl.fromTo("#f06-stats-offline-hero-label", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.15);
+  tl.fromTo("#f06-stats-offline-strip", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.6)" }, 0.4);
+
+  // slow continuous camera drift underneath
+  tl.fromTo("#f06-stats-offline-camera", { scale: 1 }, { scale: 1.05, duration: 1.7, ease: "power1.inOut" }, 0);
+
+  // ── Scene 2 (1.7–3.1s): push THROUGH the ring into the stat row ──
+  tl.to("#f06-stats-offline-camera", { scale: 1.2, duration: 0.5, ease: "power2.in" }, 1.7);
+  tl.to("#f06-stats-offline-ring-group", { scale: 1.9, opacity: 0, duration: 0.45, ease: "power2.in" }, 1.7);
+  tl.to("#f06-stats-offline-camera", { scale: 1.14, duration: 0.6, ease: "power2.out" }, 2.2);
+  tl.fromTo("#f06-stats-offline-stat-group", { scale: 1.12, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: "power2.out" }, 1.8);
+  tl.fromTo(".f06-stats-offline-card", { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power2.out", stagger: 0.15 }, 1.8);
+
+  var streakEl = document.getElementById("f06-stats-offline-streak-num");
+  var streakState = { value: 0 };
+  tl.to(streakState, {
+    value: 23, duration: 0.7, ease: "power2.out",
+    onUpdate: function () { streakEl.textContent = String(Math.round(streakState.value)); }
+  }, 1.9);
+  var bestEl = document.getElementById("f06-stats-offline-best-num");
+  var bestState = { value: 0 };
+  tl.to(bestState, {
+    value: 18, duration: 0.7, ease: "power2.out",
+    onUpdate: function () { bestEl.textContent = String(Math.round(bestState.value)); }
+  }, 2.05);
+  tl.fromTo(".f06-stats-offline-bar", { scaleY: 0 }, { scaleY: 1, duration: 0.6, ease: "power3.out", stagger: 0.07 }, 2.2);
+
+  // ── Scene 3 (3.1–4.4s): offline badge seals with a tactile press + accent glow ──
+  tl.fromTo("#f06-stats-offline-badge", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power2.out" }, 2.9);
+  tl.to("#f06-stats-offline-badge", { scale: 0.92, duration: 0.12, ease: "power1.in" }, 3.2);
+  tl.to("#f06-stats-offline-badge", { scale: 1, duration: 0.55, ease: "back.out(2.0)" }, 3.32);
+  tl.fromTo("#f06-stats-offline-burst", { scale: 1, opacity: 0 }, { scale: 5, opacity: 0.55, duration: 0.5, ease: "power2.out" }, 3.32);
+  tl.to("#f06-stats-offline-burst", { opacity: 0, duration: 0.5, ease: "power2.in" }, 3.82);
+  tl.fromTo("#f06-stats-offline-bgglow", { opacity: 0 }, { opacity: 0.25, duration: 0.7, ease: "power2.out" }, 3.32);
+
+  // chrome settles in early
+  tl.fromTo("#f06-stats-offline-chrome", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out" }, 0);
+
+  // full-span anchor so the timeline spans the whole frame
+  tl.to({}, { duration: 4.416 }, 0);
+
+  window.__timelines["06-stats-offline"] = tl;
+})();
+</script>
+</template>

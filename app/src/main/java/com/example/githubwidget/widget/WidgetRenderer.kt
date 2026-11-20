@@ -125,17 +125,18 @@ object WidgetRenderer {
         }
 
         fun draw(data: UserData?, avatar: Bitmap?, placeholder: Placeholder, inbox: ReviewInboxState?) {
-            drawCard()
+            val streak = if (design.layout == WidgetLayout.STREAK) StreakWidgetPainter.snapshot(data, placeholder) else null
+            drawCard(streak)
             val padDp = if (wDp < 180 || hDp < 100) 12f else 16f
             val pad = dp(padDp)
             val area = RectF(pad, pad, canvas.width - pad, canvas.height - pad)
             when {
                 design.layout == WidgetLayout.PR_INBOX -> drawReviewInbox(area, inbox)
-                design.layout == WidgetLayout.STREAK -> {
+                streak != null -> {
                     val streakInset = dp(if (hDp < 125f) 7f else 14f)
                     val streakArea = RectF(streakInset, streakInset, canvas.width - streakInset, canvas.height - streakInset)
                     StreakWidgetPainter.draw(canvas, streakArea, s, context, font,
-                        StreakWidgetPainter.snapshot(data, placeholder), wDp, hDp)
+                        streak, wDp, hDp)
                     drawRefreshIcon(StreakWidgetPainter.MUTED)
                 }
                 data == null -> drawPlaceholder(area, placeholder)
@@ -273,14 +274,17 @@ object WidgetRenderer {
 
         // ------------------------------------------------------------ card
 
-        fun drawCard() {
-            val streak = design.layout == WidgetLayout.STREAK
+        fun drawCard(streak: StreakWidgetPainter.Snapshot?) {
             val r = when (design.layout) {
                 WidgetLayout.PROFILE -> 0f
-                WidgetLayout.STREAK -> dp(12f)
+                WidgetLayout.STREAK -> dp(15f)
                 else -> dp(design.corners.dp)
             }
             val rect = RectF(0f, 0f, canvas.width.toFloat(), canvas.height.toFloat())
+            if (streak != null) {
+                if (design.opacity > 0) StreakWidgetPainter.drawSurface(canvas, rect, r, s, design.opacity)
+                return
+            }
             val textured = design.layout == WidgetLayout.PROFILE || design.layout == WidgetLayout.PR_INBOX
             if (design.opacity > 0 && textured && design.background != Background.BLACK) {
                 val clip = canvas.save()
@@ -289,17 +293,17 @@ object WidgetRenderer {
                 canvas.restoreToCount(clip)
             } else if (design.opacity > 0) {
                 val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = ColorUtils.setAlphaComponent(if (streak) StreakWidgetPainter.SURFACE else colors.card, design.opacity * 255 / 100)
+                    color = ColorUtils.setAlphaComponent(colors.card, design.opacity * 255 / 100)
                 }
                 canvas.drawRoundRect(rect, r, r, fill)
             }
             if (design.opacity >= 30) {
-                val half = dp(0.5f)
-                rect.inset(half, half)
+                val width = dp(1f)
+                rect.inset(width / 2f, width / 2f)
                 val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                     style = Paint.Style.STROKE
-                    strokeWidth = dp(1f)
-                    color = if (streak) StreakWidgetPainter.BORDER else colors.border
+                    strokeWidth = width
+                    color = colors.border
                 }
                 canvas.drawRoundRect(rect, r, r, stroke)
             }

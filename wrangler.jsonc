@@ -1,5 +1,5 @@
 {
-  // Hosts the showcase site (site/) as static assets at gh.yash0.in.
+  // Hosts the showcase site (site/) as static assets at gh.abhishek-a.in.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "gh-widgets-site",
   "compatibility_date": "2026-10-14",
@@ -7,5 +7,5 @@
     "directory": "./site",
     "not_found_handling": "404-page"
   },
-  "routes": [{ "pattern": "gh.yash0.in", "custom_domain": true }]
+  "routes": [{ "pattern": "gh.abhishek-a.in", "custom_domain": true }]
 }

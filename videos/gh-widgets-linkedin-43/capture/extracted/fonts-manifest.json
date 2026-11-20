@@ -1,0 +1,505 @@
+{
+  "files": [
+    {
+      "file": "1Ptgg87LROyAm3K8-C8CSKlvPfE.woff2",
+      "family": "Anton",
+      "rawFamily": "Anton",
+      "subfamily": "Regular",
+      "postscript": "Anton-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "1Ptgg87LROyAm3K9-C8CSKlvPfE.woff2",
+      "family": "Anton",
+      "rawFamily": "Anton",
+      "subfamily": "Regular",
+      "postscript": "Anton-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "1Ptgg87LROyAm3Kz-C8CSKlv.woff2",
+      "family": "Anton",
+      "rawFamily": "Anton",
+      "subfamily": "Regular",
+      "postscript": "Anton-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "Jqz55SSPQuCQF3t8uOwiUL-taUTtap9GayojdSFO.woff2",
+      "family": "Schibsted Grotesk",
+      "rawFamily": "Schibsted Grotesk",
+      "subfamily": "Regular",
+      "postscript": "SchibstedGrotesk-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "Jqz55SSPQuCQF3t8uOwiUL-taUTtap9IayojdSFOd1I.woff2",
+      "family": "Schibsted Grotesk",
+      "rawFamily": "Schibsted Grotesk",
+      "subfamily": "Regular",
+      "postscript": "SchibstedGrotesk-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yygg_vb.woff2",
+      "family": "Plus Jakarta Sans",
+      "rawFamily": "Plus Jakarta Sans",
+      "subfamily": "Regular",
+      "postscript": "PlusJakartaSans-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko40yygg_vbd-E.woff2",
+      "family": "Plus Jakarta Sans",
+      "rawFamily": "Plus Jakarta Sans",
+      "subfamily": "Regular",
+      "postscript": "PlusJakartaSans-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko50yygg_vbd-E.woff2",
+      "family": "Plus Jakarta Sans",
+      "rawFamily": "Plus Jakarta Sans",
+      "subfamily": "Regular",
+      "postscript": "PlusJakartaSans-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko70yygg_vbd-E.woff2",
+      "family": "Plus Jakarta Sans",
+      "rawFamily": "Plus Jakarta Sans",
+      "subfamily": "Regular",
+      "postscript": "PlusJakartaSans-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "QGYvz_MVcBeNP4NJtEtqUYLknw.woff2",
+      "family": "Outfit",
+      "rawFamily": "Outfit Thin",
+      "subfamily": "Regular",
+      "postscript": "Outfit-Thin",
+      "weight": 100,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2",
+      "family": "Outfit",
+      "rawFamily": "Outfit Thin",
+      "subfamily": "Regular",
+      "postscript": "Outfit-Thin",
+      "weight": 100,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7W0Q5n-wU.woff2",
+      "family": "Inter",
+      "rawFamily": "Inter",
+      "subfamily": "Regular",
+      "postscript": "Inter-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2",
+      "family": "Inter",
+      "rawFamily": "Inter",
+      "subfamily": "Regular",
+      "postscript": "Inter-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7W0Q5n-wU.woff2",
+      "family": "Inter",
+      "rawFamily": "Inter",
+      "subfamily": "Regular",
+      "postscript": "Inter-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7W0Q5n-wU.woff2",
+      "family": "Inter",
+      "rawFamily": "Inter",
+      "subfamily": "Regular",
+      "postscript": "Inter-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7W0Q5n-wU.woff2",
+      "family": "Inter",
+      "rawFamily": "Inter",
+      "subfamily": "Regular",
+      "postscript": "Inter-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7W0Q5n-wU.woff2",
+      "family": "Inter",
+      "rawFamily": "Inter",
+      "subfamily": "Regular",
+      "postscript": "Inter-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "V8mDoQDjQSkFtoMM3T6r8E7mPb54C_k3HqUtEw.woff2",
+      "family": "Space Grotesk",
+      "rawFamily": "Space Grotesk Light",
+      "subfamily": "Regular",
+      "postscript": "SpaceGrotesk-Light",
+      "weight": 300,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "V8mDoQDjQSkFtoMM3T6r8E7mPb94C_k3HqUtEw.woff2",
+      "family": "Space Grotesk",
+      "rawFamily": "Space Grotesk Light",
+      "subfamily": "Regular",
+      "postscript": "SpaceGrotesk-Light",
+      "weight": 300,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2",
+      "family": "Space Grotesk",
+      "rawFamily": "Space Grotesk Light",
+      "subfamily": "Regular",
+      "postscript": "SpaceGrotesk-Light",
+      "weight": 300,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2",
+      "family": "Figtree",
+      "rawFamily": "Figtree Light",
+      "subfamily": "Regular",
+      "postscript": "Figtree-Light",
+      "weight": 300,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2",
+      "family": "Figtree",
+      "rawFamily": "Figtree Light",
+      "subfamily": "Regular",
+      "postscript": "Figtree-Light",
+      "weight": 300,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "xn7gYHE41ni1AdIRggOxSvfedN62Zw.woff2",
+      "family": "Manrope",
+      "rawFamily": "Manrope ExtraLight",
+      "subfamily": "Regular",
+      "postscript": "Manrope-ExtraLight",
+      "weight": 200,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "xn7gYHE41ni1AdIRggSxSvfedN62Zw.woff2",
+      "family": "Manrope",
+      "rawFamily": "Manrope ExtraLight",
+      "subfamily": "Regular",
+      "postscript": "Manrope-ExtraLight",
+      "weight": 200,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "xn7gYHE41ni1AdIRggexSvfedN4.woff2",
+      "family": "Manrope",
+      "rawFamily": "Manrope ExtraLight",
+      "subfamily": "Regular",
+      "postscript": "Manrope-ExtraLight",
+      "weight": 200,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "xn7gYHE41ni1AdIRggixSvfedN62Zw.woff2",
+      "family": "Manrope",
+      "rawFamily": "Manrope ExtraLight",
+      "subfamily": "Regular",
+      "postscript": "Manrope-ExtraLight",
+      "weight": 200,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "xn7gYHE41ni1AdIRggmxSvfedN62Zw.woff2",
+      "family": "Manrope",
+      "rawFamily": "Manrope ExtraLight",
+      "subfamily": "Regular",
+      "postscript": "Manrope-ExtraLight",
+      "weight": 200,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "xn7gYHE41ni1AdIRggqxSvfedN62Zw.woff2",
+      "family": "Manrope",
+      "rawFamily": "Manrope ExtraLight",
+      "subfamily": "Regular",
+      "postscript": "Manrope-ExtraLight",
+      "weight": 200,
+      "style": "normal",
+      "variationAxes": [
+        "wght"
+      ],
+      "identified": true,
+      "isIcon": false
+    }
+  ],
+  "families": [
+    {
+      "family": "Anton",
+      "weights": [
+        400
+      ],
+      "variable": false,
+      "fileCount": 3,
+      "files": [
+        "1Ptgg87LROyAm3K8-C8CSKlvPfE.woff2",
+        "1Ptgg87LROyAm3K9-C8CSKlvPfE.woff2",
+        "1Ptgg87LROyAm3Kz-C8CSKlv.woff2"
+      ]
+    },
+    {
+      "family": "Figtree",
+      "weights": [
+        300
+      ],
+      "variable": true,
+      "fileCount": 2,
+      "files": [
+        "_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2",
+        "_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2"
+      ]
+    },
+    {
+      "family": "Inter",
+      "weights": [
+        400
+      ],
+      "variable": true,
+      "fileCount": 6,
+      "files": [
+        "UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7W0Q5n-wU.woff2",
+        "UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2",
+        "UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7W0Q5n-wU.woff2",
+        "UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7W0Q5n-wU.woff2",
+        "UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7W0Q5n-wU.woff2",
+        "UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7W0Q5n-wU.woff2"
+      ]
+    },
+    {
+      "family": "Manrope",
+      "weights": [
+        200
+      ],
+      "variable": true,
+      "fileCount": 6,
+      "files": [
+        "xn7gYHE41ni1AdIRggOxSvfedN62Zw.woff2",
+        "xn7gYHE41ni1AdIRggSxSvfedN62Zw.woff2",
+        "xn7gYHE41ni1AdIRggexSvfedN4.woff2",
+        "xn7gYHE41ni1AdIRggixSvfedN62Zw.woff2",
+        "xn7gYHE41ni1AdIRggmxSvfedN62Zw.woff2",
+        "xn7gYHE41ni1AdIRggqxSvfedN62Zw.woff2"
+      ]
+    },
+    {
+      "family": "Outfit",
+      "weights": [
+        100
+      ],
+      "variable": true,
+      "fileCount": 2,
+      "files": [
+        "QGYvz_MVcBeNP4NJtEtqUYLknw.woff2",
+        "QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2"
+      ]
+    },
+    {
+      "family": "Plus Jakarta Sans",
+      "weights": [
+        400
+      ],
+      "variable": true,
+      "fileCount": 4,
+      "files": [
+        "LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yygg_vb.woff2",
+        "LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko40yygg_vbd-E.woff2",
+        "LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko50yygg_vbd-E.woff2",
+        "LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko70yygg_vbd-E.woff2"
+      ]
+    },
+    {
+      "family": "Schibsted Grotesk",
+      "weights": [
+        400
+      ],
+      "variable": true,
+      "fileCount": 2,
+      "files": [
+        "Jqz55SSPQuCQF3t8uOwiUL-taUTtap9GayojdSFO.woff2",
+        "Jqz55SSPQuCQF3t8uOwiUL-taUTtap9IayojdSFOd1I.woff2"
+      ]
+    },
+    {
+      "family": "Space Grotesk",
+      "weights": [
+        300
+      ],
+      "variable": true,
+      "fileCount": 3,
+      "files": [
+        "V8mDoQDjQSkFtoMM3T6r8E7mPb54C_k3HqUtEw.woff2",
+        "V8mDoQDjQSkFtoMM3T6r8E7mPb94C_k3HqUtEw.woff2",
+        "V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2"
+      ]
+    }
+  ],
+  "unidentified": [],
+  "meta": {
+    "generatedAt": "2026-10-14T17:14:19.978Z",
+    "tool": "fontkit"
+  }
+}
