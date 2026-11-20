@@ -47,6 +47,14 @@ enum class ProfileTypeface(val label: String) {
     CONDENSED("Condensed"),
 }
 
+enum class AuroraColor(val label: String, val accent: Int) {
+    EMERALD("Emerald", 0xFF55E68A.toInt()),
+    BLUE("Blue", 0xFF75B8FF.toInt()),
+    VIOLET("Violet", 0xFFC3A0FF.toInt()),
+    ROSE("Rose", 0xFFFF91B4.toInt()),
+    AMBER("Amber", 0xFFFFCB77.toInt()),
+}
+
 enum class ProfileCount(val label: String) {
     FOLLOWERS("Followers"),
     FOLLOWING("Following"),
@@ -77,6 +85,7 @@ data class WidgetDesign(
     val showMonths: Boolean = true,
     val weekStartsMonday: Boolean = false,
     val weeklyGoal: Int = 20,
+    val auroraColor: AuroraColor = AuroraColor.EMERALD,
     val profileShowName: Boolean = true,
     val profileShowHandle: Boolean = true,
     val profileShowRepos: Boolean = true,
@@ -108,6 +117,7 @@ data class WidgetDesign(
         .put("showMonths", showMonths)
         .put("weekStartsMonday", weekStartsMonday)
         .put("weeklyGoal", weeklyGoal)
+        .put("auroraColor", auroraColor.name)
         .put("profileShowName", profileShowName)
         .put("profileShowHandle", profileShowHandle)
         .put("profileShowRepos", profileShowRepos)
@@ -146,6 +156,7 @@ data class WidgetDesign(
                     showToday = o.optBoolean("showToday", d.showToday),
                     showMonths = o.optBoolean("showMonths", d.showMonths),
                     weekStartsMonday = o.optBoolean("weekStartsMonday", d.weekStartsMonday),
+                    auroraColor = enumOr(o.optString("auroraColor"), d.auroraColor),
                     weeklyGoal = o.optInt("weeklyGoal", d.weeklyGoal).coerceIn(1, 10000),
                     profileShowName = o.optBoolean("profileShowName", d.profileShowName),
                     profileShowHandle = o.optBoolean("profileShowHandle", d.profileShowHandle),

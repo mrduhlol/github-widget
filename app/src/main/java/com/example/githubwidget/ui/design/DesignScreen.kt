@@ -61,10 +61,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.example.githubwidget.data.Repository
+import com.example.githubwidget.data.Day
 import com.example.githubwidget.data.SampleData
+import java.time.LocalDate
+import java.time.ZoneOffset
 import com.example.githubwidget.data.GitHubApi
 import com.example.githubwidget.data.ReviewInbox
 import com.example.githubwidget.data.ReviewInboxState
+import com.example.githubwidget.design.AuroraColor
 import com.example.githubwidget.design.Background
 import com.example.githubwidget.design.CellShape
 import com.example.githubwidget.design.Corners
@@ -186,8 +190,26 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
         }
         if (design.layout != WidgetLayout.PROFILE || profilePanel == "Appearance") {
             item {
-                SectionCard(title = "Colors") {
-                    PaletteRow(design, onSelect = { id -> update { it.copy(paletteId = id) } }, onCustom = { pickingColor = true })
+                if (layout == WidgetLayout.STREAK) {
+                    SectionCard(title = "Aurora color", subtitle = "Used when you contribute today.") {
+                        val day = LocalDate.now(ZoneOffset.UTC)
+                        val example = remember(day) {
+                            val sample = SampleData.userData
+                            sample.copy(contributions = sample.contributions.copy(days =
+                                (0L..5L).map { Day(day.minusDays(it), if (it < 5) 1 else 0, 1) }))
+                        }
+                        WidgetPreview(design, example, null, 340f, 170f,
+                            Modifier.fillMaxWidth().height(135.dp), dark = true)
+                        Text("Active state · Example", style = MaterialTheme.typography.bodySmall,
+                            color = AppTheme.colors.textSecondary)
+                        Spacer(Modifier.height(8.dp))
+                        SegmentedChoice(AuroraColor.entries, design.auroraColor, { it.label },
+                            { color -> update { it.copy(auroraColor = color) } })
+                    }
+                } else {
+                    SectionCard(title = "Colors") {
+                        PaletteRow(design, onSelect = { id -> update { it.copy(paletteId = id) } }, onCustom = { pickingColor = true })
+                    }
                 }
             }
             item {
@@ -206,12 +228,12 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
             }
             item {
                 SectionCard(title = "Background") {
-                    Field("Card color", hint = if (design.background == Background.AUTO) "Light or dark, following your phone's setting" else null) {
+                    if (layout != WidgetLayout.STREAK) Field("Card color", hint = if (design.background == Background.AUTO) "Light or dark, following your phone's setting" else null) {
                         SegmentedChoice(Background.entries, design.background, { it.label }, { b -> update { it.copy(background = b) } })
                     }
-                    Spacer(Modifier.height(20.dp))
+                    if (layout != WidgetLayout.STREAK) Spacer(Modifier.height(20.dp))
                     OpacitySlider(design.opacity) { v -> update { it.copy(opacity = v) } }
-                    if (design.layout != WidgetLayout.PROFILE) {
+                    if (layout != WidgetLayout.PROFILE && layout != WidgetLayout.STREAK) {
                         Spacer(Modifier.height(16.dp))
                         Field("Corners") {
                             SegmentedChoice(Corners.entries, design.corners, { it.label }, { c -> update { it.copy(corners = c) } })
@@ -259,7 +281,8 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
             when (design.layout) {
                 WidgetLayout.PROFILE -> Unit
                 WidgetLayout.PR_INBOX -> ReviewInboxSection(inbox)
-                WidgetLayout.STREAK, WidgetLayout.WEEKLY_GOAL -> Text(
+                WidgetLayout.STREAK -> Unit
+                WidgetLayout.WEEKLY_GOAL -> Text(
                     "Colors and fonts are shared. Each widget keeps its own type. All widgets use your connected GitHub profile.",
                     style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textSecondary,
                 )

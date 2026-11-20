@@ -73,7 +73,7 @@ class FocusWidgetTest {
                 val light = WidgetRenderer.render(context, design.copy(background = Background.LIGHT), user, null,
                     width, height, dark = false)
                 assertTrue(rendered.sameAs(light))
-                assertEquals(StreakWidgetPainter.SURFACE, rendered.getPixel(rendered.width / 2, 5))
+                assertEquals(255, android.graphics.Color.alpha(rendered.getPixel(rendered.width / 2, 5)))
                 File(out, "streak_redesign_${label}_${width.toInt()}x${height.toInt()}.png")
                     .outputStream().use { assertTrue(rendered.compress(Bitmap.CompressFormat.PNG, 100, it)) }
             }

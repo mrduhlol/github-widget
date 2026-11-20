@@ -64,6 +64,11 @@ object WidgetRenderer {
         val w = (widthDp * scale).toInt().coerceAtLeast(1)
         val h = (heightDp * scale).toInt().coerceAtLeast(1)
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        if (design.layout == WidgetLayout.STREAK) {
+            AuroraStreakPainter.draw(Canvas(bmp), scale, context, design, font,
+                StreakWidgetPainter.snapshot(data, placeholder))
+            return bmp
+        }
         val isDark = when (design.background) {
             Background.AUTO -> dark
             Background.LIGHT -> false
