@@ -66,6 +66,21 @@
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_goal_info" />
         </receiver>
 
+        <receiver android:name=".WeeklyGoalMeterWidgetProvider" android:exported="false" android:label="@string/widget_goal_meter">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_goal_info" />
+        </receiver>
+
+        <receiver android:name=".WeeklyGoalWeekWidgetProvider" android:exported="false" android:label="@string/widget_goal_week">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_goal_info" />
+        </receiver>
+
+        <receiver android:name=".WeeklyGoalAscentWidgetProvider" android:exported="false" android:label="@string/widget_goal_ascent">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_goal_info" />
+        </receiver>
+
         <receiver android:name=".ProfileWidgetProvider" android:exported="false" android:label="@string/widget_profile">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_profile_info" />

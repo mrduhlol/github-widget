@@ -21,6 +21,29 @@ import java.time.ZoneOffset
 @Config(sdk = [34])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class FocusWidgetTest {
+    @Test fun weeklyGoalStylesKeepDistinctProvidersAndRenders() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val today = LocalDate.now()
+        val monday = today.minusDays((today.dayOfWeek.value - 1).toLong())
+        val user = data(listOf(Day(monday.minusDays(1), 100, 4), Day(today, 14, 3),
+            Day(today.plusDays(1), 100, 4)))
+        val styles = WidgetLayout.entries.filter { it.isWeeklyGoal }
+        assertEquals(4, styles.size)
+        assertEquals(4, styles.map { WidgetKind.forLayout(it).component(context) }.distinct().size)
+        assertEquals(WidgetLayout.WEEKLY_GOAL, WidgetDesign.fromJson("""{"layout":"WEEKLY_GOAL"}""").layout)
+        for ((width, height) in listOf(340f to 170f, 170f to 170f)) {
+            val renders = styles.map { style ->
+                val design = WidgetDesign(layout = style, weeklyGoal = 20)
+                assertEquals(style, WidgetKind.forLayout(style).resolvedLayout(WidgetLayout.CLASSIC))
+                assertTrue(FocusWidgetPainter.accessibilityText(design, user).contains("14 of 20"))
+                WidgetRenderer.render(context, design, user, null, width, height, true)
+            }
+            for (index in renders.indices) {
+                assertTrue(renders.take(index).none { it.sameAs(renders[index]) })
+            }
+        }
+    }
+
     @Test fun streakCalendarStatesFollowUtcAndPreserveTheOpenDay() {
         val today = LocalDate.of(2026, 11, 20)
         val now = today.atStartOfDay().toInstant(ZoneOffset.UTC)

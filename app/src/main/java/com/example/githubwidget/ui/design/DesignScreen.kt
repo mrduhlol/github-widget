@@ -270,7 +270,7 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
                 }
             }
         }
-        if (design.layout == WidgetLayout.WEEKLY_GOAL) {
+        if (design.layout.isWeeklyGoal) {
             item {
                 SectionCard(title = "Weekly goal", subtitle = "Contribution count · Monday to Sunday") {
                     Field("Target", hint = "${design.weeklyGoal} contributions per week") {
@@ -284,11 +284,10 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
             }
         }
         item {
-            when (design.layout) {
-                WidgetLayout.PROFILE -> Unit
-                WidgetLayout.PR_INBOX -> ReviewInboxSection(inbox)
-                WidgetLayout.STREAK -> Unit
-                WidgetLayout.WEEKLY_GOAL -> Text(
+            when {
+                design.layout == WidgetLayout.PROFILE || design.layout == WidgetLayout.STREAK -> Unit
+                design.layout == WidgetLayout.PR_INBOX -> ReviewInboxSection(inbox)
+                design.layout.isWeeklyGoal -> Text(
                     "Colors and fonts are shared. Each widget keeps its own type. All widgets use your connected GitHub profile.",
                     style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textSecondary,
                 )

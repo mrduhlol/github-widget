@@ -3,12 +3,15 @@ package com.example.githubwidget.design
 import org.json.JSONObject
 
 /** What the widget shows besides the graph. */
-enum class WidgetLayout(val label: String, val description: String) {
+enum class WidgetLayout(val label: String, val description: String, val isWeeklyGoal: Boolean = false) {
     CLASSIC("Classic", "Name, graph and stats"),
     GRAPH("Graph only", "Just the squares"),
     NUMBERS("Numbers", "Big stats, small graph"),
     STREAK("Streak", "Current streak and today’s status"),
-    WEEKLY_GOAL("Weekly goal", "This week’s contributions and your target"),
+    WEEKLY_GOAL("Weekly Goal · Arc", "A circular gauge for your weekly target", true),
+    WEEKLY_GOAL_METER("Weekly Goal · Meter", "A segmented bar that fills toward your target", true),
+    WEEKLY_GOAL_WEEK("Weekly Goal · Week", "Daily contribution bars from Monday to Sunday", true),
+    WEEKLY_GOAL_ASCENT("Weekly Goal · Ascent", "A stepped climb toward your weekly target", true),
     PROFILE("Profile card", "Your GitHub ID · landscape or portrait"),
     PR_INBOX("PR Inbox", "Open pull requests awaiting your review"),
 }

@@ -145,7 +145,7 @@ object WidgetRenderer {
                 data == null -> drawPlaceholder(area, placeholder)
                 design.layout == WidgetLayout.GRAPH -> drawGraphOnly(area, data)
                 design.layout == WidgetLayout.NUMBERS -> drawNumbers(area, data)
-                design.layout in listOf(WidgetLayout.WEEKLY_GOAL, WidgetLayout.PROFILE) ->
+                design.layout.isWeeklyGoal || design.layout == WidgetLayout.PROFILE ->
                     FocusWidgetPainter.draw(canvas, area, s, design, colors, context, font, data, avatar,
                         wDp - 2 * padDp, hDp - 2 * padDp)
                 else -> drawClassic(area, data, avatar)

@@ -11,7 +11,10 @@ internal enum class WidgetKind(val provider: Class<*>, val layout: WidgetLayout?
     WEEKLY_GOAL(WeeklyGoalWidgetProvider::class.java, WidgetLayout.WEEKLY_GOAL),
     PROFILE(ProfileWidgetProvider::class.java, WidgetLayout.PROFILE),
     PORTRAIT_PROFILE(PortraitProfileWidgetProvider::class.java, WidgetLayout.PROFILE),
-    PR_INBOX(ReviewInboxWidgetProvider::class.java, WidgetLayout.PR_INBOX);
+    PR_INBOX(ReviewInboxWidgetProvider::class.java, WidgetLayout.PR_INBOX),
+    WEEKLY_GOAL_METER(WeeklyGoalMeterWidgetProvider::class.java, WidgetLayout.WEEKLY_GOAL_METER),
+    WEEKLY_GOAL_WEEK(WeeklyGoalWeekWidgetProvider::class.java, WidgetLayout.WEEKLY_GOAL_WEEK),
+    WEEKLY_GOAL_ASCENT(WeeklyGoalAscentWidgetProvider::class.java, WidgetLayout.WEEKLY_GOAL_ASCENT);
 
     fun component(context: Context) = ComponentName(context, provider)
 
@@ -24,6 +27,9 @@ internal enum class WidgetKind(val provider: Class<*>, val layout: WidgetLayout?
         fun forLayout(layout: WidgetLayout, portrait: Boolean = false) = when (layout) {
             WidgetLayout.STREAK -> STREAK
             WidgetLayout.WEEKLY_GOAL -> WEEKLY_GOAL
+            WidgetLayout.WEEKLY_GOAL_METER -> WEEKLY_GOAL_METER
+            WidgetLayout.WEEKLY_GOAL_WEEK -> WEEKLY_GOAL_WEEK
+            WidgetLayout.WEEKLY_GOAL_ASCENT -> WEEKLY_GOAL_ASCENT
             WidgetLayout.PR_INBOX -> PR_INBOX
             WidgetLayout.PROFILE -> if (portrait) PORTRAIT_PROFILE else PROFILE
             else -> CONTRIBUTIONS

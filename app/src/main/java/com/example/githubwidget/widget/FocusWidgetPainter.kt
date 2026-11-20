@@ -6,8 +6,14 @@ import android.text.TextPaint
 import com.example.githubwidget.data.*
 import com.example.githubwidget.design.*
 import java.text.NumberFormat
+import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 
 /** Shared by the launcher and the live editor; no network access while drawing. */
 internal object FocusWidgetPainter {
@@ -73,10 +79,10 @@ internal object FocusWidgetPainter {
 
     fun accessibilityText(design: WidgetDesign, data: UserData): String {
         val username = data.contributions.username
-        return when (design.layout) {
-            WidgetLayout.STREAK -> StreakWidgetPainter.snapshot(data, WidgetRenderer.Placeholder.NONE).description()
-            WidgetLayout.WEEKLY_GOAL -> "$username: ${activity(data).week} of ${design.weeklyGoal} contributions this week."
-            WidgetLayout.PROFILE -> buildList {
+        return when {
+            design.layout == WidgetLayout.STREAK -> StreakWidgetPainter.snapshot(data, WidgetRenderer.Placeholder.NONE).description()
+            design.layout.isWeeklyGoal -> "$username: ${activity(data).week} of ${design.weeklyGoal} contributions this week."
+            design.layout == WidgetLayout.PROFILE -> buildList {
                 if (design.profileShowName) data.profile?.displayName?.let { add(it) }
                 if (design.profileShowHandle) add("@$username")
                 profileMetrics(design, data).forEach { add("${it.value ?: "Unavailable"} ${it.spokenLabel}") }
@@ -125,29 +131,223 @@ internal object FocusWidgetPainter {
             else -> goal()
         }
         fun goal() {
-            val a = activity(data)
+            val today = LocalDate.now()
+            val dayIndex = today.dayOfWeek.value - 1
+            val monday = today.minusDays(dayIndex.toLong())
+            val byDate = data.contributions.days.associate { it.date to it.count }
+            val days = (0..dayIndex).map { byDate[monday.plusDays(it.toLong())] ?: 0 }
+            val total = days.sum()
             val target = d.weeklyGoal.coerceAtLeast(1)
-            val progress = (a.week.toFloat() / target).coerceIn(0f, 1f)
-            val compact = r.height() < dp(100f)
-            line("Weekly goal", r.left, r.top + dp(13f), r.width() - dp(22f), 12f)
-            if (compact) {
-                line("${nf.format(a.week)} / ${nf.format(target)}", r.left, r.top + dp(40f), r.width(), 24f, colors.accent, numeric = true)
-                if (r.height() >= dp(58f)) {
-                    val rect = RectF(r.left, r.bottom - dp(6f), r.right, r.bottom)
-                    val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colors.levels[0] }
-                    c.drawRoundRect(rect, dp(3f), dp(3f), p)
-                    rect.right = rect.left + rect.width() * progress; p.color = colors.accent
-                    c.drawRoundRect(rect, dp(3f), dp(3f), p)
-                }
+            val progress = (total.toFloat() / target).coerceIn(0f, 1f)
+            val percent = "${(total.toLong() * 100 / target).coerceAtMost(100)}%"
+            val count = nf.format(total)
+            val targetLabel = nf.format(target)
+            val wide = r.width() >= dp(210f) && r.width() >= r.height() * 1.35f
+            val header = r.top + dp(12f)
+            ProfileIcons.draw(c, "https://github.com", r.left + dp(6f), header - dp(4f), dp(12f), colors.accent)
+            line("Weekly goal", r.left + dp(17f), header, r.width() - dp(35f))
+            if (r.width() >= dp(210f)) {
+                val format = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
+                val sunday = monday.plusDays(6)
+                val end = if (monday.month == sunday.month) nf.format(sunday.dayOfMonth) else format.format(sunday)
+                goalEnd("${format.format(monday)}–$end", r.right - dp(28f), header, colors.textSecondary)
+            }
+            if (r.height() < dp(62f)) {
+                line("$count / $targetLabel", r.left, r.bottom - dp(2f), r.width(), 22f, colors.accent, numeric = true, center = true)
                 return
             }
-            val diameter = min(r.width() - dp(8f), r.height() - dp(53f)).coerceAtLeast(dp(32f))
-            val ring = RectF(r.centerX() - diameter/2, r.top + dp(25f), r.centerX() + diameter/2, r.top + dp(25f) + diameter)
-            val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(6f); strokeCap = Paint.Cap.ROUND; color = colors.levels[0] }
-            c.drawOval(ring, p); p.color = colors.accent; c.drawArc(ring, -90f, 360f * progress, false, p)
-            line(nf.format(a.week), ring.left + dp(8f), ring.centerY() + dp(4f), ring.width() - dp(16f), 32f, colors.accent, true, true)
-            line("of ${nf.format(target)}", ring.left + dp(8f), ring.centerY() + dp(21f), ring.width() - dp(16f), 11f, colors.textSecondary, center = true)
-            line(if (a.week >= target) "Goal met" else "${nf.format(target - a.week)} to go", r.left, r.bottom - dp(2f), r.width(), 11f, colors.textSecondary, center = true)
+            val body = RectF(r.left, r.top + dp(20f), r.right, r.bottom - dp(17f))
+            val visual = RectF(body)
+            if (d.layout != WidgetLayout.WEEKLY_GOAL_METER && (wide || d.layout != WidgetLayout.WEEKLY_GOAL)) {
+                val reading = RectF(body)
+                if (wide) {
+                    reading.right = body.left + body.width() * .47f
+                    visual.left = reading.right + dp(8f)
+                } else {
+                    reading.bottom = body.top + body.height() * .39f
+                    visual.top = reading.bottom + dp(2f)
+                }
+                goalReading(reading, count, targetLabel)
+            }
+            when (d.layout) {
+                WidgetLayout.WEEKLY_GOAL_METER -> goalMeter(body, count, targetLabel, progress, percent, wide)
+                WidgetLayout.WEEKLY_GOAL_WEEK -> goalWeek(visual, days)
+                WidgetLayout.WEEKLY_GOAL_ASCENT -> goalAscent(visual, progress)
+                else -> goalArc(visual, progress, if (wide) percent else count,
+                    if (wide) "of goal" else "of $targetLabel")
+            }
+            val remaining = 6 - dayIndex
+            val status = if (total >= target) "Goal met" else "${nf.format(target - total)} to go"
+            line(status, r.left, r.bottom - dp(2f), r.width() * .56f, 10f, colors.accent)
+            if (r.width() >= dp(106f)) {
+                goalEnd(when (remaining) { 0 -> "Ends today"; 1 -> "1 day left"; else -> "$remaining days left" },
+                    r.right, r.bottom - dp(2f), colors.textSecondary)
+            }
+        }
+
+        private fun goalEnd(value: String, right: Float, baseline: Float, color: Int) {
+            val p = paint(10f, color)
+            c.drawText(value, right - p.measureText(value), baseline, p)
+        }
+
+        private fun goalReading(area: RectF, count: String, target: String) {
+            val size = (area.height() / s * .47f).coerceIn(14f, 38f)
+            val label = area.height() >= dp(43f)
+            val baseline = area.centerY() + dp(if (label) 2f else size * .34f)
+            val valuePaint = paint(size, colors.accent, numeric = true)
+            val targetPaint = paint(size * .53f, colors.textSecondary)
+            val suffix = "/ $target"
+            val gap = dp(5f)
+            val suffixWidth = targetPaint.measureText(suffix)
+            val available = area.width() - suffixWidth - gap
+            if (available > 0f) {
+                valuePaint.textSize *= minOf(1f, available / valuePaint.measureText(count))
+                val countWidth = valuePaint.measureText(count)
+                val left = area.centerX() - (countWidth + gap + suffixWidth) / 2
+                c.drawText(count, left, baseline, valuePaint)
+                c.drawText(suffix, left + countWidth + gap, baseline, targetPaint)
+            }
+            if (label) line("Contributions", area.left, baseline + dp(14f), area.width(), 10f, colors.textSecondary, center = true)
+        }
+
+        private fun goalArc(area: RectF, progress: Float, amount: String, label: String) {
+            val diameter = min(area.width(), area.height()) - dp(14f)
+            if (diameter <= dp(8f)) return
+            val ring = RectF(area.centerX() - diameter / 2, area.centerY() - diameter / 2,
+                area.centerX() + diameter / 2, area.centerY() + diameter / 2)
+            val p = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                strokeCap = Paint.Cap.ROUND
+                color = colors.levels[0]
+            }
+            if (diameter >= dp(44f)) {
+                p.strokeWidth = dp(1f)
+                for (tick in 0..12) {
+                    val angle = Math.toRadians(135.0 + 22.5 * tick)
+                    val x = cos(angle).toFloat()
+                    val y = sin(angle).toFloat()
+                    val inner = diameter / 2 + dp(4f)
+                    val outer = inner + dp(3f)
+                    c.drawLine(area.centerX() + x * inner, area.centerY() + y * inner,
+                        area.centerX() + x * outer, area.centerY() + y * outer, p)
+                }
+            }
+            p.strokeWidth = dp(4f)
+            c.drawArc(ring, 135f, 270f, false, p)
+            if (progress > 0f) {
+                p.color = colors.accent
+                c.drawArc(ring, 135f, 270f * progress, false, p)
+            }
+            val size = (diameter / s * .29f).coerceIn(10f, 28f)
+            line(amount, ring.left + dp(4f), ring.centerY() + dp(4f), ring.width() - dp(8f), size, colors.accent, true, true)
+            if (diameter >= dp(44f)) line(label, ring.left, ring.centerY() + dp(17f), ring.width(), 10f, colors.textSecondary, center = true)
+        }
+
+        private fun goalMeter(area: RectF, count: String, target: String, progress: Float, percent: String, wide: Boolean) {
+            val caption = area.height() >= dp(50f)
+            val bottom = area.bottom - dp(if (caption) 13f else 2f)
+            val barHeight = min(dp(15f), area.height() * .22f)
+            val barTop = bottom - barHeight
+            goalReading(RectF(area.left, area.top, area.right, barTop - dp(3f)), count, target)
+            val blocks = if (wide) 16 else 10
+            val gap = dp(3f)
+            val width = (area.width() - gap * (blocks - 1)) / blocks
+            if (width <= 0f) return
+            val p = Paint(Paint.ANTI_ALIAS_FLAG)
+            repeat(blocks) { index ->
+                val left = area.left + index * (width + gap)
+                val right = left + width
+                p.color = colors.levels[0]
+                c.drawRoundRect(left, barTop, right, bottom, dp(2f), dp(2f), p)
+                val fill = (progress * blocks - index).coerceIn(0f, 1f)
+                if (fill > 0f) {
+                    val clip = c.save()
+                    c.clipRect(left, barTop, left + width * fill, bottom)
+                    p.color = colors.accent
+                    c.drawRoundRect(left, barTop, right, bottom, dp(2f), dp(2f), p)
+                    c.restoreToCount(clip)
+                }
+            }
+            if (caption) {
+                line("0", area.left, area.bottom, area.width() / 4, 10f, colors.textSecondary)
+                line("$percent of goal", area.left, area.bottom, area.width(), 10f, colors.textSecondary, center = true)
+                goalEnd(target, area.right, area.bottom, colors.textSecondary)
+            }
+        }
+
+        private fun goalWeek(area: RectF, days: List<Int>) {
+            val column = area.width() / 7
+            val captionSize = if (column >= dp(22f)) 10f else 8f
+            val barTop = area.top + dp(13f)
+            val barBottom = area.bottom - dp(13f)
+            val barHeight = barBottom - barTop
+            if (barHeight < dp(5f)) return
+            val peak = (days.maxOrNull() ?: 0).coerceAtLeast(1)
+            val p = Paint(Paint.ANTI_ALIAS_FLAG)
+            repeat(7) { index ->
+                val x = area.left + index * column
+                val half = min(column * .28f, dp(9f))
+                val center = x + column / 2
+                val count = days.getOrNull(index)
+                val textColor = if (index == days.lastIndex) colors.accent else colors.textSecondary
+                line(count?.let(nf::format) ?: "–", x, barTop - dp(3f), column, captionSize, textColor, center = true)
+                p.color = colors.levels[0]
+                c.drawRoundRect(center - half, barTop, center + half, barBottom, dp(2f), dp(2f), p)
+                if (count != null && count > 0) {
+                    p.color = colors.accent
+                    c.drawRoundRect(center - half, barBottom - barHeight * count / peak, center + half,
+                        barBottom, dp(2f), dp(2f), p)
+                }
+                val day = DayOfWeek.of(index + 1).getDisplayName(TextStyle.SHORT, Locale.getDefault())
+                val label = if (column >= dp(22f)) day else day.take(2)
+                line(label, x, area.bottom - dp(1f), column, captionSize, textColor, center = true)
+            }
+        }
+
+        private fun goalAscent(area: RectF, progress: Float) {
+            val left = area.left + dp(3f)
+            val right = area.right - dp(14f)
+            val bottom = area.bottom - dp(4f)
+            val top = area.top + dp(12f)
+            if (right <= left || bottom <= top) return
+            val stepWidth = (right - left) / 4
+            val stepHeight = (bottom - top) / 4
+            val route = Path().apply {
+                moveTo(left, bottom)
+                repeat(4) { step ->
+                    val x = left + stepWidth * step
+                    val y = bottom - stepHeight * step
+                    lineTo(x + stepWidth * .4f, y)
+                    lineTo(x + stepWidth, y - stepHeight)
+                }
+            }
+            val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = colors.levels[0]; strokeWidth = dp(1f) }
+            for (y in listOf(bottom, (bottom + top) / 2, top)) c.drawLine(left, y, right, y, p)
+            p.style = Paint.Style.STROKE
+            p.strokeWidth = dp(2.5f)
+            p.strokeJoin = Paint.Join.ROUND
+            c.drawPath(route, p)
+            val x = left + (right - left) * progress
+            val position = progress * 4
+            val step = position.toInt()
+            val slope = ((position - step - .4f) / .6f).coerceAtLeast(0f)
+            val y = bottom - stepHeight * (step + slope)
+            p.color = colors.accent
+            val clip = c.save()
+            c.clipRect(left - dp(2f), area.top, x + dp(1f), area.bottom)
+            val fill = Path(route).apply { lineTo(right, bottom); close() }
+            p.style = Paint.Style.FILL
+            p.alpha = 52
+            c.drawPath(fill, p)
+            p.alpha = 255
+            p.style = Paint.Style.STROKE
+            c.drawPath(route, p)
+            c.restoreToCount(clip)
+            p.style = Paint.Style.FILL
+            c.drawCircle(x, y, dp(3.5f), p)
+            p.strokeWidth = dp(1.4f)
+            c.drawLine(right, top, right, area.top, p)
+            c.drawRect(right, area.top, right + dp(9f), area.top + dp(5f), p)
         }
         fun profile() {
             val name = data.profile?.displayName ?: data.contributions.username

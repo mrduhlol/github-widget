@@ -7,7 +7,10 @@
     <string name="widget_refresh_desc">Refresh</string>
     <string name="widget_streak">GitHub streak</string>
     <string name="widget_streak_desc">Your current GitHub streak and whether you contributed today.</string>
-    <string name="widget_goal">GitHub weekly goal</string>
+    <string name="widget_goal">Weekly Goal · Arc</string>
+    <string name="widget_goal_meter">Weekly Goal · Meter</string>
+    <string name="widget_goal_week">Weekly Goal · Week</string>
+    <string name="widget_goal_ascent">Weekly Goal · Ascent</string>
     <string name="widget_goal_desc">This week’s contributions toward your chosen goal.</string>
     <string name="widget_profile">GitHub ID · Landscape</string>
     <string name="widget_profile_portrait">GitHub ID · Portrait</string>
