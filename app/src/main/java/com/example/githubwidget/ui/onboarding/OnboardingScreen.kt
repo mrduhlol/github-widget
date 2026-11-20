@@ -2,9 +2,11 @@ package com.example.githubwidget.ui.onboarding
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -62,6 +64,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -70,6 +73,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -91,6 +96,18 @@ import com.example.githubwidget.R
 import com.example.githubwidget.data.Lookup
 import com.example.githubwidget.data.Repository
 import com.example.githubwidget.data.SampleData
+import com.example.githubwidget.data.ReviewInboxState
+import com.example.githubwidget.data.ReviewRequest
+import com.example.githubwidget.data.ReviewResults
+import com.example.githubwidget.design.WidgetDesign
+import com.example.githubwidget.design.WidgetLayout
+import com.example.githubwidget.widget.WidgetRenderer
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import com.example.githubwidget.ui.components.AddWidgetHelpSheet
 import com.example.githubwidget.ui.components.AppIcons
 import com.example.githubwidget.ui.components.Avatar
@@ -264,19 +281,62 @@ private fun StepPage(
 
 // ------------------------------------------------------------------ step 1: welcome
 
+private enum class WelcomeWidget(val layout: WidgetLayout, val art: Int, val label: String = layout.label) {
+    CONTRIBUTIONS(WidgetLayout.CLASSIC, R.drawable.onboarding_contribution_tiles, "Contributions"),
+    STREAK(WidgetLayout.STREAK, R.drawable.onboarding_streak),
+    GOAL(WidgetLayout.WEEKLY_GOAL, R.drawable.onboarding_goal),
+    PROFILE(WidgetLayout.PROFILE, R.drawable.onboarding_profile),
+    INBOX(WidgetLayout.PR_INBOX, R.drawable.onboarding_inbox),
+    GRAPH(WidgetLayout.GRAPH, R.drawable.onboarding_contribution_tiles),
+    NUMBERS(WidgetLayout.NUMBERS, R.drawable.onboarding_contribution_tiles);
+
+    fun next() = entries[(ordinal + 1) % entries.size]
+}
+
 @Composable
 private fun WelcomeStep(onNext: () -> Unit) {
-    val design by Repository.design.collectAsState()
+    val context = LocalContext.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    var widget by rememberSaveable { mutableStateOf(WelcomeWidget.CONTRIBUTIONS) }
+    var paused by rememberSaveable { mutableStateOf(false) }
+    val previews by produceState<Map<WelcomeWidget, ImageBitmap>>(emptyMap(), context) {
+        val inbox = ReviewInboxState("octocat", ReviewResults(1, listOf(
+            ReviewRequest("Improve search ordering", "octocat/hello-world", "42",
+                "https://github.com/octocat/hello-world/pull/42", "Show exact matches before partial results."),
+        ), 0L))
+        withContext(Dispatchers.Default) {
+            for (slide in WelcomeWidget.entries) {
+                val preview = WidgetRenderer.render(context, WidgetDesign(layout = slide.layout),
+                    SampleData.userData, null, 340f, 170f, dark = true, maxPixels = 120_000,
+                    inbox = inbox.takeIf { slide == WelcomeWidget.INBOX }).asImageBitmap()
+                withContext(Dispatchers.Main) { value = value + (slide to preview) }
+            }
+        }
+    }
+    val ready = previews.size == WelcomeWidget.entries.size
+    val motionEnabled = android.animation.ValueAnimator.areAnimatorsEnabled()
+    LaunchedEffect(lifecycle, paused, ready, motionEnabled) {
+        if (!paused && ready && motionEnabled) lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
+                delay(5_000)
+                if (!android.animation.ValueAnimator.areAnimatorsEnabled()) break
+                widget = widget.next()
+            }
+        }
+    }
+    val fade = tween<Float>(260, easing = LinearOutSlowInEasing)
     // The wallpaper is intentionally dark in either system theme.
     val foreground = Color(0xFFF3F8F5)
     val secondary = Color(0xFFC5D0CA)
     Box(Modifier.fillMaxSize().background(Color(0xFF080E0D))) {
-        Image(
-            painter = painterResource(R.drawable.onboarding_contribution_tiles),
-            contentDescription = null,
-            modifier = Modifier.matchParentSize(),
-            contentScale = ContentScale.Crop,
-        )
+        Crossfade(widget, modifier = Modifier.matchParentSize(), animationSpec = fade, label = "widget artwork") { slide ->
+            Image(
+                painter = painterResource(slide.art),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+        }
         Box(Modifier.matchParentSize().background(Brush.verticalGradient(
             0f to Color(0xE5080E0D),
             .48f to Color(0x35080E0D),
@@ -309,16 +369,28 @@ private fun WelcomeStep(onNext: () -> Unit) {
                     border = BorderStroke(1.dp, Color(0x50738B7B)),
                 ) {
                     Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        WidgetPreview(
-                            design = design,
-                            data = SampleData.userData,
-                            avatar = null,
-                            widthDp = 340f,
-                            heightDp = 170f,
-                            dark = true,
-                            modifier = Modifier.fillMaxWidth().heightIn(max = 170.dp),
-                        )
-                        Text("Example widget", style = MaterialTheme.typography.bodySmall, color = secondary)
+                        Crossfade(widget, animationSpec = fade, label = "widget example") { slide ->
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                    val width = minOf(maxWidth, 340.dp)
+                                    Box(Modifier.width(width).height(width / 2), contentAlignment = Alignment.Center) {
+                                        previews[slide]?.let { bitmap ->
+                                            Image(bitmap, "Example ${slide.label} widget", Modifier.fillMaxSize())
+                                        }
+                                    }
+                                }
+                                Text(slide.label, style = MaterialTheme.typography.bodySmall, color = secondary)
+                            }
+                        }
+                    }
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    if (motionEnabled) TextButton(onClick = { paused = !paused }, enabled = ready) {
+                        Text(if (paused) "Resume" else "Pause", color = secondary)
+                    }
+                    TextButton(onClick = { paused = true; widget = widget.next() },
+                        enabled = previews.containsKey(widget.next())) {
+                        Text("Next widget", color = foreground)
                     }
                 }
             },
