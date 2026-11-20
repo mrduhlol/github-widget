@@ -441,6 +441,7 @@ fun WidgetPreview(
     modifier: Modifier = Modifier,
     dark: Boolean = AppTheme.colors.isDark,
     inbox: ReviewInboxState? = null,
+    contentDescription: String? = "Widget preview",
 ) {
     val context = LocalContext.current
     val font by Repository.numberFont.collectAsState()
@@ -456,7 +457,7 @@ fun WidgetPreview(
         val h = (heightDp * scale).dp
         val shown = bitmap
         if (shown != null) {
-            Image(shown, contentDescription = "Widget preview", modifier = Modifier.size(w, h))
+            Image(shown, contentDescription = contentDescription, modifier = Modifier.size(w, h))
         } else {
             Spacer(Modifier.size(w, h))
         }

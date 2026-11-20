@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +25,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,6 +60,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -457,33 +463,46 @@ internal fun WidgetCatalog(onOpen: (WidgetLayout, PreviewSize) -> Unit) {
     val inbox by ReviewInbox.state.collectAsState()
     val cachedInbox = remember(username) { ReviewInbox.cached(context, username) }
     val widgets = WidgetLayout.entries.map { it to PreviewSize.WIDE } + (WidgetLayout.PROFILE to PreviewSize.PORTRAIT)
-    LazyColumn(
-        Modifier.fillMaxSize().background(AppTheme.colors.canvas).statusBarsPadding(),
+    val minTileWidth = 144.dp * LocalDensity.current.fontScale.coerceAtLeast(1f)
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = minTileWidth),
+        modifier = Modifier.fillMaxSize().background(AppTheme.colors.canvas).statusBarsPadding(),
         contentPadding = PaddingValues(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        item {
-            Text("Widgets", style = MaterialTheme.typography.headlineMedium, color = AppTheme.colors.textPrimary)
-            Text("Choose a widget to preview and customize.", style = MaterialTheme.typography.bodyMedium,
-                color = AppTheme.colors.textSecondary, modifier = Modifier.padding(top = 4.dp, bottom = 8.dp))
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Widgets", style = MaterialTheme.typography.headlineMedium, color = AppTheme.colors.textPrimary)
+                Text("Choose a widget to preview and customize.", style = MaterialTheme.typography.bodyMedium,
+                    color = AppTheme.colors.textSecondary)
+            }
         }
-        items(widgets, key = { (layout, size) -> "${layout.name}-${size.name}" }) { (layout, size) ->
+        gridItems(widgets, key = { (layout, size) -> "${layout.name}-${size.name}" }) { (layout, size) ->
             val portrait = size == PreviewSize.PORTRAIT
-            Surface(onClick = { onOpen(layout, size) }, shape = MaterialTheme.shapes.large,
-                color = AppTheme.colors.card, border = BorderStroke(1.dp, AppTheme.colors.hairline)) {
-                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    WidgetPreview(design.copy(layout = layout), realData ?: SampleData.userData, avatar, size.widthDp, size.heightDp,
-                        Modifier.width(84.dp).height(48.dp),
-                        inbox = if (layout == WidgetLayout.PR_INBOX) inbox?.takeIf { it.username == username } ?: cachedInbox else null)
-                    Column(Modifier.weight(1f)) {
-                        Text(if (portrait) "Portrait profile" else layout.label, style = MaterialTheme.typography.titleMedium,
-                            color = AppTheme.colors.textPrimary)
-                        Text(if (portrait) "Your GitHub ID in a vertical layout" else layout.description, style = MaterialTheme.typography.bodySmall,
-                            color = AppTheme.colors.textSecondary)
-                    }
-                    Text("›", style = MaterialTheme.typography.titleLarge, color = AppTheme.colors.textSecondary)
-                }
+            val shape = MaterialTheme.shapes.medium
+            Column(
+                Modifier.fillMaxWidth().clip(shape).clickable(role = Role.Button) { onOpen(layout, size) },
+            ) {
+                WidgetPreview(
+                    design.copy(layout = layout), realData ?: SampleData.userData, avatar, size.widthDp, size.heightDp,
+                    modifier = Modifier.fillMaxWidth().aspectRatio(1.4f).clip(shape)
+                        .background(AppTheme.colors.raised).padding(8.dp),
+                    inbox = if (layout == WidgetLayout.PR_INBOX) inbox?.takeIf { it.username == username } ?: cachedInbox else null,
+                    contentDescription = null,
+                )
+                Text(
+                    if (portrait) "Portrait profile" else layout.label,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = AppTheme.colors.textPrimary,
+                    modifier = Modifier.padding(start = 2.dp, top = 8.dp, end = 2.dp),
+                )
+                Text(
+                    if (portrait) "Your GitHub ID in a vertical layout" else layout.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = AppTheme.colors.textSecondary,
+                    modifier = Modifier.padding(start = 2.dp, top = 2.dp, end = 2.dp, bottom = 4.dp),
+                )
             }
         }
     }
