@@ -1,7 +1,9 @@
 <resources>
     <string name="app_name">GH Widgets</string>
     <string name="widget_label">GitHub contributions</string>
-    <string name="widget_desc">Your GitHub contribution graph. Resize it to see more weeks.</string>
+    <string name="widget_desc">Your GitHub contribution graph. Tap to replay it or double-tap for Stats.</string>
+    <string name="widget_contributions_tap_hint">Tap to replay. Double-tap for Stats.</string>
+    <string name="widget_contributions_stats_hint">Activate to open Stats.</string>
     <string name="widget_refresh_desc">Refresh</string>
     <string name="widget_streak">GitHub streak</string>
     <string name="widget_streak_desc">Your current GitHub streak and whether you contributed today.</string>

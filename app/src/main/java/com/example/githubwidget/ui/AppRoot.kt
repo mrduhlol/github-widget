@@ -73,17 +73,17 @@ enum class Tab(val label: String, val icon: ImageVector) {
  *  - otherwise three tabs: Widget (design), Stats, Settings
  */
 @Composable
-fun AppRoot(widgetOpenRequest: Int, requestedLayout: WidgetLayout?, requestedPortrait: Boolean) {
+fun AppRoot(widgetOpenRequest: Int, requestedLayout: WidgetLayout?, requestedPortrait: Boolean, requestedStats: Boolean) {
     val context = LocalContext.current
     val username by Repository.username.collectAsState()
     var changingAccount by rememberSaveable { mutableStateOf(false) }
-    var tab by rememberSaveable { mutableStateOf(Tab.WIDGET) }
+    var tab by rememberSaveable { mutableStateOf(if (requestedStats) Tab.STATS else Tab.WIDGET) }
     var widgetDetail by rememberSaveable { mutableStateOf<WidgetLayout?>(null) }
     var widgetPreviewSize by rememberSaveable { mutableStateOf(PreviewSize.WIDE) }
     BackHandler(tab == Tab.WIDGET && widgetDetail != null && username.isNotBlank() && !changingAccount) { widgetDetail = null }
     LaunchedEffect(widgetOpenRequest) {
         if (widgetOpenRequest > 0) {
-            tab = Tab.WIDGET
+            tab = if (requestedStats) Tab.STATS else Tab.WIDGET
             widgetDetail = requestedLayout
             widgetPreviewSize = if (requestedPortrait) PreviewSize.PORTRAIT else PreviewSize.WIDE
             changingAccount = false

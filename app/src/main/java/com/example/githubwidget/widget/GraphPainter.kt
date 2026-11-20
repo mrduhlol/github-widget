@@ -6,6 +6,7 @@ import android.graphics.RectF
 import com.example.githubwidget.data.Day
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -28,6 +29,7 @@ object GraphPainter {
         val maxCellPx: Float,
         val monthLabelPaint: Paint? = null,
         val monthLabelHeightPx: Float = 0f,
+        val revealProgress: Float = 1f,
     )
 
     /** First day of the week containing [date]. */
@@ -71,6 +73,11 @@ object GraphPainter {
         days.forEach { byDate[it.date] = it }
         val today = days.lastOrNull()?.date ?: LocalDate.now()
         val firstWeek = weekStart(today, spec.weekStartsMonday).minusWeeks((weeks - 1).toLong())
+        val firstDay = maxOf(firstWeek, days.firstOrNull()?.date ?: today)
+        val firstDayIndex = ChronoUnit.DAYS.between(firstWeek, firstDay).toInt()
+        val lastDayIndex = ChronoUnit.DAYS.between(firstWeek, today).toInt()
+        val revealEnd = if (spec.revealProgress >= 1f) lastDayIndex + 1
+            else firstDayIndex + ((lastDayIndex - firstDayIndex + 1) * spec.revealProgress).toInt()
 
         val fill = Paint(Paint.ANTI_ALIAS_FLAG)
         val radius = cell * spec.radiusFraction
@@ -101,7 +108,7 @@ object GraphPainter {
             for (row in 0..6) {
                 val date = colStart.plusDays(row.toLong())
                 if (date.isAfter(today)) break
-                val level = byDate[date]?.level ?: 0
+                val level = if (col * 7 + row < revealEnd) byDate[date]?.level ?: 0 else 0
                 fill.color = spec.levels[level.coerceIn(0, 4)]
                 val y = gridTop + row * (cell + gap)
                 rect.set(x, y, x + cell, y + cell)

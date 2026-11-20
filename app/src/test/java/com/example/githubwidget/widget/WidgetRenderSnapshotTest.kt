@@ -1,7 +1,11 @@
 package com.example.githubwidget.widget
 
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.RectF
 import androidx.test.core.app.ApplicationProvider
+import com.example.githubwidget.data.Day
 import com.example.githubwidget.data.SampleData
 import com.example.githubwidget.data.Stats
 import com.example.githubwidget.design.Background
@@ -18,6 +22,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
+import java.time.LocalDate
 
 /**
  * Renders the widget in its main variants. Images are written to
@@ -84,6 +89,30 @@ class WidgetRenderSnapshotTest {
             assertEquals("Render must retain the host's proportions", width / height,
                 bmp.width.toFloat() / bmp.height, width / height * 0.01f)
         }
+    }
+
+    @Test
+    fun replayRevealsOlderDaysFirstAndKeepsFutureDaysEmpty() {
+        val first = LocalDate.of(2026, 11, 8)
+        val days = listOf(Day(first, 1, 1), Day(first.plusDays(7), 2, 2), Day(first.plusDays(9), 3, 3))
+        val levels = intArrayOf(Color.GRAY, Color.GREEN, Color.BLUE, Color.RED, Color.MAGENTA)
+        fun colorsAtProgress(progress: Float): List<Int> {
+            val bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+            val grid = GraphPainter.draw(
+                Canvas(bitmap), RectF(0f, 0f, 100f, 100f), days,
+                GraphPainter.Spec(levels, 0f, false, 2, 100f, revealProgress = progress),
+            )
+            val cell = GraphPainter.cellForHeight(100f)
+            val step = cell * (1f + GraphPainter.GAP)
+            fun pixel(column: Int, row: Int) = bitmap.getPixel(
+                (grid.left + cell / 2 + step * column).toInt(),
+                (grid.top + cell / 2 + step * row).toInt(),
+            )
+            return listOf(pixel(0, 0), pixel(1, 0), pixel(1, 2), pixel(1, 3))
+        }
+        assertEquals(listOf(Color.GRAY, Color.GRAY, Color.GRAY, Color.TRANSPARENT), colorsAtProgress(0f))
+        assertEquals(listOf(Color.GREEN, Color.BLUE, Color.GRAY, Color.TRANSPARENT), colorsAtProgress(0.8f))
+        assertEquals(listOf(Color.GREEN, Color.BLUE, Color.RED, Color.TRANSPARENT), colorsAtProgress(1f))
     }
 
     @Test

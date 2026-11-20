@@ -19,14 +19,19 @@ class MainActivity : ComponentActivity() {
     private var widgetOpenRequest by mutableIntStateOf(0)
     private var requestedLayout by mutableStateOf<WidgetLayout?>(null)
     private var requestedPortrait by mutableStateOf(false)
+    private var requestedStats by mutableStateOf(false)
 
     companion object {
         const val EXTRA_WIDGET_LAYOUT = "widget_layout"
         const val EXTRA_WIDGET_PORTRAIT = "widget_portrait"
+        const val EXTRA_WIDGET_STATS = "widget_stats"
     }
 
     private fun openWidget(intent: Intent?) {
-        val layout = WidgetLayout.entries.firstOrNull { it.name == intent?.getStringExtra(EXTRA_WIDGET_LAYOUT) } ?: return
+        val stats = intent?.getBooleanExtra(EXTRA_WIDGET_STATS, false) == true
+        val layout = WidgetLayout.entries.firstOrNull { it.name == intent?.getStringExtra(EXTRA_WIDGET_LAYOUT) }
+        if (!stats && layout == null) return
+        requestedStats = stats
         requestedLayout = layout
         requestedPortrait = intent?.getBooleanExtra(EXTRA_WIDGET_PORTRAIT, false) == true
         widgetOpenRequest++
@@ -45,7 +50,7 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) openWidget(intent)
         setContent {
             GhTheme {
-                AppRoot(widgetOpenRequest, requestedLayout, requestedPortrait)
+                AppRoot(widgetOpenRequest, requestedLayout, requestedPortrait, requestedStats)
             }
         }
     }

@@ -55,6 +55,7 @@ object WidgetRenderer {
         font: NumberFont = NumberFont.SYSTEM,
         maxPixels: Int = MAX_PIXELS.toInt(),
         inbox: ReviewInboxState? = null,
+        revealProgress: Float = 1f,
     ): Bitmap {
         val density = context.resources.displayMetrics.density
         var scale = density
@@ -91,7 +92,8 @@ object WidgetRenderer {
             textPrimary = if (isDark) 0xFFF5F6F3.toInt() else 0xFF1A201C.toInt(),
             textSecondary = if (isDark) 0xFFA9B0AB.toInt() else 0xFF59635C.toInt(),
         )
-        Painter(Canvas(bmp), scale, widthDp, heightDp, design, colors, context, font).draw(data, avatar, placeholder, inbox)
+        Painter(Canvas(bmp), scale, widthDp, heightDp, design, colors, context, font, revealProgress)
+            .draw(data, avatar, placeholder, inbox)
         return bmp
     }
 
@@ -104,6 +106,7 @@ object WidgetRenderer {
         val colors: ColorSet,
         val context: Context,
         val font: NumberFont,
+        val revealProgress: Float,
     ) {
         val numbers: NumberFormat = NumberFormat.getIntegerInstance()
         val seeThrough = design.opacity < 45
@@ -323,6 +326,7 @@ object WidgetRenderer {
                     maxCellPx = dp(maxCellDp),
                     monthLabelPaint = labelPaint,
                     monthLabelHeightPx = if (months) dp(15f) else 0f,
+                    revealProgress = revealProgress,
                 ),
             )
         }
@@ -394,8 +398,7 @@ object WidgetRenderer {
                 drawAvatar(avatar, data, left, cy - size / 2, size)
                 left += size + dp(8f)
             }
-            // Keep clear of the refresh icon overlaid at top-end inside the card (20dp + margins).
-            var right = r.right - dp(28f)
+            var right = r.right
             if (design.showTotal) {
                 val num = numberText(16f, colors.accent)
                 val numStr = numbers.format(stats.total)
@@ -420,7 +423,6 @@ object WidgetRenderer {
         }
 
         fun drawFooter(r: RectF, stats: Stats, fetchedAt: Long) {
-            // Refresh icon now lives inside the header (top-end), so the footer gets full width.
             val end = r.right
             val parts = buildList {
                 if (design.showStreak) add(streakText(stats.currentStreak))

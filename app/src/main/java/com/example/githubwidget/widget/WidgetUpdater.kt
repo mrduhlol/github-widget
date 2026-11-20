@@ -1,5 +1,6 @@
 package com.example.githubwidget.widget
 
+import android.animation.ValueAnimator
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -7,9 +8,12 @@ import android.content.Context
 import android.content.Intent
 import com.example.githubwidget.design.WidgetLayout
 import android.graphics.Bitmap
+import android.os.SystemClock
 import android.os.Bundle
 import android.util.Log
 import android.util.SizeF
+import android.view.View
+import android.view.accessibility.AccessibilityManager
 import android.widget.RemoteViews
 import com.example.githubwidget.ContributionWidgetProvider
 import com.example.githubwidget.MainActivity
@@ -18,12 +22,18 @@ import com.example.githubwidget.data.Repository
 import com.example.githubwidget.data.RefreshState
 import com.example.githubwidget.data.ReviewInbox
 import com.example.githubwidget.design.Background
+import kotlinx.coroutines.delay
 
 /** Renders the current design + data into every placed widget. */
 object WidgetUpdater {
 
     private const val PREFS = "gh_widget_ids"
     private const val KEY_DRAWN = "drawn"
+    private const val REPLAY_STEPS = 8
+    private const val REPLAY_FRAME_MS = 65L
+    private const val REPLAY_PIXEL_BUDGET = 320_000L
+    private val renderLock = Any()
+    private val activeReplays = mutableMapOf<Int, Any>()
     private data class RenderKey(val layout: WidgetLayout, val width: Float, val height: Float, val dark: Boolean, val pixelBudget: Int)
 
     fun widgetIds(context: Context): IntArray =
@@ -52,11 +62,46 @@ object WidgetUpdater {
             val component = mgr.getAppWidgetInfo(id)?.provider
             val kind = WidgetKind.entries.firstOrNull { it.component(context) == component } ?: WidgetKind.CONTRIBUTIONS
             if (kind == WidgetKind.STREAK) hasStreak = true
-            runCatching { mgr.updateAppWidget(id, build(context, mgr.getAppWidgetOptions(id), drawn, kind)) }
+            runCatching {
+                synchronized(renderLock) {
+                    mgr.updateAppWidget(id, build(context, id, mgr.getAppWidgetOptions(id), drawn, kind))
+                    activeReplays.remove(id)
+                }
+            }
                 .onFailure { Log.e("GHWidget", "Could not render widget $id", it) }
         }
         if (hasStreak && Repository.hasUser) StreakRolloverWorker.schedule(context)
         markDrawn(context, ids)
+    }
+
+    internal suspend fun replay(context: Context, id: Int) {
+        if (!ValueAnimator.areAnimatorsEnabled() || Repository.data.value == null) return
+        val mgr = AppWidgetManager.getInstance(context)
+        val kind = WidgetKind.CONTRIBUTIONS
+        if (mgr.getAppWidgetInfo(id)?.provider != kind.component(context)) return
+        val replay = Any()
+        synchronized(renderLock) { activeReplays[id] = replay }
+        val started = SystemClock.uptimeMillis()
+        try {
+            for (step in 0 until REPLAY_STEPS) {
+                delay((started + step * REPLAY_FRAME_MS - SystemClock.uptimeMillis()).coerceAtLeast(0L))
+                synchronized(renderLock) {
+                    if (activeReplays[id] !== replay) return
+                    val frame = build(context, id, mgr.getAppWidgetOptions(id), HashMap(), kind, step.toFloat() / REPLAY_STEPS)
+                    mgr.updateAppWidget(id, frame)
+                }
+            }
+            delay((started + REPLAY_STEPS * REPLAY_FRAME_MS - SystemClock.uptimeMillis()).coerceAtLeast(0L))
+        } catch (error: RuntimeException) {
+            Log.e("GHWidget", "Could not replay contributions for widget $id", error)
+        } finally {
+            synchronized(renderLock) {
+                if (activeReplays[id] === replay) {
+                    activeReplays.remove(id)
+                    update(context, intArrayOf(id))
+                }
+            }
+        }
     }
 
     /** Current orientation size for callers that need a single preview. */
@@ -135,14 +180,24 @@ object WidgetUpdater {
         return SizeF(width, height)
     }
 
-    private fun build(context: Context, options: Bundle?, drawn: MutableMap<RenderKey, Bitmap>, kind: WidgetKind): RemoteViews {
+    private fun build(
+        context: Context,
+        id: Int,
+        options: Bundle?,
+        drawn: MutableMap<RenderKey, Bitmap>,
+        kind: WidgetKind,
+        revealProgress: Float = 1f,
+    ): RemoteViews {
         val sizes = exactSizes(options)
         val variantCount = if (sizes.isEmpty()) 2 else sizes.size
         val dm = context.resources.displayMetrics
         val colorVariants = if (Repository.design.value.background == Background.AUTO) 2 else 1
         // All size/color bitmaps share one RemoteViews memory allowance. Leave
         // headroom under the host's 6 * screen pixels budget (ARGB uses 4 bytes).
-        val pixelBudget = (dm.widthPixels.toLong() * dm.heightPixels / (variantCount * colorVariants))
+        val screenPixels = dm.widthPixels.toLong() * dm.heightPixels
+        // Keep the repeated bitmap transfers small while the launcher displays the replay.
+        val availablePixels = if (revealProgress < 1f) minOf(screenPixels, REPLAY_PIXEL_BUDGET) else screenPixels
+        val pixelBudget = (availablePixels / (variantCount * colorVariants))
             .coerceIn(1L, 1_100_000L).toInt()
         val portrait = legacySize(options, false)
         val landscape = legacySize(options, true)
@@ -153,7 +208,7 @@ object WidgetUpdater {
             if (normalized != size) {
                 Log.w("GHWidget", "Corrected launcher bitmap size $size to $normalized; host key retained")
             }
-            return buildSize(context, normalized, drawn, pixelBudget, kind)
+            return buildSize(context, id, normalized, drawn, pixelBudget, kind, revealProgress)
         }
         return if (android.os.Build.VERSION.SDK_INT >= 31 && sizes.isNotEmpty()) {
             RemoteViews(sizes.associateWith { size ->
@@ -176,10 +231,12 @@ object WidgetUpdater {
 
     private fun buildSize(
         context: Context,
+        id: Int,
         size: SizeF,
         drawn: MutableMap<RenderKey, Bitmap>,
         pixelBudget: Int,
         kind: WidgetKind,
+        revealProgress: Float,
     ): RemoteViews {
         val shared = Repository.design.value
         val design = shared.copy(layout = kind.resolvedLayout(shared.layout, shared.contributionLayout))
@@ -195,7 +252,7 @@ object WidgetUpdater {
         fun render(dark: Boolean) = drawn.getOrPut(RenderKey(design.layout, size.width, size.height, dark, pixelBudget)) {
             WidgetRenderer.render(
                 context, design, data, Repository.avatar.value, size.width, size.height, dark, placeholder,
-                Repository.numberFont.value, maxPixels = pixelBudget, inbox = inbox,
+                Repository.numberFont.value, maxPixels = pixelBudget, inbox = inbox, revealProgress = revealProgress,
             )
         }
 
@@ -226,8 +283,15 @@ object WidgetUpdater {
             }
         } ?: data?.let { FocusWidgetPainter.accessibilityText(design, it) }
             ?: "GitHub contributions widget. Tap to set up."
-        views.setContentDescription(R.id.widget_image_light, desc)
-        views.setContentDescription(R.id.widget_image_dark, desc)
+        val replayEnabled = kind == WidgetKind.CONTRIBUTIONS && data != null
+        val touchExploration = replayEnabled && context.getSystemService(AccessibilityManager::class.java).isTouchExplorationEnabled
+        val contentDescription = when {
+            touchExploration -> "$desc ${context.getString(R.string.widget_contributions_stats_hint)}"
+            replayEnabled -> "$desc ${context.getString(R.string.widget_contributions_tap_hint)}"
+            else -> desc
+        }
+        views.setContentDescription(R.id.widget_image_light, contentDescription)
+        views.setContentDescription(R.id.widget_image_dark, contentDescription)
 
         val open = PendingIntent.getActivity(
             context, 100 + kind.ordinal,
@@ -242,7 +306,14 @@ object WidgetUpdater {
                 Intent(Intent.ACTION_VIEW, android.net.Uri.parse(request.url)),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }
-        views.setOnClickPendingIntent(R.id.widget_root, openReview ?: open)
+        val contributionTap = if (replayEnabled) PendingIntent.getBroadcast(
+            context, id,
+            Intent(context, ContributionWidgetProvider::class.java)
+                .setAction(ContributionWidgetProvider.ACTION_CONTRIBUTION_TAP)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        ) else null
+        views.setOnClickPendingIntent(R.id.widget_root, contributionTap ?: openReview ?: open)
         views.removeAllViews(R.id.widget_connections)
         if (design.layout == WidgetLayout.PROFILE && data != null) {
             val pad = if (size.width < 180 || size.height < 100) 12f else 16f
@@ -266,8 +337,8 @@ object WidgetUpdater {
                 views.addView(R.id.widget_connections, button)
             }
         }
-
-
+        views.setViewVisibility(R.id.widget_refresh, if (kind == WidgetKind.CONTRIBUTIONS) View.GONE else View.VISIBLE)
+        if (kind == WidgetKind.CONTRIBUTIONS) return views
         val refresh = PendingIntent.getBroadcast(
             context, 1,
             Intent(context, ContributionWidgetProvider::class.java).setAction(ContributionWidgetProvider.ACTION_REFRESH),
@@ -291,6 +362,7 @@ object WidgetUpdater {
             .getStringSet(KEY_DRAWN, emptySet())!!.contains(id.toString())
 
     fun forget(context: Context, ids: IntArray) {
+        synchronized(renderLock) { ids.forEach { activeReplays.remove(it) } }
         val p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val set = p.getStringSet(KEY_DRAWN, emptySet())!!.toMutableSet()
         set.removeAll(ids.map { it.toString() }.toSet())
