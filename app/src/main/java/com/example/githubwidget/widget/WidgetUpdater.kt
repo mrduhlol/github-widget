@@ -3,7 +3,6 @@ package com.example.githubwidget.widget
 import android.animation.ValueAnimator
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import com.example.githubwidget.design.WidgetLayout
@@ -319,7 +318,7 @@ object WidgetUpdater {
         if (design.layout == WidgetLayout.PROFILE && data != null) {
             val pad = if (size.width < 180 || size.height < 100) 12f else 16f
             val dock = FocusWidgetPainter.profileDock(size.width - 2 * pad, size.height - 2 * pad, design, data)
-            views.setViewVisibility(R.id.widget_connections, if (dock.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE)
+            views.setViewVisibility(R.id.widget_connections, if (dock.isEmpty()) View.GONE else View.VISIBLE)
             val px = (pad * context.resources.displayMetrics.density).toInt()
             val rightPad = (size.width - pad - dock.size * FocusWidgetPainter.PROFILE_LINK_SIZE).coerceAtLeast(pad)
             val bottomPad = pad - FocusWidgetPainter.PROFILE_FOOTER_OFFSET
@@ -338,16 +337,6 @@ object WidgetUpdater {
                 views.addView(R.id.widget_connections, button)
             }
         }
-        views.setViewVisibility(R.id.widget_refresh, if (kind == WidgetKind.CONTRIBUTIONS) View.GONE else View.VISIBLE)
-        if (kind == WidgetKind.CONTRIBUTIONS) return views
-        val refresh = PendingIntent.getBroadcast(
-            context, 1,
-            Intent(context, ContributionWidgetProvider::class.java).setAction(ContributionWidgetProvider.ACTION_REFRESH),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-        views.setViewVisibility(R.id.widget_refresh_icon,
-            if (kind == WidgetKind.PR_INBOX || kind == WidgetKind.STREAK) android.view.View.INVISIBLE else android.view.View.VISIBLE)
-        views.setOnClickPendingIntent(R.id.widget_refresh, refresh)
         return views
     }
 

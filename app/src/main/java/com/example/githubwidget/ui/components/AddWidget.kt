@@ -1,8 +1,9 @@
 package com.example.githubwidget.ui.components
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,7 +43,14 @@ object WidgetPinning {
         val mgr = AppWidgetManager.getInstance(context)
         if (!mgr.isRequestPinAppWidgetSupported) return false
         return runCatching {
-            mgr.requestPinAppWidget(com.example.githubwidget.widget.WidgetKind.forLayout(layout, portrait).component(context), null, null)
+            val provider = com.example.githubwidget.widget.WidgetKind.forLayout(layout, portrait).component(context)
+            // The launcher fills in the ID so we can paint as soon as pinning succeeds.
+            val onPinned = PendingIntent.getBroadcast(
+                context, 0,
+                Intent(ContributionWidgetProvider.ACTION_PINNED).setComponent(provider),
+                PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_ONE_SHOT,
+            )
+            mgr.requestPinAppWidget(provider, null, onPinned)
         }.getOrDefault(false)
     }
 }

@@ -12,7 +12,6 @@ import android.graphics.Shader
 import android.graphics.Typeface
 import android.text.TextPaint
 import androidx.core.graphics.ColorUtils
-import com.example.githubwidget.R
 import com.example.githubwidget.design.NumberFont
 import com.example.githubwidget.design.WidgetDesign
 import java.text.NumberFormat
@@ -93,13 +92,13 @@ internal object AuroraStreakPainter {
             paint.color = 0xFF344650.toInt()
             paint.strokeWidth = 1f
             canvas.drawLine(width * .25f, height * .23f, width * .25f, height * .77f, paint)
-            line("GitHub streak", x, height * .29f, 14f, width - x - 42f, muted, Typeface.DEFAULT_BOLD)
+            line("GitHub streak", x, height * .29f, 14f, width - x - 24f, muted, Typeface.DEFAULT_BOLD)
         } else {
             ProfileIcons.draw(canvas, "https://github.com", x, height * .22f, if (compact) 12f else 28f, primary)
         }
         val unit = if (snapshot.count == 1) "day" else "days"
         val pillWidth = 66f
-        val countSpace = if (wide) width - x - pillWidth - 24f else width - if (compact) 42f else 24f
+        val countSpace = if (wide) width - x - pillWidth - 24f else width - 24f
         val used = line(digits, x, countY, if (compact) 26f else minOf(74f, height * .39f),
             countSpace, primary, countFont, center = !wide)
         if (wide && snapshot.count != null) {
@@ -131,12 +130,6 @@ internal object AuroraStreakPainter {
         }
         line(footer, if (wide) x + 12f else x, footerY, if (compact) 9f else 12f,
             if (wide) width - x - 24f else width - 18f, accent, center = !wide)
-        context.getDrawable(R.drawable.ic_refresh)?.mutate()?.let {
-            it.setTint(muted)
-            val right = width.toInt() - 17
-            it.setBounds(right - 14, 17, right, 31)
-            it.draw(canvas)
-        }
         canvas.restoreToCount(save)
     }
 }

@@ -2,9 +2,14 @@
 
 Your GitHub contributions, on your Android home screen. Set up with your username—no sign-in or token needed.
 
-[Download GH-widgets v3.7 for Android](https://github.com/mrduhlol/github-widget/releases/download/v3.7/gh-widgets.apk)
+[Download GH-widgets v3.7.1 for Android](https://github.com/mrduhlol/github-widget/releases/download/v3.7.1/gh-widgets.apk)
 
 Choose a widget style, colors, background, and the stats you want to see. Resize it to fit your home screen, explore your activity in the app, or share your year as an image. Your last synced graph stays available offline.
+
+## New in v3.7.1
+
+- Removed manual reload controls from home-screen widgets. Widgets refresh automatically.
+- Newly pinned widgets draw when the launcher confirms placement and show a loading card before the first draw.
 
 ## New in v3.7
 

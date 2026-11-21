@@ -29,9 +29,12 @@ open class ContributionWidgetProvider : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         when (intent.action) {
-            ACTION_REFRESH -> {
-                Repository.init(context)
-                RefreshWorker.runOnce(context)
+            ACTION_PINNED -> {
+                val id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+                val mgr = AppWidgetManager.getInstance(context)
+                if (mgr.getAppWidgetInfo(id)?.provider == intent.component) {
+                    onUpdate(context, mgr, intArrayOf(id))
+                }
             }
             ACTION_CONTRIBUTION_TAP -> onContributionTap(context, intent)
             ACTION_REPLAY -> {
@@ -107,7 +110,7 @@ open class ContributionWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
-        const val ACTION_REFRESH = "com.example.githubwidget.action.REFRESH"
+        internal const val ACTION_PINNED = "com.example.githubwidget.action.PINNED"
         internal const val ACTION_CONTRIBUTION_TAP = "com.example.githubwidget.action.CONTRIBUTION_TAP"
         private const val ACTION_REPLAY = "com.example.githubwidget.action.REPLAY_CONTRIBUTIONS"
         private val tapTimeout = ViewConfiguration.getDoubleTapTimeout().toLong()

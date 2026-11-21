@@ -14,7 +14,6 @@ import android.text.TextPaint
 import android.text.StaticLayout
 import android.text.TextUtils
 import androidx.core.graphics.ColorUtils
-import com.example.githubwidget.R
 import com.example.githubwidget.data.ReviewInboxState
 import com.example.githubwidget.data.Stats
 import com.example.githubwidget.data.UserData
@@ -143,7 +142,6 @@ object WidgetRenderer {
                     val streakArea = RectF(streakInset, streakInset, canvas.width - streakInset, canvas.height - streakInset)
                     StreakWidgetPainter.draw(canvas, streakArea, s, context, font,
                         streak, wDp, hDp)
-                    drawRefreshIcon(StreakWidgetPainter.MUTED)
                 }
                 data == null -> drawPlaceholder(area, placeholder)
                 design.layout == WidgetLayout.GRAPH -> drawGraphOnly(area, data)
@@ -166,7 +164,6 @@ object WidgetRenderer {
                 ?: colors.textSecondary
             val markX = area.left + dp(8f)
             val headerY = area.top + dp(12f)
-            val actionWidth = area.width() - dp(28f)
 
             fun line(value: String, x: Float, baseline: Float, width: Float, paint: TextPaint) {
                 if (baseline <= area.bottom && width > 0f) {
@@ -175,8 +172,7 @@ object WidgetRenderer {
             }
 
             drawPullRequestMark(markX, headerY - dp(4f), accent)
-            line("PR INBOX", area.left + dp(22f), headerY, actionWidth - dp(22f), mono)
-            drawRefreshIcon(colors.textSecondary)
+            line("PR INBOX", area.left + dp(22f), headerY, area.width() - dp(22f), mono)
 
             val title = newest?.title ?: when {
                 inbox == null || inbox.username.isBlank() -> "Connect a GitHub profile"
@@ -187,7 +183,7 @@ object WidgetRenderer {
             }
             val titlePaint = text(if (compact || wDp < 180f) 16f else 24f, colors.textPrimary, bold = true)
             val titleY = area.top + dp(if (compact) 32f else 42f)
-            line(title, area.left, titleY, if (compact) actionWidth else area.width(), titlePaint)
+            line(title, area.left, titleY, area.width(), titlePaint)
 
             val repoY = titleY + dp(16f)
             val footerY = area.bottom - dp(1f)
@@ -203,7 +199,6 @@ object WidgetRenderer {
                     val count = "${numbers.format(results.total)} awaiting review"
                     if (inbox.failed) "$count · last check" else count
                 }
-                inbox?.failed == true -> "Tap refresh to try again"
                 else -> null
             }
             if (footer != null && footerY - (if (newest == null) titleY else repoY) >= dp(18f)) {
@@ -243,16 +238,6 @@ object WidgetRenderer {
                 lineTo(right, y)
                 quadTo(right, top, x, top)
             }, ink)
-        }
-
-        private fun drawRefreshIcon(color: Int) {
-            val icon = context.getDrawable(R.drawable.ic_refresh)?.mutate() ?: return
-            val x = canvas.width - dp(24f)
-            val y = dp(24f)
-            val radius = dp(7f)
-            icon.setTint(color)
-            icon.setBounds((x - radius).toInt(), (y - radius).toInt(), (x + radius).toInt(), (y + radius).toInt())
-            icon.draw(canvas)
         }
 
         private fun drawReviewExcerpt(excerpt: String, area: RectF) {
