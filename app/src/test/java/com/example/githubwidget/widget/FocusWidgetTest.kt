@@ -257,7 +257,7 @@ class FocusWidgetTest {
                 }
             }
         }
-        for ((width, height) in listOf(340f to 170f, 170f to 340f)) {
+        for ((width, height) in listOf(170f to 170f, 340f to 170f, 340f to 260f, 170f to 340f)) {
             for (dark in listOf(false, true)) {
                 val bitmap = WidgetRenderer.render(context, WidgetDesign(layout = WidgetLayout.PROFILE), data(), avatar,
                     width, height, dark, font = NumberFont.INTER, maxPixels = 200_000)

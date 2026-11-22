@@ -344,10 +344,8 @@ object WidgetUpdater {
             val dock = FocusWidgetPainter.profileDock(size.width - 2 * pad, size.height - 2 * pad, design, data)
             views.setViewVisibility(R.id.widget_connections, if (dock.isEmpty()) View.GONE else View.VISIBLE)
             val px = (pad * context.resources.displayMetrics.density).toInt()
-            val rightPad = (size.width - pad - dock.size * FocusWidgetPainter.PROFILE_LINK_SIZE).coerceAtLeast(pad)
             val bottomPad = pad - FocusWidgetPainter.PROFILE_FOOTER_OFFSET
-            views.setViewPadding(R.id.widget_connections, px, 0,
-                (rightPad * context.resources.displayMetrics.density).toInt(),
+            views.setViewPadding(R.id.widget_connections, px, 0, px,
                 (bottomPad * context.resources.displayMetrics.density).toInt())
             dock.forEach { item ->
                 val button = RemoteViews(context.packageName, R.layout.widget_connection)
