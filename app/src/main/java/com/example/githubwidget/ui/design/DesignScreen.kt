@@ -80,6 +80,8 @@ import com.example.githubwidget.data.GitHubApi
 import com.example.githubwidget.data.ReviewInbox
 import com.example.githubwidget.data.ReviewInboxState
 import com.example.githubwidget.design.AuroraColor
+import com.example.githubwidget.design.ReviewColor
+import com.example.githubwidget.widget.ReviewCardPainter
 import com.example.githubwidget.design.Background
 import com.example.githubwidget.design.CellShape
 import com.example.githubwidget.design.Corners
@@ -128,7 +130,7 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
     val inbox = activeInbox?.takeIf { it.username == username }
         ?: remember(username) { ReviewInbox.cached(context, username) }
     LaunchedEffect(design.layout, username) {
-        if (design.layout == WidgetLayout.PR_INBOX) {
+        if (design.layout.isReviewWidget) {
             refreshReviewInbox(context, username)
         }
     }
@@ -175,12 +177,17 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
                         avatar = if (realData != null) avatar else null,
                         widthDp = previewSize.widthDp,
                         heightDp = previewSize.heightDp,
-                        inbox = if (design.layout == WidgetLayout.PR_INBOX) inbox else null,
+                        inbox = if (layout.hasReviewColors && inbox.results == null) ReviewCardPainter.example
+                            else inbox.takeIf { layout.isReviewWidget },
                         modifier = Modifier.fillMaxWidth().height(if (previewSize == PreviewSize.PORTRAIT) 320.dp else if (previewSize == PreviewSize.LARGE) 250.dp else 180.dp),
                     )
                 }
-                if (realData == null && design.layout != WidgetLayout.PR_INBOX) {
+                if (realData == null && !design.layout.isReviewWidget) {
                     Text("Example data · Refresh Stats to load your activity", style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textSecondary)
+                }
+                if (layout.hasReviewColors && inbox.results == null) {
+                    Text("Example pull requests", style = MaterialTheme.typography.bodySmall,
+                        color = AppTheme.colors.textSecondary)
                 }
                 Spacer(Modifier.height(10.dp))
                 SegmentedChoice(
@@ -199,7 +206,14 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
             item { SegmentedChoice(listOf("Content", "Appearance"), profilePanel, { it }, { profilePanel = it }) }
             if (profilePanel == "Content") item { ProfileCardOptions(design, ::update) }
         }
-        if (design.layout != WidgetLayout.PROFILE || profilePanel == "Appearance") {
+        if (layout.hasReviewColors) {
+            item {
+                SectionCard(title = "Widget color", subtitle = "Shared by Up Next and Review Queue.") {
+                    SegmentedChoice(ReviewColor.entries, design.reviewColor, { it.label },
+                        { color -> update { it.copy(reviewColor = color) } })
+                }
+            }
+        } else if (design.layout != WidgetLayout.PROFILE || profilePanel == "Appearance") {
             item {
                 if (layout == WidgetLayout.STREAK) {
                     SectionCard(title = "Aurora color", subtitle = "Used when you contribute today.") {
@@ -291,7 +305,7 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
         item {
             when {
                 design.layout == WidgetLayout.PROFILE || design.layout == WidgetLayout.STREAK -> Unit
-                design.layout == WidgetLayout.PR_INBOX -> ReviewInboxSection(inbox)
+                design.layout.isReviewWidget -> ReviewInboxSection(inbox)
                 design.layout.isWeeklyGoal -> Text(
                     "Colors and fonts are shared. Each widget keeps its own type. All widgets use your connected GitHub profile.",
                     style = MaterialTheme.typography.bodySmall, color = AppTheme.colors.textSecondary,
@@ -467,14 +481,16 @@ internal fun WidgetCatalog(onOpen: (WidgetLayout, PreviewSize) -> Unit) {
     val inbox by ReviewInbox.state.collectAsState()
     val cachedInbox = remember(username) { ReviewInbox.cached(context, username) }
     val sections = remember {
-        val widgets = WidgetLayout.entries.map { it to PreviewSize.WIDE } + (WidgetLayout.PROFILE to PreviewSize.PORTRAIT)
+        val widgets = WidgetLayout.entries.map { layout ->
+            layout to if (layout == WidgetLayout.REVIEW_QUEUE) PreviewSize.LARGE else PreviewSize.WIDE
+        } + (WidgetLayout.PROFILE to PreviewSize.PORTRAIT)
         widgets.groupBy { (layout, _) ->
             when (layout) {
                 WidgetLayout.CLASSIC, WidgetLayout.GRAPH, WidgetLayout.NUMBERS, WidgetLayout.STREAK -> "Contributions"
                 WidgetLayout.WEEKLY_GOAL, WidgetLayout.WEEKLY_GOAL_METER,
                 WidgetLayout.WEEKLY_GOAL_WEEK, WidgetLayout.WEEKLY_GOAL_ASCENT -> "Weekly Goals"
                 WidgetLayout.PROFILE -> "GitHub ID"
-                WidgetLayout.PR_INBOX -> "Pull Requests"
+                WidgetLayout.PR_INBOX, WidgetLayout.REVIEW_NEXT, WidgetLayout.REVIEW_QUEUE -> "Pull Requests"
             }
         }
     }
@@ -525,8 +541,16 @@ internal fun WidgetCatalog(onOpen: (WidgetLayout, PreviewSize) -> Unit) {
                         WidgetPreview(
                             previewDesign, example ?: realData ?: SampleData.userData, avatar, size.widthDp, size.heightDp,
                             modifier = thumbnailModifier,
-                            inbox = if (layout == WidgetLayout.PR_INBOX) inbox?.takeIf { it.username == username } ?: cachedInbox else null,
-                            contentDescription = example?.let { "Example week" },
+                            inbox = when {
+                                layout.hasReviewColors -> ReviewCardPainter.example
+                                layout.isReviewWidget -> inbox?.takeIf { it.username == username } ?: cachedInbox
+                                else -> null
+                            },
+                            contentDescription = when {
+                                layout.hasReviewColors -> "Example pull requests"
+                                example != null -> "Example week"
+                                else -> null
+                            },
                             weeklyGoalPreviewDate = example?.contributions?.days?.lastOrNull()?.date,
                         )
                     }

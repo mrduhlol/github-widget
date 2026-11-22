@@ -20,6 +20,7 @@ import com.example.githubwidget.R
 import com.example.githubwidget.data.Repository
 import com.example.githubwidget.data.RefreshState
 import com.example.githubwidget.data.ReviewInbox
+import com.example.githubwidget.data.ReviewRequest
 import com.example.githubwidget.design.Background
 import kotlinx.coroutines.delay
 
@@ -45,7 +46,11 @@ object WidgetUpdater {
         AppWidgetManager.getInstance(context).getAppWidgetIds(WidgetKind.STREAK.component(context))
 
     internal fun reviewInboxIds(context: Context): IntArray =
-        AppWidgetManager.getInstance(context).getAppWidgetIds(WidgetKind.PR_INBOX.component(context))
+        AppWidgetManager.getInstance(context).let { manager ->
+            WidgetKind.entries.filter { it.layout?.isReviewWidget == true }.flatMap { kind ->
+                manager.getAppWidgetIds(kind.component(context)).asIterable()
+            }.toIntArray()
+        }
 
     fun updateAll(context: Context) = update(context, widgetIds(context))
 
@@ -241,7 +246,7 @@ object WidgetUpdater {
         val shared = Repository.design.value
         val design = shared.copy(layout = kind.resolvedLayout(shared.layout, shared.contributionLayout))
         val data = Repository.data.value
-        val inbox = if (kind == WidgetKind.PR_INBOX) ReviewInbox.cached(context, Repository.username.value) else null
+        val inbox = if (design.layout.isReviewWidget) ReviewInbox.cached(context, Repository.username.value) else null
         val placeholder = when {
             kind == WidgetKind.STREAK && Repository.hasUser && Repository.refreshState.value is RefreshState.Failed ->
                 WidgetRenderer.Placeholder.FAILED
@@ -267,19 +272,25 @@ object WidgetUpdater {
             views.setImageViewBitmap(R.id.widget_image_light, bmp)
             views.setImageViewBitmap(R.id.widget_image_dark, bmp)
         }
-        val latestReview = inbox?.results?.requests?.firstOrNull()
+        val queueRows = if (kind == WidgetKind.REVIEW_QUEUE) ReviewCardPainter.queueRows(inbox, size.height) else emptyList()
+        val latestReview = when (kind) {
+            WidgetKind.REVIEW_NEXT -> ReviewCardPainter.orderedRequests(inbox).firstOrNull()
+            WidgetKind.REVIEW_QUEUE -> null
+            else -> inbox?.results?.requests?.firstOrNull()
+        }
+        val reviewLabel = design.layout.label
         val desc = if (kind == WidgetKind.STREAK) StreakWidgetPainter.snapshot(data, placeholder).description() else inbox?.let {
             val total = it.results?.total
             when {
-                total != null -> "PR Inbox. $total public review requests." +
+                total != null -> "$reviewLabel. $total public review requests." +
                     (latestReview?.let { request ->
                         " Open ${request.title}, ${request.repository}." +
                             (request.excerpt?.let { " Description: $it" } ?: "")
                     } ?: "") +
                     if (it.failed) " Showing the last check." else ""
-                it.failed -> "PR Inbox. Couldn't check for review requests."
-                it.username.isBlank() -> "PR Inbox. Tap to connect a GitHub profile."
-                else -> "PR Inbox. Checking for public review requests."
+                it.failed -> "$reviewLabel. Couldn't check for review requests."
+                it.username.isBlank() -> "$reviewLabel. Tap to connect a GitHub profile."
+                else -> "$reviewLabel. Checking for public review requests."
             }
         } ?: data?.let { FocusWidgetPainter.accessibilityText(design, it) }
             ?: "GitHub contributions widget. Tap to set up."
@@ -301,11 +312,10 @@ object WidgetUpdater {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val openReview = latestReview?.let { request ->
-            PendingIntent.getActivity(context, 0,
-                Intent(Intent.ACTION_VIEW, android.net.Uri.parse(request.url)),
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        }
+        fun openReview(request: ReviewRequest): PendingIntent = PendingIntent.getActivity(
+            context, 0, Intent(Intent.ACTION_VIEW, android.net.Uri.parse(request.url)),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
         val contributionTap = if (replayEnabled) PendingIntent.getBroadcast(
             context, id,
             Intent(context, ContributionWidgetProvider::class.java)
@@ -313,17 +323,29 @@ object WidgetUpdater {
                 .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         ) else null
-        views.setOnClickPendingIntent(R.id.widget_root, contributionTap ?: openReview ?: open)
+        views.setOnClickPendingIntent(R.id.widget_root, contributionTap ?: latestReview?.let(::openReview) ?: open)
+        if (kind == WidgetKind.REVIEW_QUEUE) {
+            views.removeAllViews(R.id.widget_review_rows)
+            views.setViewVisibility(R.id.widget_review_rows, if (queueRows.isEmpty()) View.GONE else View.VISIBLE)
+            if (queueRows.isNotEmpty()) {
+                // The painter and the overlay both give the header and each row equal height.
+                views.addView(R.id.widget_review_rows, RemoteViews(context.packageName, R.layout.widget_review_row))
+                queueRows.forEach { request ->
+                    val row = RemoteViews(context.packageName, R.layout.widget_review_row)
+                    row.setContentDescription(R.id.widget_review_row, "Open ${request.title}, ${request.repository} #${request.number}")
+                    row.setOnClickPendingIntent(R.id.widget_review_row, openReview(request))
+                    views.addView(R.id.widget_review_rows, row)
+                }
+            }
+        }
         views.removeAllViews(R.id.widget_connections)
         if (design.layout == WidgetLayout.PROFILE && data != null) {
             val pad = if (size.width < 180 || size.height < 100) 12f else 16f
             val dock = FocusWidgetPainter.profileDock(size.width - 2 * pad, size.height - 2 * pad, design, data)
             views.setViewVisibility(R.id.widget_connections, if (dock.isEmpty()) View.GONE else View.VISIBLE)
             val px = (pad * context.resources.displayMetrics.density).toInt()
-            val rightPad = (size.width - pad - dock.size * FocusWidgetPainter.PROFILE_LINK_SIZE).coerceAtLeast(pad)
             val bottomPad = pad - FocusWidgetPainter.PROFILE_FOOTER_OFFSET
-            views.setViewPadding(R.id.widget_connections, px, 0,
-                (rightPad * context.resources.displayMetrics.density).toInt(),
+            views.setViewPadding(R.id.widget_connections, px, 0, px,
                 (bottomPad * context.resources.displayMetrics.density).toInt())
             dock.forEach { item ->
                 val button = RemoteViews(context.packageName, R.layout.widget_connection)

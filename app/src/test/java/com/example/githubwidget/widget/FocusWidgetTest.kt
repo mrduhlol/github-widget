@@ -257,7 +257,7 @@ class FocusWidgetTest {
                 }
             }
         }
-        for ((width, height) in listOf(340f to 170f, 170f to 340f)) {
+        for ((width, height) in listOf(170f to 170f, 340f to 170f, 340f to 260f, 170f to 340f)) {
             for (dark in listOf(false, true)) {
                 val bitmap = WidgetRenderer.render(context, WidgetDesign(layout = WidgetLayout.PROFILE), data(), avatar,
                     width, height, dark, font = NumberFont.INTER, maxPixels = 200_000)
@@ -289,6 +289,37 @@ class FocusWidgetTest {
             assertFalse(populated.sameAs(withoutExcerpt))
             File(out, "pr_inbox_340x170_${if (dark) "dark" else "light"}.png")
                 .outputStream().use { assertTrue(populated.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+        }
+    }
+
+    @Test fun reviewVariantsKeepTheirColorsAndOrderAcrossWidgetSizes() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val results = ReviewResults.fromJson(JSONObject("""{
+            "total_count": 3,
+            "items": [
+                {"html_url":"https://github.com/octocat/widgets/pull/2","title":"Second","created_at":"2026-01-02T00:00:00Z"},
+                {"html_url":"https://github.com/octocat/widgets/pull/1","title":"First","created_at":"2026-01-01T00:00:00Z","user":{"login":"octocat"}},
+                {"html_url":"https://github.com/octocat/widgets/pull/3","title":"Cached without a date"}
+            ]
+        }"""), fetchedAt = 0L)
+        val inbox = ReviewInboxState("octocat", results)
+        assertEquals("octocat", ReviewCardPainter.orderedRequests(inbox).first().author)
+        assertEquals(listOf("1", "2", "3"), ReviewCardPainter.queueRows(inbox, 196f).map { it.number })
+        assertEquals(listOf("1"), ReviewCardPainter.queueRows(inbox, 60f).map { it.number })
+        assertEquals(ReviewColor.SAND, WidgetDesign.fromJson("""{"layout":"PR_INBOX"}""").reviewColor)
+        val out = File("build/widget-renders").apply { mkdirs() }
+        for (style in listOf(WidgetLayout.REVIEW_NEXT, WidgetLayout.REVIEW_QUEUE)) {
+            val design = WidgetDesign(layout = style, reviewColor = ReviewColor.INDIGO)
+            assertEquals(style, WidgetKind.forLayout(style).resolvedLayout(WidgetLayout.CLASSIC))
+            assertEquals(design, WidgetDesign.fromJson(design.toJson()))
+            val height = if (style == WidgetLayout.REVIEW_QUEUE) 220f else 170f
+            val indigo = WidgetRenderer.render(context, design, null, null, 340f, height, true, inbox = ReviewCardPainter.example)
+            val sand = WidgetRenderer.render(context, design.copy(reviewColor = ReviewColor.SAND), null, null,
+                340f, height, true, inbox = ReviewCardPainter.example)
+            assertFalse(indigo.sameAs(sand))
+            File(out, "${style.name.lowercase()}_indigo.png").outputStream().use {
+                assertTrue(indigo.compress(Bitmap.CompressFormat.PNG, 100, it))
+            }
         }
     }
 }

@@ -10,6 +10,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.time.Instant
 
 data class ReviewRequest(
     val title: String,
@@ -17,6 +18,8 @@ data class ReviewRequest(
     val number: String,
     val url: String,
     val excerpt: String? = null,
+    val author: String? = null,
+    val openedAt: Instant? = null,
 )
 
 data class ReviewResults(val total: Int, val requests: List<ReviewRequest>, val fetchedAt: Long) {
@@ -37,7 +40,11 @@ data class ReviewResults(val total: Int, val requests: List<ReviewRequest>, val 
                     body.codePointCount(0, body.length) <= EXCERPT_LIMIT -> body
                     else -> body.substring(0, body.offsetByCodePoints(0, EXCERPT_LIMIT - 1)).trimEnd() + "…"
                 }
-                ReviewRequest(item.getString("title"), match.groupValues[1], match.groupValues[2], url, excerpt)
+                ReviewRequest(
+                    item.getString("title"), match.groupValues[1], match.groupValues[2], url, excerpt,
+                    item.optJSONObject("user")?.optString("login")?.takeIf { it.isNotBlank() },
+                    runCatching { Instant.parse(item.optString("created_at")) }.getOrNull(),
+                )
             }
             return ReviewResults(json.getInt("total_count"), requests, fetchedAt)
         }
@@ -80,7 +87,10 @@ internal object ReviewInbox {
                 if (Repository.username.value != username) return@withLock
                 val items = JSONArray()
                 data.requests.forEach {
-                    items.put(JSONObject().put("html_url", it.url).put("title", it.title).put("body_text", it.excerpt))
+                    items.put(JSONObject()
+                        .put("html_url", it.url).put("title", it.title).put("body_text", it.excerpt)
+                        .put("user", it.author?.let { login -> JSONObject().put("login", login) })
+                        .put("created_at", it.openedAt?.toString()))
                 }
                 val json = JSONObject().put("items", items).put("total_count", data.total).put("fetchedAt", data.fetchedAt)
                 prefs(context).edit().putString("username", username).putString("results", json.toString()).apply()

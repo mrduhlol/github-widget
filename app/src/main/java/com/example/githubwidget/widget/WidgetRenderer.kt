@@ -66,6 +66,10 @@ object WidgetRenderer {
         val w = (widthDp * scale).toInt().coerceAtLeast(1)
         val h = (heightDp * scale).toInt().coerceAtLeast(1)
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        if (design.layout.hasReviewColors) {
+            ReviewCardPainter.draw(Canvas(bmp), scale, widthDp, heightDp, design, inbox)
+            return bmp
+        }
         if (design.layout == WidgetLayout.STREAK) {
             AuroraStreakPainter.draw(Canvas(bmp), scale, context, design, font,
                 StreakWidgetPainter.snapshot(data, placeholder))

@@ -14,6 +14,11 @@ enum class WidgetLayout(val label: String, val description: String, val isWeekly
     WEEKLY_GOAL_ASCENT("Weekly Goal · Ascent", "A stepped climb toward your weekly target", true),
     PROFILE("Profile card", "Your GitHub ID · landscape or portrait"),
     PR_INBOX("PR Inbox", "Open pull requests awaiting your review"),
+    REVIEW_NEXT("Up Next", "The next pull request awaiting your review"),
+    REVIEW_QUEUE("Review Queue", "A short list of pull requests awaiting your review");
+
+    val isReviewWidget get() = this == PR_INBOX || hasReviewColors
+    val hasReviewColors get() = this == REVIEW_NEXT || this == REVIEW_QUEUE
 }
 
 /** Card background. AUTO follows the phone's light/dark setting. */
@@ -58,6 +63,13 @@ enum class AuroraColor(val label: String, val accent: Int) {
     AMBER("Amber", 0xFFFFCB77.toInt()),
 }
 
+enum class ReviewColor(val label: String, val paper: Int, val ink: Int, val surface: Int, val highlight: Int) {
+    SAND("Sand", 0xFFE8BB8B.toInt(), 0xFF261C16.toInt(), 0xFF1E201E.toInt(), 0xFF34312A.toInt()),
+    JADE("Jade", 0xFFA7D7B8.toInt(), 0xFF152A21.toInt(), 0xFF18251F.toInt(), 0xFF233C2E.toInt()),
+    INDIGO("Indigo", 0xFFBAC5F3.toInt(), 0xFF191D38.toInt(), 0xFF202236.toInt(), 0xFF303452.toInt()),
+    ROSE("Rose", 0xFFE6B7C7.toInt(), 0xFF351923.toInt(), 0xFF2A1D24.toInt(), 0xFF452D3A.toInt()),
+}
+
 enum class ProfileCount(val label: String) {
     FOLLOWERS("Followers"),
     FOLLOWING("Following"),
@@ -89,6 +101,7 @@ data class WidgetDesign(
     val weekStartsMonday: Boolean = false,
     val weeklyGoal: Int = 20,
     val auroraColor: AuroraColor = AuroraColor.EMERALD,
+    val reviewColor: ReviewColor = ReviewColor.SAND,
     val profileShowName: Boolean = true,
     val profileShowHandle: Boolean = true,
     val profileShowRepos: Boolean = true,
@@ -121,6 +134,7 @@ data class WidgetDesign(
         .put("weekStartsMonday", weekStartsMonday)
         .put("weeklyGoal", weeklyGoal)
         .put("auroraColor", auroraColor.name)
+        .put("reviewColor", reviewColor.name)
         .put("profileShowName", profileShowName)
         .put("profileShowHandle", profileShowHandle)
         .put("profileShowRepos", profileShowRepos)
@@ -160,6 +174,7 @@ data class WidgetDesign(
                     showMonths = o.optBoolean("showMonths", d.showMonths),
                     weekStartsMonday = o.optBoolean("weekStartsMonday", d.weekStartsMonday),
                     auroraColor = enumOr(o.optString("auroraColor"), d.auroraColor),
+                    reviewColor = enumOr(o.optString("reviewColor"), d.reviewColor),
                     weeklyGoal = o.optInt("weeklyGoal", d.weeklyGoal).coerceIn(1, 10000),
                     profileShowName = o.optBoolean("profileShowName", d.profileShowName),
                     profileShowHandle = o.optBoolean("profileShowHandle", d.profileShowHandle),

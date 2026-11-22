@@ -14,7 +14,9 @@ internal enum class WidgetKind(val provider: Class<*>, val layout: WidgetLayout?
     PR_INBOX(ReviewInboxWidgetProvider::class.java, WidgetLayout.PR_INBOX),
     WEEKLY_GOAL_METER(WeeklyGoalMeterWidgetProvider::class.java, WidgetLayout.WEEKLY_GOAL_METER),
     WEEKLY_GOAL_WEEK(WeeklyGoalWeekWidgetProvider::class.java, WidgetLayout.WEEKLY_GOAL_WEEK),
-    WEEKLY_GOAL_ASCENT(WeeklyGoalAscentWidgetProvider::class.java, WidgetLayout.WEEKLY_GOAL_ASCENT);
+    WEEKLY_GOAL_ASCENT(WeeklyGoalAscentWidgetProvider::class.java, WidgetLayout.WEEKLY_GOAL_ASCENT),
+    REVIEW_NEXT(ReviewNextWidgetProvider::class.java, WidgetLayout.REVIEW_NEXT),
+    REVIEW_QUEUE(ReviewQueueWidgetProvider::class.java, WidgetLayout.REVIEW_QUEUE);
 
     fun component(context: Context) = ComponentName(context, provider)
 
@@ -31,6 +33,8 @@ internal enum class WidgetKind(val provider: Class<*>, val layout: WidgetLayout?
             WidgetLayout.WEEKLY_GOAL_WEEK -> WEEKLY_GOAL_WEEK
             WidgetLayout.WEEKLY_GOAL_ASCENT -> WEEKLY_GOAL_ASCENT
             WidgetLayout.PR_INBOX -> PR_INBOX
+            WidgetLayout.REVIEW_NEXT -> REVIEW_NEXT
+            WidgetLayout.REVIEW_QUEUE -> REVIEW_QUEUE
             WidgetLayout.PROFILE -> if (portrait) PORTRAIT_PROFILE else PROFILE
             else -> CONTRIBUTIONS
         }
