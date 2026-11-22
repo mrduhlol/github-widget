@@ -366,9 +366,13 @@ internal object FocusWidgetPainter {
             val metrics = profileMetrics(d, data)
 
             fun profileText(text: String, x: Float, y: Float, width: Float, size: Float,
-                            typeface: Typeface, color: Int = colors.textSecondary) {
+                            typeface: Typeface, color: Int = colors.textSecondary, minSize: Float = size) {
                 if (width <= 0f || y > r.bottom) return
                 val p = paint(size, color).apply { this.typeface = typeface }
+                val measured = p.measureText(text)
+                if (measured > width && minSize < size) {
+                    p.textSize = (p.textSize * width / measured).coerceAtLeast(dp(minSize))
+                }
                 c.drawText(WidgetRenderer.ellipsize(text, p, width), x, y, p)
             }
 
@@ -379,7 +383,8 @@ internal object FocusWidgetPainter {
                     ProfileTypeface.SANS -> NumberFont.typeface(context, NumberFont.INTER, if (bold) 700 else 400)
                     ProfileTypeface.CONDENSED -> Typeface.create("sans-serif-condensed", style)
                 }
-                profileText(text, x, y, width, size, face, if (bold) colors.textPrimary else colors.textSecondary)
+                profileText(text, x, y, width, size, face, if (bold) colors.textPrimary else colors.textSecondary,
+                    minSize = if (bold) size * .8f else size)
             }
 
             val countFace = if (font == NumberFont.SYSTEM) Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
