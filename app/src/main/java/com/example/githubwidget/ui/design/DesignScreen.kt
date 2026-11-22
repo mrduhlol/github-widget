@@ -63,6 +63,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -464,7 +466,18 @@ internal fun WidgetCatalog(onOpen: (WidgetLayout, PreviewSize) -> Unit) {
     val username by Repository.username.collectAsState()
     val inbox by ReviewInbox.state.collectAsState()
     val cachedInbox = remember(username) { ReviewInbox.cached(context, username) }
-    val widgets = WidgetLayout.entries.map { it to PreviewSize.WIDE } + (WidgetLayout.PROFILE to PreviewSize.PORTRAIT)
+    val sections = remember {
+        val widgets = WidgetLayout.entries.map { it to PreviewSize.WIDE } + (WidgetLayout.PROFILE to PreviewSize.PORTRAIT)
+        widgets.groupBy { (layout, _) ->
+            when (layout) {
+                WidgetLayout.CLASSIC, WidgetLayout.GRAPH, WidgetLayout.NUMBERS, WidgetLayout.STREAK -> "Contributions"
+                WidgetLayout.WEEKLY_GOAL, WidgetLayout.WEEKLY_GOAL_METER,
+                WidgetLayout.WEEKLY_GOAL_WEEK, WidgetLayout.WEEKLY_GOAL_ASCENT -> "Weekly Goals"
+                WidgetLayout.PROFILE -> "GitHub ID"
+                WidgetLayout.PR_INBOX -> "Pull Requests"
+            }
+        }
+    }
     val minTileWidth = 144.dp * LocalDensity.current.fontScale.coerceAtLeast(1f)
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = minTileWidth),
@@ -480,46 +493,56 @@ internal fun WidgetCatalog(onOpen: (WidgetLayout, PreviewSize) -> Unit) {
                     color = AppTheme.colors.textSecondary)
             }
         }
-        gridItems(widgets, key = { (layout, size) -> "${layout.name}-${size.name}" }) { (layout, size) ->
-            val portrait = size == PreviewSize.PORTRAIT
-            val shape = MaterialTheme.shapes.medium
-            val thumbnailModifier = Modifier.widthIn(max = size.widthDp.dp).fillMaxWidth()
-                .aspectRatio(size.widthDp / size.heightDp).clip(shape)
-            Column(
-                Modifier.fillMaxWidth().clip(shape).clickable(role = Role.Button) { onOpen(layout, size) },
-            ) {
-                if (layout == WidgetLayout.WEEKLY_GOAL_WEEK) {
-                    Image(
-                        painter = painterResource(R.drawable.weekly_goal_week_preview),
-                        contentDescription = "Example week with 14 of 20 contributions",
-                        modifier = thumbnailModifier,
+        for ((title, widgets) in sections) {
+            item(key = title, span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = AppTheme.colors.textPrimary,
+                    modifier = Modifier.semantics { heading() },
+                )
+            }
+            gridItems(widgets, key = { (layout, size) -> "${layout.name}-${size.name}" }) { (layout, size) ->
+                val portrait = size == PreviewSize.PORTRAIT
+                val shape = MaterialTheme.shapes.medium
+                val thumbnailModifier = Modifier.widthIn(max = size.widthDp.dp).fillMaxWidth()
+                    .aspectRatio(size.widthDp / size.heightDp).clip(shape)
+                Column(
+                    Modifier.fillMaxWidth().clip(shape).clickable(role = Role.Button) { onOpen(layout, size) },
+                ) {
+                    if (layout == WidgetLayout.WEEKLY_GOAL_WEEK) {
+                        Image(
+                            painter = painterResource(R.drawable.weekly_goal_week_preview),
+                            contentDescription = "Example week with 14 of 20 contributions",
+                            modifier = thumbnailModifier,
+                        )
+                    } else {
+                        val example = if (layout.isWeeklyGoal) SampleData.weeklyGoalThumbnail else null
+                        val previewDesign = design.copy(
+                            layout = layout,
+                            weeklyGoal = if (example != null) SampleData.WEEKLY_GOAL_THUMBNAIL_TARGET else design.weeklyGoal,
+                        )
+                        WidgetPreview(
+                            previewDesign, example ?: realData ?: SampleData.userData, avatar, size.widthDp, size.heightDp,
+                            modifier = thumbnailModifier,
+                            inbox = if (layout == WidgetLayout.PR_INBOX) inbox?.takeIf { it.username == username } ?: cachedInbox else null,
+                            contentDescription = example?.let { "Example week" },
+                            weeklyGoalPreviewDate = example?.contributions?.days?.lastOrNull()?.date,
+                        )
+                    }
+                    Text(
+                        if (portrait) "Portrait profile" else layout.label,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = AppTheme.colors.textPrimary,
+                        modifier = Modifier.padding(start = 2.dp, top = 8.dp, end = 2.dp),
                     )
-                } else {
-                    val example = if (layout.isWeeklyGoal) SampleData.weeklyGoalThumbnail else null
-                    val previewDesign = design.copy(
-                        layout = layout,
-                        weeklyGoal = if (example != null) SampleData.WEEKLY_GOAL_THUMBNAIL_TARGET else design.weeklyGoal,
-                    )
-                    WidgetPreview(
-                        previewDesign, example ?: realData ?: SampleData.userData, avatar, size.widthDp, size.heightDp,
-                        modifier = thumbnailModifier,
-                        inbox = if (layout == WidgetLayout.PR_INBOX) inbox?.takeIf { it.username == username } ?: cachedInbox else null,
-                        contentDescription = example?.let { "Example week" },
-                        weeklyGoalPreviewDate = example?.contributions?.days?.lastOrNull()?.date,
+                    Text(
+                        if (portrait) "Your GitHub ID in a vertical layout" else layout.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AppTheme.colors.textSecondary,
+                        modifier = Modifier.padding(start = 2.dp, top = 2.dp, end = 2.dp, bottom = 4.dp),
                     )
                 }
-                Text(
-                    if (portrait) "Portrait profile" else layout.label,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = AppTheme.colors.textPrimary,
-                    modifier = Modifier.padding(start = 2.dp, top = 8.dp, end = 2.dp),
-                )
-                Text(
-                    if (portrait) "Your GitHub ID in a vertical layout" else layout.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = AppTheme.colors.textSecondary,
-                    modifier = Modifier.padding(start = 2.dp, top = 2.dp, end = 2.dp, bottom = 4.dp),
-                )
             }
         }
     }
