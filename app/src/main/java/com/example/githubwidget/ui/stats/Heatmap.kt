@@ -20,6 +20,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +33,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -38,6 +46,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -51,8 +62,12 @@ import com.example.githubwidget.data.Day
 import com.example.githubwidget.ui.theme.AppTheme
 import com.example.githubwidget.widget.GraphPainter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle as JTextStyle
 import java.util.Locale
@@ -80,7 +95,9 @@ internal fun YearHeatmap(
         GraphPainter.weekStart(today, weekStartsMonday).minusWeeks((WEEKS - 1).toLong())
     }
     val byDate = remember(days) { days.associateBy { it.date } }
-    var selected by remember(days, weekStartsMonday) { mutableStateOf<LocalDate?>(null) }
+    var selected by rememberSaveable(firstWeek, today) { mutableStateOf<LocalDate?>(null) }
+
+    var choosingDate by rememberSaveable { mutableStateOf(false) }
 
     val tertiary = AppTheme.colors.textTertiary
     val ring = AppTheme.colors.textPrimary
@@ -110,14 +127,31 @@ internal fun YearHeatmap(
     }
 
     val scroll = rememberScrollState()
-    LaunchedEffect(Unit) {
-        // Jump to the newest week once the grid has been measured.
-        val max = snapshotFlow { scroll.maxValue }.first { it != Int.MAX_VALUE }
-        scroll.scrollTo(max)
-    }
-
     val gridHeight = MONTH_ROW + CELL * 7 + GAP * 6
     val gridWidth = CELL * WEEKS + GAP * (WEEKS - 1)
+    val density = LocalDensity.current
+    val scope = rememberCoroutineScope()
+    fun scrollOffset(date: LocalDate): Int = with(density) {
+        val column = ChronoUnit.WEEKS.between(firstWeek, date).toInt()
+        val viewport = gridWidth.roundToPx() - scroll.maxValue
+        (column * (CELL + GAP).toPx() + CELL.toPx() / 2 - viewport / 2).toInt()
+            .coerceIn(0, scroll.maxValue)
+    }
+    LaunchedEffect(firstWeek) {
+        val max = snapshotFlow { scroll.maxValue }.first { it != Int.MAX_VALUE }
+        scroll.scrollTo(selected?.let { scrollOffset(it) } ?: max)
+    }
+
+    if (choosingDate && days.isNotEmpty()) {
+        HeatmapDatePicker(selected ?: today, firstWeek, today, byDate,
+            onDismiss = { choosingDate = false },
+            onSelect = { date ->
+                selected = date
+                choosingDate = false
+                scope.launch { scroll.animateScrollTo(scrollOffset(date)) }
+            },
+        )
+    }
 
     Column(modifier.fillMaxWidth()) {
         SelectedDayLine(selected, byDate)
@@ -138,14 +172,14 @@ internal fun YearHeatmap(
                         .width(gridWidth)
                         .height(gridHeight)
                         .semantics { contentDescription = "Contribution squares for the last year. Tap a square to see that day." }
-                        .pointerInput(firstWeek, today) {
+                        .pointerInput(firstWeek, byDate) {
                             detectTapGestures { pos ->
                                 val step = (CELL + GAP).toPx()
                                 val col = (pos.x / step).toInt()
                                 val row = ((pos.y - MONTH_ROW.toPx()) / step).toInt()
                                 if (pos.y < MONTH_ROW.toPx() || col !in 0 until WEEKS || row !in 0..6) return@detectTapGestures
                                 val date = firstWeek.plusWeeks(col.toLong()).plusDays(row.toLong())
-                                if (date.isAfter(today)) return@detectTapGestures
+                                if (date !in byDate) return@detectTapGestures
                                 selected = if (selected == date) null else date
                             }
                         },
@@ -181,8 +215,47 @@ internal fun YearHeatmap(
             }
         }
         Spacer(Modifier.height(14.dp))
-        Legend(levels, radiusFraction, Modifier.align(Alignment.End))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween) {
+            TextButton(onClick = { choosingDate = true }, enabled = days.isNotEmpty()) { Text("Find date") }
+            Legend(levels, radiusFraction)
+        }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HeatmapDatePicker(
+    initial: LocalDate,
+    firstWeek: LocalDate,
+    last: LocalDate,
+    byDate: Map<LocalDate, Day>,
+    onDismiss: () -> Unit,
+    onSelect: (LocalDate) -> Unit,
+) {
+    val allowed = remember(firstWeek, byDate) {
+        object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                val date = Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneOffset.UTC).toLocalDate()
+                return !date.isBefore(firstWeek) && date in byDate
+            }
+        }
+    }
+    val state = rememberDatePickerState(
+        initialSelectedDateMillis = initial.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+        yearRange = maxOf(firstWeek, byDate.keys.min()).year..last.year,
+        selectableDates = allowed,
+    )
+    val millis = state.selectedDateMillis
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(enabled = millis != null && allowed.isSelectableDate(millis), onClick = {
+                millis?.let { onSelect(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()) }
+            }) { Text("Show day") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    ) { DatePicker(state) }
 }
 
 @Composable
@@ -193,7 +266,7 @@ private fun SelectedDayLine(selected: LocalDate?, byDate: Map<LocalDate, Day>) {
         targetState = selected,
         transitionSpec = { fadeIn() togetherWith fadeOut() },
         label = "selectedDay",
-        modifier = Modifier.heightIn(min = 20.dp),
+        modifier = Modifier.heightIn(min = 20.dp).semantics { liveRegion = LiveRegionMode.Polite },
     ) { date ->
         if (date == null) {
             Text(
