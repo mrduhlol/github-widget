@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -443,6 +444,7 @@ fun WidgetPreview(
     inbox: ReviewInboxState? = null,
     contentDescription: String? = "Widget preview",
     weeklyGoalPreviewDate: java.time.LocalDate? = null,
+    maxScale: Float = 1f,
 ) {
     val context = LocalContext.current
     val font by Repository.numberFont.collectAsState()
@@ -455,7 +457,7 @@ fun WidgetPreview(
         }
     }
     BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
-        var scale = minOf(1f, maxWidth.value / widthDp)
+        var scale = minOf(maxScale, maxWidth.value / widthDp)
         if (constraints.hasBoundedHeight) scale = minOf(scale, maxHeight.value / heightDp)
         val w = (widthDp * scale).dp
         val h = (heightDp * scale).dp
@@ -473,7 +475,11 @@ fun WidgetPreview(
  * backgrounds look like they will on a real home screen.
  */
 @Composable
-fun WallpaperBackdrop(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+fun WallpaperBackdrop(
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 22.dp),
+    content: @Composable () -> Unit,
+) {
     // Soft periwinkle wash built only from theme tokens: card melting into raised,
     // with a faint primary glow so see-through widget backgrounds preview faithfully.
     val brush = androidx.compose.ui.graphics.Brush.linearGradient(
@@ -485,7 +491,7 @@ fun WallpaperBackdrop(modifier: Modifier = Modifier, content: @Composable () -> 
             .clip(MaterialTheme.shapes.extraLarge)
             .background(brush)
             .border(1.dp, AppTheme.colors.hairline, MaterialTheme.shapes.extraLarge)
-            .padding(horizontal = 16.dp, vertical = 22.dp),
+            .padding(contentPadding),
         contentAlignment = Alignment.Center,
     ) {
         content()

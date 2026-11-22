@@ -382,17 +382,32 @@ internal object FocusWidgetPainter {
                 profileText(text, x, y, width, size, face, if (bold) colors.textPrimary else colors.textSecondary)
             }
 
-            fun stats(x: Float, top: Float, width: Float) {
-                if (metrics.isEmpty() || top + dp(28f) > footerTop) return
+            val countFace = if (font == NumberFont.SYSTEM) Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                else NumberFont.typeface(context, font, 700)
+
+            fun stats(x: Float, top: Float, width: Float, size: Float) {
+                if (metrics.isEmpty() || top + dp(34f) > footerTop) return
                 val column = width / metrics.size
-                val countFace = if (font == NumberFont.SYSTEM) Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-                    else NumberFont.typeface(context, font, 700)
+                c.drawLine(x, top, x + width, top, rule)
                 metrics.forEachIndexed { i, (value, label) ->
                     val left = x + column * i
-                    profileText(value?.let { compactCount(it) } ?: "—", left, top + dp(14f),
-                        column - dp(3f), 17f, countFace, colors.textPrimary)
-                    profileText(label, left, top + dp(27f), column - dp(2f),
-                        if (column >= dp(55f)) 10f else 8f, Typeface.MONOSPACE)
+                    profileText(value?.let(::compactCount) ?: "—", left, top + dp(20f),
+                        column - dp(4f), size, countFace, colors.textPrimary)
+                    profileText(label, left, top + dp(32f), column - dp(4f),
+                        if (column >= dp(55f)) 10f else 9f, Typeface.DEFAULT)
+                }
+            }
+
+            val bodyHeight = footerTop - r.top
+            val identityLines = listOf(d.profileShowName, d.profileShowHandle).count { it }
+            val hasMetrics = metrics.isNotEmpty()
+
+            fun identityBlock(x: Float, top: Float, width: Float, size: Float, compact: Boolean = false) {
+                if (d.profileShowName) identity(name, x, top + dp(size), width, size, bold = true)
+                if (d.profileShowHandle) {
+                    val handleSize = if (compact) 10f else 12f
+                    val baseline = if (d.profileShowName) size + handleSize + 4f else handleSize + 1f
+                    identity(login, x, top + dp(baseline), width, handleSize)
                 }
             }
 
@@ -406,61 +421,85 @@ internal object FocusWidgetPainter {
             }
 
             when {
-                wide -> {
-                    val headerHeight = min(dp(84f), footerTop - r.top - dp(7f))
-                    val y = r.top + (footerTop - r.top - headerHeight) / 2
-                    var x = r.left
-                    if (d.profileShowAvatar) {
-                        avatar(x, y, headerHeight)
-                        x += headerHeight + dp(16f)
-                    }
-                    val width = r.right - x - dp(22f)
-                    var baseline = y + dp(19f)
-                    if (d.profileShowName) {
-                        identity(name, x, baseline, width, 21f, bold = true)
-                        baseline += dp(15f)
-                    }
-                    if (d.profileShowHandle) identity(login, x, baseline, width, 11f)
-                    stats(x, y + headerHeight - dp(28f), min(r.right - x, dp(206f)))
-                }
                 tall -> {
-                    val photo = min(dp(102f), r.width())
-                    var y = r.top
-                    if (d.profileShowAvatar) {
+                    val rowHeight = (bodyHeight / 9f).coerceIn(dp(24f), dp(38f))
+                    val metricsHeight = rowHeight * metrics.size
+                    val identityHeight = dp(when {
+                        identityLines == 2 -> 46f
+                        identityLines == 1 -> 29f
+                        else -> 0f
+                    })
+                    val photoGap = if (identityLines > 0 || hasMetrics) dp(10f) else 0f
+                    val photo = if (d.profileShowAvatar) {
+                        minOf(r.width(), bodyHeight - metricsHeight - identityHeight - photoGap).coerceAtLeast(0f)
+                    } else 0f
+                    val blockHeight = photo + (if (photo > 0f) photoGap else 0f) + identityHeight + metricsHeight
+                    var y = r.top + (bodyHeight - blockHeight).coerceAtLeast(0f) / 2f
+                    if (photo > 0f) {
                         avatar(r.left, y, photo)
-                        y += photo + dp(10f)
+                        y += photo + photoGap
                     }
-                    if (d.profileShowName) {
-                        y += dp(18f)
-                        identity(name, r.left, y, r.width(), 19f, bold = true)
-                        y += dp(5f)
+                    identityBlock(r.left, y, r.width(), 21f)
+                    y += identityHeight
+                    metrics.forEachIndexed { i, (value, label) ->
+                        val top = y + rowHeight * i
+                        val baseline = top + rowHeight / 2f + dp(5f)
+                        val split = r.width() * .55f
+                        val count = value?.let(::compactCount) ?: "—"
+                        val countPaint = paint(18f, colors.textPrimary).apply { typeface = countFace }
+                        val countWidth = r.width() - split
+                        val shown = WidgetRenderer.ellipsize(count, countPaint, countWidth)
+                        c.drawLine(r.left, top, r.right, top, rule)
+                        profileText(label, r.left, baseline, split - dp(6f), 11f, Typeface.DEFAULT)
+                        c.drawText(shown, r.right - countPaint.measureText(shown), baseline, countPaint)
                     }
-                    if (d.profileShowHandle) {
-                        y += dp(13f)
-                        identity(login, r.left, y, r.width(), 11f)
-                    }
-                    stats(r.left, y + dp(16f), r.width())
+                }
+                wide -> {
+                    val separateStats = hasMetrics && bodyHeight >= dp(148f)
+                    val heroHeight = bodyHeight - if (separateStats) dp(46f) else 0f
+                    val photoLimit = if (identityLines == 0 && (separateStats || !hasMetrics)) r.width() else r.width() * .42f
+                    val photo = minOf(heroHeight - dp(6f), photoLimit, dp(138f))
+                    val hasSideContent = identityLines > 0 || (hasMetrics && !separateStats)
+                    val photoLeft = if (hasSideContent) r.left else r.centerX() - photo / 2f
+                    val x = if (d.profileShowAvatar) r.left + photo + dp(16f) else r.left
+                    val nameSize = if (bodyHeight >= dp(148f)) 26f else 22f
+                    val identityHeight = dp(when {
+                        identityLines == 2 -> nameSize + 20f
+                        identityLines == 1 -> nameSize + 4f
+                        else -> 0f
+                    })
+                    val stackHeight = identityHeight + if (hasMetrics && !separateStats) dp(34f) else 0f
+                    val y = r.top + (heroHeight - stackHeight).coerceAtLeast(0f) / 2f
+                    if (d.profileShowAvatar) avatar(photoLeft, r.top + (heroHeight - photo) / 2f, photo)
+                    identityBlock(x, y, r.right - x, nameSize)
+                    if (separateStats) stats(r.left, footerTop - dp(38f), r.width(), 21f)
+                    else stats(x, y + identityHeight, r.right - x, 18f)
                 }
                 else -> {
-                    val photo = min(dp(38f), r.height())
-                    var x = r.left
-                    if (d.profileShowAvatar && r.width() >= dp(120f)) {
-                        avatar(x, r.top, photo)
-                        x += photo + dp(9f)
+                    val showStats = hasMetrics && bodyHeight >= dp(66f)
+                    val heroHeight = bodyHeight - if (showStats) dp(40f) else 0f
+                    val compact = heroHeight < dp(40f)
+                    val showPhoto = d.profileShowAvatar && r.width() >= dp(120f)
+                    val photo = minOf(dp(54f), r.width() * .36f, heroHeight)
+                    val x = if (showPhoto) r.left + photo + dp(9f) else r.left
+                    val textHeight = dp(when {
+                        identityLines < 2 -> 18f
+                        compact -> 28f
+                        else -> 34f
+                    })
+                    val y = r.top + (heroHeight - textHeight).coerceAtLeast(0f) / 2f
+                    if (showPhoto) {
+                        val left = if (identityLines > 0) r.left else r.centerX() - photo / 2f
+                        avatar(left, r.top + (heroHeight - photo) / 2f, photo)
                     }
-                    var y = r.top + dp(13f)
-                    if (d.profileShowName) {
-                        identity(name, x, y, r.right - x - dp(16f), 14f, bold = true)
-                        y += dp(14f)
-                    }
-                    if (d.profileShowHandle) identity(login, x, y, r.right - x, 10f)
-                    if (footerTop - r.top >= dp(66f)) stats(r.left, footerTop - dp(28f), r.width())
+                    identityBlock(x, y, r.right - x, if (compact) 14f else 16f, compact)
+                    if (showStats) stats(r.left, footerTop - dp(34f), r.width(), 19f)
                 }
             }
 
             if (dock.isNotEmpty()) {
                 c.drawLine(r.left, footerTop + dp(8f), r.right, footerTop + dp(8f), rule)
-                val slot = dp(PROFILE_LINK_SIZE)
+                val slot = r.width() / dock.size
                 val centerY = footerTop + dp(28f)
                 dock.forEachIndexed { i, item ->
                     val centerX = r.left + slot * (i + .5f)

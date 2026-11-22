@@ -139,6 +139,7 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
     var hasWidget by remember { mutableStateOf(WidgetUpdater.hasWidgets(context)) }
     var showHelp by remember { mutableStateOf(false) }
     var pickingColor by remember { mutableStateOf(false) }
+    val isProfile = layout == WidgetLayout.PROFILE
 
     // Re-check when coming back from the home screen (the user may have just added one).
     LifecycleResumeEffect(Unit) {
@@ -154,8 +155,8 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
 
     LazyColumn(
         Modifier.fillMaxSize().background(AppTheme.colors.canvas).statusBarsPadding(),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = if (isProfile) 4.dp else 12.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(if (isProfile) 14.dp else 20.dp),
     ) {
         item {
             Column(
@@ -169,8 +170,18 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
                     color = AppTheme.colors.textPrimary)
                 Text(layout.description, style = MaterialTheme.typography.bodyMedium,
                     color = AppTheme.colors.textSecondary)
-                Spacer(Modifier.height(14.dp))
-                WallpaperBackdrop {
+                Spacer(Modifier.height(if (isProfile) 10.dp else 14.dp))
+                val previewMaxWidth = when (previewSize) {
+                    PreviewSize.SMALL -> 226.dp
+                    PreviewSize.PORTRAIT -> 160.dp
+                    else -> 376.dp
+                }
+                WallpaperBackdrop(
+                    modifier = if (isProfile) Modifier.align(Alignment.CenterHorizontally).widthIn(max = previewMaxWidth)
+                        else Modifier,
+                    contentPadding = if (isProfile) PaddingValues(8.dp)
+                        else PaddingValues(horizontal = 16.dp, vertical = 22.dp),
+                ) {
                     WidgetPreview(
                         design = design,
                         data = data,
@@ -179,7 +190,13 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
                         heightDp = previewSize.heightDp,
                         inbox = if (layout.hasReviewColors && inbox.results == null) ReviewCardPainter.example
                             else inbox.takeIf { layout.isReviewWidget },
-                        modifier = Modifier.fillMaxWidth().height(if (previewSize == PreviewSize.PORTRAIT) 320.dp else if (previewSize == PreviewSize.LARGE) 250.dp else 180.dp),
+                        modifier = if (isProfile) Modifier.fillMaxWidth().aspectRatio(previewSize.widthDp / previewSize.heightDp)
+                            else Modifier.fillMaxWidth().height(when (previewSize) {
+                                PreviewSize.PORTRAIT -> 320.dp
+                                PreviewSize.LARGE -> 250.dp
+                                else -> 180.dp
+                            }),
+                        maxScale = if (isProfile) 1.25f else 1f,
                     )
                 }
                 if (realData == null && !design.layout.isReviewWidget) {
