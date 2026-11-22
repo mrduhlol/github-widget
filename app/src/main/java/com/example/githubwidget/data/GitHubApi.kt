@@ -21,15 +21,17 @@ object GitHubApi {
 
     private const val USER_AGENT = "gh-widgets-android/3"
 
-    /** Strips spaces, a leading "@" and a pasted profile URL down to the bare login. */
-    fun cleanUsername(raw: String): String =
-        raw.trim()
-            .removePrefix("https://").removePrefix("http://")
-            .removePrefix("www.").removePrefix("github.com/")
-            .trimStart('@')
+    private val profileLinkPrefix = Regex("""^(?:https?://)?(?:www\.)?github\.com/""", RegexOption.IGNORE_CASE)
+
+    /** Accept a login, @handle, or the owner segment of a GitHub web link. */
+    fun cleanUsername(raw: String): String {
+        val input = raw.trim()
+        val prefix = profileLinkPrefix.find(input) ?: return input.removePrefix("@")
+        return input.substring(prefix.range.last + 1)
             .substringBefore('/')
             .substringBefore('?')
-            .trim()
+            .substringBefore('#')
+    }
 
     /** GitHub logins: letters, digits and single hyphens, max 39 chars. */
     fun isValidUsername(name: String): Boolean =

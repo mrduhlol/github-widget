@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -107,24 +108,38 @@ object Repository {
     // ---------------------------------------------------------------- account
 
     /** Fetches an account without saving it, so the user can confirm it's them. */
-    suspend fun lookup(rawName: String): Result<Lookup> = withContext(Dispatchers.IO) {
+    internal suspend fun lookup(
+        rawName: String,
+        fetchContributions: (String) -> Contributions = GitHubApi::fetchContributions,
+        fetchProfile: (String) -> Profile = GitHubApi::fetchProfile,
+        fetchAvatar: (String) -> Bitmap? = { GitHubApi.fetchAvatar(it) },
+    ): Result<Lookup> = withContext(Dispatchers.IO) {
         val name = GitHubApi.cleanUsername(rawName)
         if (!GitHubApi.isValidUsername(name)) {
             return@withContext Result.failure(
                 IllegalArgumentException("That doesn't look like a GitHub username. It's the name after github.com/ in your profile link.")
             )
         }
-        runCatching {
-            val contributions = async { GitHubApi.fetchContributions(name) }
-            // The profile is a nice-to-have: if it fails (rate limit) we still continue.
-            val profile = runCatching { GitHubApi.fetchProfile(name) }.getOrNull()
-            val avatar = profile?.let { GitHubApi.fetchAvatar(it.avatarUrl) }
-            val c = contributions.await()
-            Lookup(
-                UserData(c.copy(username = profile?.login ?: c.username), profile, System.currentTimeMillis()),
-                avatar,
-            )
-        }.recoverCatching { throw if (it is FetchError) it else FetchError.Offline }
+        try {
+            val lookup = coroutineScope {
+                val contributions = async { fetchContributions(name) }
+                val profile = try {
+                    fetchProfile(name)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    null // Profile metadata is optional, including when GitHub rate-limits it.
+                }
+                val c = contributions.await()
+                val avatar = profile?.let { fetchAvatar(it.avatarUrl) }
+                Lookup(UserData(c.copy(username = profile?.login ?: c.username), profile, System.currentTimeMillis()), avatar)
+            }
+            Result.success(lookup)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e as? FetchError ?: FetchError.Offline)
+        }
     }
 
     /** Saves a confirmed account and updates every widget right away. */
