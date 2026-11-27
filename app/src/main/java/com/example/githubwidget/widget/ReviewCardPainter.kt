@@ -69,15 +69,6 @@ internal object ReviewCardPainter {
             val bounds = RectF(0f, 0f, width, height)
             canvas.clipPath(Path().apply { addRoundRect(bounds, radius, radius, Path.Direction.CW) })
             canvas.drawColor(if (next) palette.paper else palette.surface)
-            if (next) {
-                paint.color = ColorUtils.setAlphaComponent(0xFFFFFFFF.toInt(), 26)
-                paint.strokeWidth = 1f
-                var x = -height
-                while (x < width) {
-                    canvas.drawLine(x, height, x + height, 0f, paint)
-                    x += 15f
-                }
-            }
             val requests = orderedRequests(inbox)
             if (requests.isEmpty()) {
                 line(design.layout.label, pad, pad + 13f, interior, 13f, bold = true)
@@ -101,14 +92,7 @@ internal object ReviewCardPainter {
             val badge = "$total to review"
             val badgeWidth = minOf(interior * .44f, 88f)
             line("Up next", pad, header, interior - badgeWidth - 5f, 13f, bold = true)
-            if (badgeWidth >= 48f) {
-                paint.color = ColorUtils.setAlphaComponent(palette.ink, 115)
-                paint.style = Paint.Style.STROKE
-                paint.strokeWidth = 1f
-                canvas.drawRoundRect(right - badgeWidth, header - 13f, right, header + 5f, 4f, 4f, paint)
-                paint.style = Paint.Style.FILL
-            }
-            line(badge, right - badgeWidth + 4f, header, badgeWidth - 9f, 11f, alignRight = true)
+            line(badge, right - badgeWidth, header, badgeWidth, 11f, alignRight = true)
 
             val compact = height < 125f
             val personY = if (compact) header + 18f else maxOf(header + 25f, height * .35f)

@@ -303,7 +303,7 @@ export function renderWidget(canvas, design, user, widthDp, heightDp, systemDark
     ctx.stroke();
   }
 
-  const pad = widthDp < 180 || heightDp < 100 ? 12 : 16;
+  const pad = Math.min(widthDp < 180 || heightDp < 100 ? 12 : 16, widthDp / 4, heightDp / 4);
   const area = { x: pad, y: pad, w: widthDp - 2 * pad, h: heightDp - 2 * pad };
   const data = user.contributions;
   const st = stats(data);
@@ -366,13 +366,14 @@ export function renderWidget(canvas, design, user, widthDp, heightDp, systemDark
     const base = cy + 11 * 0.36;
     let x = fr.x;
     parts.forEach((s, i) => {
+      const labelX = x + 12;
+      const shown = ellipsize(s, 11, 400, fr.x + fr.w - labelX);
+      if (!shown) return;
       const active = i === 0 && design.showStreak ? st.currentStreak > 0 : st.today > 0;
       ctx.fillStyle = rgba(active ? c.accent : c.levels[0]);
       ctx.beginPath(); ctx.arc(x + 3.5, cy, 3.5, 0, Math.PI * 2); ctx.fill();
-      x += 12;
-      const shown = ellipsize(s, 11, 400, fr.x + fr.w - x);
-      text(shown, x, base, 11, c.textSecondary);
-      x += measure(shown, 11) + 14;
+      text(shown, labelX, base, 11, c.textSecondary);
+      x = labelX + measure(shown, 11) + 14;
     });
     const legendW = 5 * 10 + 4 * 3;
     const lessW = measure("Less ", 10), moreW = measure(" More", 10);
@@ -384,9 +385,9 @@ export function renderWidget(canvas, design, user, widthDp, heightDp, systemDark
       for (let lvl = 0; lvl <= 4; lvl++) {
         ctx.fillStyle = rgba(c.levels[lvl]);
         roundRect(ctx, lx, cy - 5, 10, 10, 10 * CELL_SHAPES[design.cellShape]);
-        lx += 13;
+        lx += lvl < 4 ? 13 : 10;
       }
-      text("More", lx + 1, base, 10, c.textSecondary);
+      text(" More", lx, base, 10, c.textSecondary);
     }
   };
 
@@ -425,11 +426,13 @@ export function renderWidget(canvas, design, user, widthDp, heightDp, systemDark
     gridRect = graph(area, roomForMonths(area.h), 16);
   } else if (design.layout === "NUMBERS") {
     const wide = area.w > area.h * 1.55;
-    if (wide) {
-      const colW = Math.min(170, Math.max(96, area.w * 0.36));
-      drawBigStats({ x: area.x, y: area.y, w: colW, h: area.h }, false);
+    if (area.w < 150 && area.h < 72) {
+      drawBigStats(area, true);
+    } else if (wide) {
+      const colW = Math.min(170, Math.max(96, area.w * 0.36), Math.max(0, area.w - 12));
+      drawBigStats({ x: area.x, y: area.y, w: colW, h: area.h }, area.h < 100);
       const g = { x: area.x + colW + 12, y: area.y, w: area.w - colW - 12, h: area.h };
-      gridRect = graph(g, roomForMonths(g.h) && g.h > 100);
+      if (g.w > 0) gridRect = graph(g, roomForMonths(g.h) && g.h > 100);
     } else {
       const statsH = Math.min(92, area.h * 0.48);
       drawBigStats({ x: area.x, y: area.y, w: area.w, h: statsH }, true);

@@ -1,5 +1,6 @@
 import {
-  DEFAULT_DESIGN, PALETTES, FONTS, renderWidget, drawGraph, colors, parseContributions,
+  DEFAULT_DESIGN, PALETTES, FONTS, CELL_SHAPES, CORNERS, RANGES,
+  renderWidget, drawGraph, colors, parseContributions,
   stats as computeStats, renderShareImage, fmt, parse, rgba,
 } from "./widget.js";
 
@@ -8,6 +9,35 @@ const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const isDark = () => document.documentElement.dataset.theme === "dark";
+const DESIGN_KEY = "ghw-design";
+const DESIGN_CHOICES = {
+  layout: ["CLASSIC", "GRAPH", "NUMBERS"],
+  background: ["AUTO", "LIGHT", "DARK", "BLACK"],
+  paletteId: [...PALETTES.map(({ id }) => id), "custom"],
+  font: FONTS.map(({ id }) => id),
+  corners: Object.keys(CORNERS),
+  range: Object.keys(RANGES),
+  cellShape: Object.keys(CELL_SHAPES),
+};
+
+function savedDesign() {
+  try {
+    const value = JSON.parse(localStorage.getItem(DESIGN_KEY) || "{}");
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    const valid = {};
+    for (const [key, fallback] of Object.entries(DEFAULT_DESIGN)) {
+      const candidate = value[key];
+      if (typeof candidate !== typeof fallback) continue;
+      if (DESIGN_CHOICES[key] && !DESIGN_CHOICES[key].includes(candidate)) continue;
+      valid[key] = candidate;
+    }
+    if (!/^#[0-9a-f]{6}$/i.test(valid.customColor || "")) delete valid.customColor;
+    if (valid.opacity < 0 || valid.opacity > 100) delete valid.opacity;
+    return valid;
+  } catch {
+    return {};
+  }
+}
 
 // ------------------------------------------------------------------ data
 
@@ -60,7 +90,7 @@ function setupTheme(onChange) {
   btn.addEventListener("click", () => {
     const next = isDark() ? "light" : "dark";
     document.documentElement.dataset.theme = next;
-    localStorage.setItem("ghw-theme", next);
+    try { localStorage.setItem("ghw-theme", next); } catch {}
     label();
     onChange();
   });
@@ -72,14 +102,18 @@ function setupNav() {
     btn.setAttribute("aria-expanded", "false");
     btn.setAttribute("aria-label", "Open menu");
     menu.classList.remove("open");
-    setTimeout(() => { if (!menu.classList.contains("open")) menu.hidden = true; }, 400);
+    setTimeout(() => {
+      if (btn.getAttribute("aria-expanded") === "false") menu.hidden = true;
+    }, 400);
   };
   btn.addEventListener("click", () => {
     if (btn.getAttribute("aria-expanded") === "true") return close();
     menu.hidden = false;
-    requestAnimationFrame(() => menu.classList.add("open"));
     btn.setAttribute("aria-expanded", "true");
     btn.setAttribute("aria-label", "Close menu");
+    requestAnimationFrame(() => {
+      if (btn.getAttribute("aria-expanded") === "true") menu.classList.add("open");
+    });
   });
   $$("a", menu).forEach((a) => a.addEventListener("click", close));
   addEventListener("keydown", (e) => { if (e.key === "Escape" && !menu.hidden) close(); });
@@ -252,11 +286,12 @@ function setupHeatmap(user, st) {
 // ------------------------------------------------------------------ studio
 
 function setupStudio(user) {
-  const KEY = "ghw-design";
-  let design = { ...DEFAULT_DESIGN, ...JSON.parse(localStorage.getItem(KEY) || "{}") };
+  let design = { ...DEFAULT_DESIGN, ...savedDesign() };
   const canvas = $("#studio-canvas"), box = $("#resizable"), stage = $(".stage-inner");
   const CELL_W = 88, CELL_H = 84;
-  let size = { w: 352, h: 168 };
+  const defaultSize = { w: 352, h: 168 };
+  let requestedSize = defaultSize;
+  let size = defaultSize;
 
   // Swatches
   const sw = $("#swatches");
@@ -270,7 +305,10 @@ function setupStudio(user) {
   const custom = document.createElement("label");
   custom.className = "swatch swatch-custom"; custom.title = "Custom color";
   custom.dataset.palette = "custom";
-  custom.innerHTML = `<input type="color" value="${design.customColor}" aria-label="Custom color" />`;
+  const colorInput = document.createElement("input");
+  colorInput.type = "color";
+  colorInput.setAttribute("aria-label", "Custom color");
+  custom.append(colorInput);
   sw.append(custom);
 
   // Fonts
@@ -296,6 +334,7 @@ function setupStudio(user) {
     $("#opacity").value = 100 - design.opacity;
     $("#opacity-out").textContent = `${100 - design.opacity}%`;
     sel.value = design.font;
+    colorInput.value = design.customColor;
   };
 
   const render = () => {
@@ -306,7 +345,7 @@ function setupStudio(user) {
   };
   const update = async (patch) => {
     design = { ...design, ...patch };
-    localStorage.setItem(KEY, JSON.stringify(design));
+    try { localStorage.setItem(DESIGN_KEY, JSON.stringify(design)); } catch {}
     syncControls();
     if (patch.font) await ensureFont(patch.font);
     render();
@@ -320,11 +359,16 @@ function setupStudio(user) {
     const b = e.target.closest("button.swatch");
     if (b) update({ paletteId: b.dataset.palette });
   });
-  $("input", custom).addEventListener("input", (e) => update({ paletteId: "custom", customColor: e.target.value }));
+  colorInput.addEventListener("input", (e) => update({ paletteId: "custom", customColor: e.target.value }));
   $$("[data-toggle]").forEach((t) => t.addEventListener("change", () => update({ [t.dataset.toggle]: t.checked })));
   $("#opacity").addEventListener("input", (e) => update({ opacity: 100 - Number(e.target.value) }));
   sel.addEventListener("change", () => update({ font: sel.value }));
-  $("#reset").addEventListener("click", () => { localStorage.removeItem(KEY); design = { ...DEFAULT_DESIGN }; syncControls(); setSize(352, 168); });
+  $("#reset").addEventListener("click", () => {
+    try { localStorage.removeItem(DESIGN_KEY); } catch {}
+    design = { ...DEFAULT_DESIGN };
+    syncControls();
+    setSize(defaultSize.w, defaultSize.h);
+  });
 
   // Wallpapers
   $$(".wallpapers button").forEach((b) => b.addEventListener("click", () => {
@@ -339,29 +383,35 @@ function setupStudio(user) {
     // not-yet-laid-out stage) would clamp the widget to the floor here and
     // it would never grow back. Skip those; the next real layout re-fits.
     if (r.width <= 0 || r.height <= 0 || innerWidth < 100 || innerHeight < 100) return null;
-    return { maxW: Math.max(140, r.width - 56), maxH: Math.max(90, r.height - 72) };
+    return { maxW: Math.max(1, r.width - 56), maxH: Math.max(1, r.height - 72) };
   };
-  const setSize = (w, h) => {
+  const fitSize = () => {
     const b = bounds();
     if (!b) return;
     const { maxW, maxH } = b;
+    const { w, h } = requestedSize;
     size = { w: Math.round(Math.min(maxW, Math.max(110, w))), h: Math.round(Math.min(maxH, Math.max(70, h))) };
     box.style.setProperty("--w", `${size.w}px`);
     box.style.setProperty("--h", `${size.h}px`);
     render();
   };
+  const setSize = (w, h) => {
+    requestedSize = { w, h };
+    fitSize();
+  };
   const handle = $("#handle");
   handle.addEventListener("pointerdown", (e) => {
+    if (!e.isPrimary || e.button !== 0) return;
     e.preventDefault();
     handle.setPointerCapture(e.pointerId);
     handle.classList.add("dragging");
     const sx = e.clientX, sy = e.clientY, sw0 = size.w, sh0 = size.h;
     // The box is centered, so the corner moves at half speed; double the delta.
     const move = (ev) => setSize(sw0 + (ev.clientX - sx) * 2, sh0 + (ev.clientY - sy) * 2);
-    const up = () => { handle.classList.remove("dragging"); handle.removeEventListener("pointermove", move); };
-    handle.addEventListener("pointermove", move);
-    handle.addEventListener("pointerup", up, { once: true });
-    handle.addEventListener("pointercancel", up, { once: true });
+    const drag = new AbortController();
+    const finish = () => { handle.classList.remove("dragging"); drag.abort(); };
+    handle.addEventListener("pointermove", move, { signal: drag.signal });
+    handle.addEventListener("lostpointercapture", finish, { signal: drag.signal });
   });
   handle.addEventListener("keydown", (e) => {
     const d = e.shiftKey ? 40 : 10;
@@ -374,11 +424,11 @@ function setupStudio(user) {
   }));
 
   syncControls();
-  ensureFont(design.font).then(() => setSize(size.w, size.h));
+  ensureFont(design.font).then(fitSize);
   // Track the stage's actual size: covers boot before the first real layout
   // and viewport changes the window `resize` event reports late.
-  new ResizeObserver(() => setSize(size.w, size.h)).observe(stage);
-  return () => setSize(size.w, size.h);
+  new ResizeObserver(fitSize).observe(stage);
+  return fitSize;
 }
 
 // ------------------------------------------------------------------ stats tab
@@ -427,7 +477,7 @@ function setupStats(user, st) {
 
   // Share image
   const share = $("#share-canvas");
-  const draw = () => renderShareImage(share, { ...DEFAULT_DESIGN, ...JSON.parse(localStorage.getItem("ghw-design") || "{}") }, user);
+  const draw = () => renderShareImage(share, { ...DEFAULT_DESIGN, ...savedDesign() }, user);
   draw();
   $("#share-btn").addEventListener("click", () => {
     draw();
@@ -485,7 +535,9 @@ function syncHeroShot() {
   const want = isDark() ? img.dataset.dark : img.dataset.light;
   if (!img.src.endsWith(want)) {
     const probe = new Image();
-    probe.onload = () => { img.src = want; };
+    probe.onload = () => {
+      if ((isDark() ? img.dataset.dark : img.dataset.light) === want) img.src = want;
+    };
     probe.src = want;
   }
 }
@@ -497,6 +549,11 @@ async function main() {
   setupReveal();
   setupScreens();
   syncHeroShot();
+  let redrawThemeWidgets = () => {};
+  setupTheme(() => {
+    syncHeroShot();
+    redrawThemeWidgets();
+  });
 
   const user = await loadUser();
   const st = computeStats(user.contributions);
@@ -519,7 +576,7 @@ async function main() {
   const redrawStudio = setupStudio(user);
   const redrawShare = setupStats(user, st);
 
-  setupTheme(() => { heroWidgets(); fields(); redrawHeatmap(); redrawStudio(); syncHeroShot(); });
+  redrawThemeWidgets = () => { heroWidgets(); fields(); redrawHeatmap(); redrawStudio(); };
   addEventListener("storage", redrawShare);
   $("#controls").addEventListener("click", () => setTimeout(redrawShare, 0));
   $("#controls").addEventListener("change", () => setTimeout(redrawShare, 0));

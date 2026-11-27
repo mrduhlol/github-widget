@@ -221,7 +221,8 @@ object Repository {
             _refreshState.value = RefreshState.Failed(
                 (e as? FetchError)?.message ?: FetchError.Offline.message
             )
-            WidgetUpdater.update(app, WidgetUpdater.streakIds(app))
+            if (_data.value == null) WidgetUpdater.updateAll(app)
+            else WidgetUpdater.update(app, WidgetUpdater.streakIds(app))
             false
         }
     }

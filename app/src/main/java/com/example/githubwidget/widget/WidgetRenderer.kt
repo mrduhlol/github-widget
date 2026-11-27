@@ -43,6 +43,9 @@ object WidgetRenderer {
     /** Keeps bitmaps under the RemoteViews memory budget on every device. */
     private const val MAX_PIXELS = 1_100_000f
 
+    internal fun contentPaddingDp(width: Float, height: Float): Float =
+        (if (width < 180f || height < 100f) 12f else 16f).coerceAtMost(minOf(width, height) / 4f)
+
     fun render(
         context: Context,
         design: WidgetDesign,
@@ -80,22 +83,15 @@ object WidgetRenderer {
             Background.LIGHT -> false
             Background.DARK, Background.BLACK -> true
         }
-        val base = Palettes.colors(context, design, isDark)
-        // Neutral card materials let the selected accent and profile photo lead.
-        val colors = base.copy(
-            card = when {
-                design.background == Background.BLACK -> 0xFF000000.toInt()
-                isDark && design.layout in listOf(WidgetLayout.PROFILE, WidgetLayout.PR_INBOX) -> 0xFF0D1013.toInt()
-                isDark -> 0xFF141618.toInt()
-                else -> 0xFFFAFAF7.toInt()
-            },
-            border = when {
-                isDark && design.layout == WidgetLayout.PROFILE -> 0xFF41464D.toInt()
-                isDark -> 0xFF353A3D.toInt()
-                else -> 0xFFD3D6D0.toInt()
-            },
-            textPrimary = if (isDark) 0xFFF5F6F3.toInt() else 0xFF1A201C.toInt(),
-            textSecondary = if (isDark) 0xFFA9B0AB.toInt() else 0xFF59635C.toInt(),
+        val surface = when {
+            design.background == Background.BLACK -> 0xFF000000.toInt()
+            isDark -> 0xFF15181C.toInt()
+            else -> 0xFFF8F9FA.toInt()
+        }
+        val colors = Palettes.colors(context, design, isDark, cardOverride = surface).copy(
+            border = if (isDark) 0xFF2C3137.toInt() else 0xFFE0E4E8.toInt(),
+            textPrimary = if (isDark) 0xFFF2F4F6.toInt() else 0xFF19212A.toInt(),
+            textSecondary = if (isDark) 0xFFABB4BE.toInt() else 0xFF53616E.toInt(),
         )
         Painter(Canvas(bmp), scale, widthDp, heightDp, design, colors, context, font, replayElapsedMs)
             .draw(data, avatar, placeholder, inbox, weeklyGoalPreviewDate)
@@ -134,25 +130,26 @@ object WidgetRenderer {
 
         fun draw(data: UserData?, avatar: Bitmap?, placeholder: Placeholder, inbox: ReviewInboxState?,
                  weeklyGoalPreviewDate: LocalDate?) {
-            val streak = if (design.layout == WidgetLayout.STREAK) StreakWidgetPainter.snapshot(data, placeholder) else null
-            drawCard(streak)
-            val padDp = if (wDp < 180 || hDp < 100) 12f else 16f
+            drawCard()
+            val padDp = contentPaddingDp(wDp, hDp)
             val pad = dp(padDp)
             val area = RectF(pad, pad, canvas.width - pad, canvas.height - pad)
             when {
                 design.layout == WidgetLayout.PR_INBOX -> drawReviewInbox(area, inbox)
-                streak != null -> {
-                    val streakInset = dp(if (hDp < 125f) 7f else 14f)
-                    val streakArea = RectF(streakInset, streakInset, canvas.width - streakInset, canvas.height - streakInset)
-                    StreakWidgetPainter.draw(canvas, streakArea, s, context, font,
-                        streak, wDp, hDp)
-                }
                 data == null -> drawPlaceholder(area, placeholder)
                 design.layout == WidgetLayout.GRAPH -> drawGraphOnly(area, data)
                 design.layout == WidgetLayout.NUMBERS -> drawNumbers(area, data)
-                design.layout.isWeeklyGoal || design.layout == WidgetLayout.PROFILE ->
+                design.layout.isWeeklyGoal || design.layout == WidgetLayout.PROFILE -> {
+                    val clip = canvas.save()
+                    if (design.layout == WidgetLayout.PROFILE) {
+                        val bounds = RectF(0f, 0f, canvas.width.toFloat(), canvas.height.toFloat())
+                        val radius = cardRadius(bounds)
+                        canvas.clipPath(Path().apply { addRoundRect(bounds, radius, radius, Path.Direction.CW) })
+                    }
                     FocusWidgetPainter.draw(canvas, area, s, design, colors, context, font, data, avatar,
                         wDp - 2 * padDp, hDp - 2 * padDp, weeklyGoalPreviewDate)
+                    canvas.restoreToCount(clip)
+                }
                 else -> drawClassic(area, data, avatar)
             }
         }
@@ -269,17 +266,11 @@ object WidgetRenderer {
 
         // ------------------------------------------------------------ card
 
-        fun drawCard(streak: StreakWidgetPainter.Snapshot?) {
-            val r = when (design.layout) {
-                WidgetLayout.PROFILE -> 0f
-                WidgetLayout.STREAK -> dp(15f)
-                else -> dp(design.corners.dp)
-            }
+        private fun cardRadius(rect: RectF) = minOf(dp(design.corners.dp), rect.width() / 2, rect.height() / 2)
+
+        fun drawCard() {
             val rect = RectF(0f, 0f, canvas.width.toFloat(), canvas.height.toFloat())
-            if (streak != null) {
-                if (design.opacity > 0) StreakWidgetPainter.drawSurface(canvas, rect, r, s, design.opacity)
-                return
-            }
+            val r = cardRadius(rect)
             val textured = design.layout == WidgetLayout.PROFILE || design.layout == WidgetLayout.PR_INBOX
             if (design.opacity > 0 && textured && design.background != Background.BLACK) {
                 val clip = canvas.save()
@@ -352,7 +343,7 @@ object WidgetRenderer {
             val gridArea = RectF(area.left, top, area.right, bottom)
             val grid = graph(gridArea, data, roomForMonths(gridArea.height()))
             if (footer) {
-                drawFooter(RectF(grid.left, area.bottom - footerH, grid.right, area.bottom), stats, data.fetchedAt)
+                drawFooter(RectF(grid.left, area.bottom - footerH, grid.right, area.bottom), stats)
             }
         }
 
@@ -368,10 +359,14 @@ object WidgetRenderer {
             }
             val wide = area.width() > area.height() * 1.55f
             if (wide) {
+                // On very short, narrow widgets the usual minimum column width
+                // can exceed the available area. Keep the graph inside the card.
+                val gap = dp(12f)
                 val colW = (area.width() * 0.36f).coerceIn(dp(96f), dp(170f))
+                    .coerceAtMost((area.width() - gap).coerceAtLeast(0f))
                 drawBigStats(RectF(area.left, area.top, area.left + colW, area.bottom), stats, compact = area.height() < dp(100f))
-                val g = RectF(area.left + colW + dp(12f), area.top, area.right, area.bottom)
-                graph(g, data, roomForMonths(g.height()) && g.height() > dp(100f))
+                val g = RectF(area.left + colW + gap, area.top, area.right, area.bottom)
+                if (!g.isEmpty) graph(g, data, roomForMonths(g.height()) && g.height() > dp(100f))
             } else {
                 val statsH = (area.height() * 0.48f).coerceAtMost(dp(92f))
                 drawBigStats(RectF(area.left, area.top, area.right, area.top + statsH), stats, compact = true)
@@ -392,7 +387,7 @@ object WidgetRenderer {
             }
             var right = r.right
             if (design.showTotal) {
-                val num = numberText(16f, colors.accent)
+                val num = numberText(16f, colors.textPrimary)
                 val numStr = numbers.format(stats.total)
                 val label = text(11f, colors.textSecondary)
                 val labelStr = if (r.width() > dp(220f)) " contributions" else ""
@@ -414,34 +409,26 @@ object WidgetRenderer {
             }
         }
 
-        fun drawFooter(r: RectF, stats: Stats, fetchedAt: Long) {
+        fun drawFooter(r: RectF, stats: Stats) {
             val end = r.right
             val parts = buildList {
                 if (design.showStreak) add(streakText(stats.currentStreak))
                 if (design.showToday) add(todayText(stats.today))
             }
             val p = text(11f, colors.textSecondary)
-            val base = r.centerY() + p.textSize * 0.36f
+            val base = r.centerY() - (p.ascent() + p.descent()) / 2
             var x = r.left
             val dot = Paint(Paint.ANTI_ALIAS_FLAG)
-            parts.forEachIndexed { i, s ->
-                val active = if (i == 0 && design.showStreak) stats.currentStreak > 0 else stats.today > 0
-                dot.color = if (active) colors.accent else colors.levels[0]
-                val d = dp(3.5f)
-                canvas.drawCircle(x + d, r.centerY(), d, dot)
-                x += d * 2 + dp(5f)
-                val shown = ellipsize(s, p, end - x)
-                canvas.drawText(shown, x, base, p)
-                x += p.measureText(shown) + dp(14f)
-            }
-            // Small "last updated" note after the stats, only when it fits.
-            if (fetchedAt > 0) {
-                val note = text(9.5f, colors.textSecondary)
-                val noteStr = updatedAgo(fetchedAt)
-                if (end - x > note.measureText(noteStr) + dp(4f)) {
-                    canvas.drawText(noteStr, x, r.centerY() + note.textSize * 0.36f, note)
-                    x += note.measureText(noteStr) + dp(14f)
+            parts.forEachIndexed { i, value ->
+                val labelX = x + if (i == 0) 0f else dp(14f)
+                val shown = ellipsize(value, p, end - labelX)
+                if (shown.isEmpty()) return@forEachIndexed
+                if (i > 0) {
+                    dot.color = colors.textSecondary
+                    canvas.drawCircle(x + dp(7f), r.centerY(), dp(1.25f), dot)
                 }
+                canvas.drawText(shown, labelX, base, p)
+                x = labelX + p.measureText(shown)
             }
             // "Less ▪▪▪▪▪ More" legend on the right when there's plenty of room.
             val legendW = dp(5 * 10f + 4 * 3f)
@@ -460,15 +447,15 @@ object WidgetRenderer {
                     cp.color = colors.levels[lvl]
                     val top = r.centerY() - cell / 2
                     canvas.drawRoundRect(RectF(lx, top, lx + cell, top + cell), cr, cr, cp)
-                    lx += cell + dp(3f)
+                    lx += cell + if (lvl < 4) dp(3f) else 0f
                 }
-                canvas.drawText("More", lx + dp(1f), base, labelP)
+                canvas.drawText(" More", lx, base, labelP)
             }
         }
 
         fun drawBigStats(r: RectF, stats: Stats, compact: Boolean) {
             val bigSize = if (compact) (r.height() / s * 0.34f).coerceIn(18f, 30f) else 30f
-            val big = numberText(bigSize, colors.accent)
+            val big = numberText(bigSize, colors.textPrimary)
             val label = text(11f, colors.textSecondary)
             val small = medium(13f, colors.textPrimary)
 
@@ -535,16 +522,28 @@ object WidgetRenderer {
         }
 
         fun drawPlaceholder(area: RectF, placeholder: Placeholder) {
-            val title = if (placeholder == Placeholder.LOADING) "Loading your graph…" else "Tap to set up"
-            val sub = if (placeholder == Placeholder.LOADING) "This only takes a moment" else "Connect your GitHub in one step"
+            val title = when (placeholder) {
+                Placeholder.LOADING -> "Loading your graph…"
+                Placeholder.FAILED -> "Couldn't load GitHub activity"
+                else -> "Tap to set up"
+            }
+            val sub = when (placeholder) {
+                Placeholder.LOADING -> "This only takes a moment"
+                Placeholder.FAILED -> "Tap to check your connection"
+                else -> "Connect your GitHub in one step"
+            }
             val t = medium(14f, colors.textPrimary)
             val st = text(11f, colors.textSecondary)
-            val showText = area.height() > dp(70f)
+            val showDetails = area.height() > dp(70f)
             var top = area.top
-            if (showText) {
+            if (showDetails) {
                 canvas.drawText(ellipsize(title, t, area.width()), area.left, top + t.textSize, t)
                 canvas.drawText(ellipsize(sub, st, area.width()), area.left, top + t.textSize + dp(6f) + st.textSize, st)
                 top += t.textSize + st.textSize + dp(16f)
+            } else if (placeholder == Placeholder.FAILED && area.height() >= dp(20f)) {
+                canvas.drawText(ellipsize("Couldn't load activity", st, area.width()),
+                    area.left, area.centerY() - (st.ascent() + st.descent()) / 2f, st)
+                return
             }
             // A faded sample graph hints at what's coming.
             val faded = colors.copy(levels = colors.levels.map { ColorUtils.setAlphaComponent(it, 90) }.toIntArray())

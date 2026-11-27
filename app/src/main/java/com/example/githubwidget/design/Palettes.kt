@@ -69,8 +69,8 @@ object Palettes {
     }
 
     /** Resolves every color for one render of [design] on a [dark] or light card. */
-    fun colors(context: Context, design: WidgetDesign, dark: Boolean): ColorSet {
-        val card = when {
+    fun colors(context: Context, design: WidgetDesign, dark: Boolean, cardOverride: Int? = null): ColorSet {
+        val card = cardOverride ?: when {
             design.background == Background.BLACK -> c(0xFF000000)
             dark -> c(0xFF1A2145)
             else -> c(0xFFFFFFFF)
@@ -82,6 +82,7 @@ object Palettes {
         val empty = when {
             see && dark -> 0x33FFFFFF
             see -> 0x26000000
+            cardOverride != null -> ColorUtils.blendARGB(card, if (dark) c(0xFFFFFFFF) else c(0xFF000000), if (dark) .09f else .065f)
             design.background == Background.BLACK -> c(0xFF232B55)
             dark -> c(0xFF232B55)
             else -> c(0xFFF1F4FF)

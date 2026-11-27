@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
 import com.example.githubwidget.data.Repository
+import com.example.githubwidget.widget.WidgetKind
 import com.example.githubwidget.widget.WidgetUpdater
 
 /**
@@ -25,16 +26,17 @@ class WidgetConfigActivity : Activity() {
             return
         }
         Repository.init(this)
+        val provider = AppWidgetManager.getInstance(this).getAppWidgetInfo(id)?.provider
+        val kind = WidgetKind.entries.firstOrNull { it.component(this) == provider }
         val reconfigure = WidgetUpdater.wasDrawn(this, id)
         setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id))
         WidgetUpdater.update(this, intArrayOf(id))
+        ContributionWidgetProvider.scheduleRefresh(this, kind == WidgetKind.STREAK || kind?.layout?.isReviewWidget == true)
         if (!Repository.hasUser || reconfigure) {
-            val provider = AppWidgetManager.getInstance(this).getAppWidgetInfo(id)?.provider
-            val kind = com.example.githubwidget.widget.WidgetKind.entries.firstOrNull { it.component(this) == provider }
             val layout = kind?.resolvedLayout(Repository.design.value.layout, Repository.design.value.contributionLayout)
             startActivity(Intent(this, MainActivity::class.java)
                 .putExtra(MainActivity.EXTRA_WIDGET_LAYOUT, layout?.name)
-                .putExtra(MainActivity.EXTRA_WIDGET_PORTRAIT, kind == com.example.githubwidget.widget.WidgetKind.PORTRAIT_PROFILE)
+                .putExtra(MainActivity.EXTRA_WIDGET_PORTRAIT, kind == WidgetKind.PORTRAIT_PROFILE)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
         finish()

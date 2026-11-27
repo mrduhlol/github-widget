@@ -45,8 +45,8 @@ internal object ProfileTexture {
     fun drawSurface(canvas: Canvas, bounds: RectF, base: Int, dark: Boolean, opacity: Int, scale: Float) {
         // Composite the material as one surface so the opacity setting also fades the grain.
         val layer = if (opacity < 100) canvas.saveLayerAlpha(bounds, opacity * 255 / 100) else canvas.save()
-        val highlight = ColorUtils.blendARGB(base, Color.WHITE, if (dark) .035f else .25f)
-        val shadow = ColorUtils.blendARGB(base, Color.BLACK, if (dark) .34f else .023f)
+        val highlight = ColorUtils.blendARGB(base, Color.WHITE, if (dark) .025f else .16f)
+        val shadow = ColorUtils.blendARGB(base, Color.BLACK, if (dark) .16f else .018f)
         val paint = Paint().apply {
             shader = LinearGradient(bounds.left, bounds.top, bounds.right, bounds.bottom,
                 intArrayOf(highlight, base, shadow), floatArrayOf(0f, .46f, 1f), Shader.TileMode.CLAMP)
@@ -57,7 +57,7 @@ internal object ProfileTexture {
         paint.shader = BitmapShader(grain, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT).apply {
             setLocalMatrix(Matrix().apply { setScale(grainScale, grainScale) })
         }
-        paint.alpha = if (dark) 175 else 109
+        paint.alpha = if (dark) 65 else 45
         canvas.drawRect(bounds, paint)
         canvas.restoreToCount(layer)
     }
@@ -68,7 +68,7 @@ internal object ProfileTexture {
             postTranslate(bounds.left, bounds.top)
         }
         val color = ink and 0x00FFFFFF
-        val edgeAlpha = if (dark) 0x3C000000 else 0x24000000
+        val edgeAlpha = if (dark) 0x26000000 else 0x18000000
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = .7f * scale

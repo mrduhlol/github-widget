@@ -19,7 +19,8 @@
   <script>
     // Pick the theme before first paint so there's no flash.
     (function () {
-      var saved = localStorage.getItem("ghw-theme");
+      var saved;
+      try { saved = localStorage.getItem("ghw-theme"); } catch {}
       var dark = saved ? saved === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
       document.documentElement.dataset.theme = dark ? "dark" : "light";
     })();

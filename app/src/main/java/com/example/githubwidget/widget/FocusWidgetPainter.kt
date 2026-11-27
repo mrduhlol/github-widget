@@ -11,9 +11,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
-import kotlin.math.cos
 import kotlin.math.min
-import kotlin.math.sin
 
 /** Shared by the launcher and the live editor; no network access while drawing. */
 internal object FocusWidgetPainter {
@@ -48,7 +46,7 @@ internal object FocusWidgetPainter {
 
     /** Coordinates use the renderer's content rectangle; each link gets at least 48dp. */
     fun profileDock(contentWidth: Float, contentHeight: Float, design: WidgetDesign, data: UserData): List<DockItem> {
-        if (contentHeight < 120f || contentWidth < 125f) return emptyList()
+        if (contentHeight < 120f || contentWidth < PROFILE_LINK_SIZE) return emptyList()
         val links = profileLinks(design, data)
         val capacity = (contentWidth / PROFILE_LINK_SIZE).toInt().coerceIn(1, 6)
         return if (links.size <= capacity) links.map { DockItem(it.label, it.url) }
@@ -152,10 +150,10 @@ internal object FocusWidgetPainter {
                 val sunday = monday.plusDays(6)
                 val end = if (monday.month == sunday.month) nf.format(sunday.dayOfMonth) else format.format(sunday)
                 val dateLabel = if (weeklyGoalPreviewDate != null) "Example week" else "${format.format(monday)}–$end"
-                goalEnd(dateLabel, r.right - dp(28f), header, colors.textSecondary)
+                goalEnd(dateLabel, r.right, header, colors.textSecondary)
             }
             if (r.height() < dp(62f)) {
-                line("$count / $targetLabel", r.left, r.bottom - dp(2f), r.width(), 22f, colors.accent, numeric = true, center = true)
+                goalReading(RectF(r.left, header + dp(2f), r.right, r.bottom), count, targetLabel)
                 return
             }
             val body = RectF(r.left, r.top + dp(20f), r.right, r.bottom - dp(17f))
@@ -180,7 +178,8 @@ internal object FocusWidgetPainter {
             }
             val remaining = 6 - dayIndex
             val status = if (total >= target) "Goal met" else "${nf.format(target - total)} to go"
-            line(status, r.left, r.bottom - dp(2f), r.width() * .56f, 10f, colors.accent)
+            line(status, r.left, r.bottom - dp(2f), r.width() * .56f, 10f,
+                if (total >= target) colors.textPrimary else colors.textSecondary)
             if (r.width() >= dp(106f)) {
                 goalEnd(when (remaining) { 0 -> "Ends today"; 1 -> "1 day left"; else -> "$remaining days left" },
                     r.right, r.bottom - dp(2f), colors.textSecondary)
@@ -196,7 +195,7 @@ internal object FocusWidgetPainter {
             val size = (area.height() / s * .47f).coerceIn(14f, 38f)
             val label = area.height() >= dp(43f)
             val baseline = area.centerY() + dp(if (label) 2f else size * .34f)
-            val valuePaint = paint(size, colors.accent, numeric = true)
+            val valuePaint = paint(size, colors.textPrimary, numeric = true)
             val targetPaint = paint(size * .53f, colors.textSecondary)
             val suffix = "/ $target"
             val gap = dp(5f)
@@ -222,26 +221,14 @@ internal object FocusWidgetPainter {
                 strokeCap = Paint.Cap.ROUND
                 color = colors.levels[0]
             }
-            if (diameter >= dp(44f)) {
-                p.strokeWidth = dp(1f)
-                for (tick in 0..12) {
-                    val angle = Math.toRadians(135.0 + 22.5 * tick)
-                    val x = cos(angle).toFloat()
-                    val y = sin(angle).toFloat()
-                    val inner = diameter / 2 + dp(4f)
-                    val outer = inner + dp(3f)
-                    c.drawLine(area.centerX() + x * inner, area.centerY() + y * inner,
-                        area.centerX() + x * outer, area.centerY() + y * outer, p)
-                }
-            }
-            p.strokeWidth = dp(4f)
+            p.strokeWidth = dp(5f)
             c.drawArc(ring, 135f, 270f, false, p)
             if (progress > 0f) {
                 p.color = colors.accent
                 c.drawArc(ring, 135f, 270f * progress, false, p)
             }
             val size = (diameter / s * .29f).coerceIn(10f, 28f)
-            line(amount, ring.left + dp(4f), ring.centerY() + dp(4f), ring.width() - dp(8f), size, colors.accent, true, true)
+            line(amount, ring.left + dp(4f), ring.centerY() + dp(4f), ring.width() - dp(8f), size, colors.textPrimary, true, true)
             if (diameter >= dp(44f)) line(label, ring.left, ring.centerY() + dp(17f), ring.width(), 10f, colors.textSecondary, center = true)
         }
 

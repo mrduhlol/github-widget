@@ -3,7 +3,6 @@ package com.example.githubwidget.ui.design
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -61,7 +60,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -70,7 +68,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import com.example.githubwidget.R
 import com.example.githubwidget.data.Repository
 import com.example.githubwidget.data.Day
 import com.example.githubwidget.data.SampleData
@@ -111,6 +108,7 @@ import com.example.githubwidget.ui.components.selectionBorder
 import com.example.githubwidget.ui.theme.AppTheme
 import com.example.githubwidget.ui.theme.numberFontFamily
 import com.example.githubwidget.widget.WidgetUpdater
+import com.example.githubwidget.widget.WidgetKind
 
 /**
  * The "Widget" tab: a live preview followed by simple visual
@@ -136,14 +134,17 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
     }
     var profilePanel by rememberSaveable { mutableStateOf("Content") }
     var previewSize by rememberSaveable(layout, initialSize) { mutableStateOf(initialSize) }
-    var hasWidget by remember { mutableStateOf(WidgetUpdater.hasWidgets(context)) }
+    val widgetKind = WidgetKind.forLayout(layout, previewSize == PreviewSize.PORTRAIT)
+    fun isPlaced() = android.appwidget.AppWidgetManager.getInstance(context)
+        .getAppWidgetIds(widgetKind.component(context)).isNotEmpty()
+    var hasWidget by remember(widgetKind) { mutableStateOf(isPlaced()) }
     var showHelp by remember { mutableStateOf(false) }
     var pickingColor by remember { mutableStateOf(false) }
     val isProfile = layout == WidgetLayout.PROFILE
 
     // Re-check when coming back from the home screen (the user may have just added one).
-    LifecycleResumeEffect(Unit) {
-        hasWidget = WidgetUpdater.hasWidgets(context)
+    LifecycleResumeEffect(widgetKind) {
+        hasWidget = isPlaced()
         onPauseOrDispose { }
     }
 
@@ -207,6 +208,12 @@ fun DesignScreen(layout: WidgetLayout, initialSize: PreviewSize, onBack: () -> U
                         color = AppTheme.colors.textSecondary)
                 }
                 Spacer(Modifier.height(10.dp))
+                Text(
+                    "Preview size",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = AppTheme.colors.textSecondary,
+                )
+                Spacer(Modifier.height(6.dp))
                 SegmentedChoice(
                     options = PreviewSize.entries,
                     selected = previewSize,
@@ -528,12 +535,19 @@ internal fun WidgetCatalog(onOpen: (WidgetLayout, PreviewSize) -> Unit) {
         }
         for ((title, widgets) in sections) {
             item(key = title, span = { GridItemSpan(maxLineSpan) }) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = AppTheme.colors.textPrimary,
-                    modifier = Modifier.semantics { heading() },
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = AppTheme.colors.textSecondary,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                    Spacer(Modifier.weight(1f).height(1.dp).background(AppTheme.colors.hairline))
+                }
             }
             gridItems(widgets, key = { (layout, size) -> "${layout.name}-${size.name}" }) { (layout, size) ->
                 val portrait = size == PreviewSize.PORTRAIT
@@ -543,34 +557,26 @@ internal fun WidgetCatalog(onOpen: (WidgetLayout, PreviewSize) -> Unit) {
                 Column(
                     Modifier.fillMaxWidth().clip(shape).clickable(role = Role.Button) { onOpen(layout, size) },
                 ) {
-                    if (layout == WidgetLayout.WEEKLY_GOAL_WEEK) {
-                        Image(
-                            painter = painterResource(R.drawable.weekly_goal_week_preview),
-                            contentDescription = "Example week with 14 of 20 contributions",
-                            modifier = thumbnailModifier,
-                        )
-                    } else {
-                        val example = if (layout.isWeeklyGoal) SampleData.weeklyGoalThumbnail else null
-                        val previewDesign = design.copy(
-                            layout = layout,
-                            weeklyGoal = if (example != null) SampleData.WEEKLY_GOAL_THUMBNAIL_TARGET else design.weeklyGoal,
-                        )
-                        WidgetPreview(
-                            previewDesign, example ?: realData ?: SampleData.userData, avatar, size.widthDp, size.heightDp,
-                            modifier = thumbnailModifier,
-                            inbox = when {
-                                layout.hasReviewColors -> ReviewCardPainter.example
-                                layout.isReviewWidget -> inbox?.takeIf { it.username == username } ?: cachedInbox
-                                else -> null
-                            },
-                            contentDescription = when {
-                                layout.hasReviewColors -> "Example pull requests"
-                                example != null -> "Example week"
-                                else -> null
-                            },
-                            weeklyGoalPreviewDate = example?.contributions?.days?.lastOrNull()?.date,
-                        )
-                    }
+                    val example = if (layout.isWeeklyGoal) SampleData.weeklyGoalThumbnail else null
+                    val previewDesign = design.copy(
+                        layout = layout,
+                        weeklyGoal = if (example != null) SampleData.WEEKLY_GOAL_THUMBNAIL_TARGET else design.weeklyGoal,
+                    )
+                    WidgetPreview(
+                        previewDesign, example ?: realData ?: SampleData.userData, avatar, size.widthDp, size.heightDp,
+                        modifier = thumbnailModifier,
+                        inbox = when {
+                            layout.hasReviewColors -> ReviewCardPainter.example
+                            layout.isReviewWidget -> inbox?.takeIf { it.username == username } ?: cachedInbox
+                            else -> null
+                        },
+                        contentDescription = when {
+                            layout.hasReviewColors -> "Example pull requests"
+                            example != null -> "Example week"
+                            else -> null
+                        },
+                        weeklyGoalPreviewDate = example?.contributions?.days?.lastOrNull()?.date,
+                    )
                     Text(
                         if (portrait) "Portrait profile" else layout.label,
                         style = MaterialTheme.typography.titleMedium,

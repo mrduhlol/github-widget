@@ -59,6 +59,13 @@ class WidgetSizingTest {
         assertEquals(SizeF(170f, 90f), WidgetUpdater.legacySize(options, false))
         assertEquals(SizeF(170f, 90f), WidgetUpdater.legacySize(options, true))
     }
+
+    @Test
+    fun `new portrait card retains its shape before the host supplies bounds`() {
+        val portraitCard = SizeF(110f, 250f)
+        assertEquals(portraitCard, WidgetUpdater.legacySize(Bundle(), false, portraitCard))
+        assertEquals(portraitCard, WidgetUpdater.legacySize(Bundle(), true, portraitCard))
+    }
     @Test
     fun `pixel width correction is preserved for portrait launcher reports`() {
         assertEquals(SizeF(320f, 176f), WidgetUpdater.normalizeHostSize(

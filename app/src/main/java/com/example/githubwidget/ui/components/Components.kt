@@ -256,7 +256,9 @@ fun <T> SegmentedChoice(
 ) {
     val fontScale = LocalDensity.current.fontScale
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        val columns = (maxWidth.value / (80f * fontScale)).toInt().coerceAtLeast(1)
+        val maxColumns = ((maxWidth.value - 4f) / (80f * fontScale + 4f)).toInt().coerceAtLeast(1)
+        val rowCount = ((options.size + maxColumns - 1) / maxColumns).coerceAtLeast(1)
+        val columns = ((options.size + rowCount - 1) / rowCount).coerceAtLeast(1)
         Column(
             Modifier.fillMaxWidth()
                 .clip(MaterialTheme.shapes.large)

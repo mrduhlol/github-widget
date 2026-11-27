@@ -1,8 +1,10 @@
+<img src="docs/assets/app-icon.svg" width="96" height="96" alt="GH-widgets app icon" />
+
 # GH-widgets
 
 Your GitHub contributions, on your Android home screen. Set up with your username—no sign-in or token needed.
 
-[Download GH-widgets v3.7.1 for Android](https://github.com/mrduhlol/github-widget/releases/download/v3.7.1/gh-widgets.apk)
+[![Download APK for Android](https://img.shields.io/badge/Download-Android_APK-22863A?style=for-the-badge&logo=android&logoColor=white)](https://github.com/mrduhlol/github-widget/releases/latest/download/gh-widgets.apk)
 
 Choose a widget style, colors, background, and the stats you want to see. Resize it to fit your home screen, explore your activity in the app, or share your year as an image. Your last synced graph stays available offline.
 

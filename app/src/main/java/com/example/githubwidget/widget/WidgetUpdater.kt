@@ -62,19 +62,34 @@ object WidgetUpdater {
         val drawn = HashMap<RenderKey, Bitmap>()
         var hasStreak = false
         for (id in ids) {
-            val component = mgr.getAppWidgetInfo(id)?.provider
-            val kind = WidgetKind.entries.firstOrNull { it.component(context) == component } ?: WidgetKind.CONTRIBUTIONS
+            val info = mgr.getAppWidgetInfo(id) ?: continue
+            val kind = WidgetKind.entries.firstOrNull { it.component(context) == info.provider } ?: continue
             if (kind == WidgetKind.STREAK) hasStreak = true
             runCatching {
                 synchronized(renderLock) {
-                    mgr.updateAppWidget(id, build(context, id, mgr.getAppWidgetOptions(id), drawn, kind))
+                    val density = context.resources.displayMetrics.density
+                    val fallback = SizeF(info.minWidth / density, info.minHeight / density)
+                    mgr.updateAppWidget(id, build(context, id, mgr.getAppWidgetOptions(id), drawn, kind, fallback = fallback))
                     activeReplays.remove(id)
+                    markDrawn(context, id)
                 }
             }
-                .onFailure { Log.e("GHWidget", "Could not render widget $id", it) }
+                .onFailure {
+                    Log.e("GHWidget", "Could not render widget $id", it)
+                    // Replace the launcher's initial loading view with a way back into the app.
+                    runCatching {
+                        val fallback = RemoteViews(context.packageName, R.layout.widget_loading)
+                        fallback.setTextViewText(R.id.widget_loading_text, "Couldn't display widget. Tap to open GH Widgets.")
+                        fallback.setOnClickPendingIntent(R.id.widget_loading_text, PendingIntent.getActivity(
+                            context, 0, Intent(context, MainActivity::class.java)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                        ))
+                        mgr.updateAppWidget(id, fallback)
+                    }.onFailure { fallbackError -> Log.e("GHWidget", "Could not show widget recovery view $id", fallbackError) }
+                }
         }
         if (hasStreak && Repository.hasUser) StreakRolloverWorker.schedule(context)
-        markDrawn(context, ids)
     }
 
     internal suspend fun replay(context: Context, id: Int) {
@@ -138,11 +153,13 @@ object WidgetUpdater {
     }
 
     /** Width and height bounds belong to opposite orientations, not one rectangle. */
-    internal fun legacySize(options: Bundle?, landscape: Boolean): SizeF {
+    internal fun legacySize(options: Bundle?, landscape: Boolean, fallback: SizeF = SizeF(320f, 160f)): SizeF {
         fun positive(key: String, fallback: Float) =
             options?.getInt(key)?.takeIf { it > 0 }?.toFloat() ?: fallback
-        val portraitW = positive(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 320f)
-        val landscapeH = positive(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 160f)
+        val portraitW = positive(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,
+            positive(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, fallback.width.takeIf { it > 0f } ?: 320f))
+        val landscapeH = positive(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,
+            positive(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, fallback.height.takeIf { it > 0f } ?: 160f))
         val landscapeW = positive(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, portraitW)
         val portraitH = positive(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, landscapeH)
         return if (landscape) SizeF(landscapeW, landscapeH) else SizeF(portraitW, portraitH)
@@ -192,6 +209,7 @@ object WidgetUpdater {
         drawn: MutableMap<RenderKey, Bitmap>,
         kind: WidgetKind,
         replayElapsedMs: Long? = null,
+        fallback: SizeF = SizeF(320f, 160f),
     ): RemoteViews {
         val sizes = exactSizes(options)
         val variantCount = if (sizes.isEmpty()) 2 else sizes.size
@@ -204,8 +222,8 @@ object WidgetUpdater {
         val availablePixels = if (replayElapsedMs != null) minOf(screenPixels, REPLAY_PIXEL_BUDGET) else screenPixels
         val pixelBudget = (availablePixels / (variantCount * colorVariants))
             .coerceIn(1L, 1_100_000L).toInt()
-        val portrait = legacySize(options, false)
-        val landscape = legacySize(options, true)
+        val portrait = legacySize(options, false, fallback)
+        val landscape = legacySize(options, true, fallback)
         fun views(size: SizeF, landscapeMode: Boolean?): RemoteViews {
             val normalized = normalizeHostSize(
                 size, dm.widthPixels / dm.density, dm.heightPixels / dm.density, dm.density, landscapeMode,
@@ -248,7 +266,7 @@ object WidgetUpdater {
         val data = Repository.data.value
         val inbox = if (design.layout.isReviewWidget) ReviewInbox.cached(context, Repository.username.value) else null
         val placeholder = when {
-            kind == WidgetKind.STREAK && Repository.hasUser && Repository.refreshState.value is RefreshState.Failed ->
+            (data == null || kind == WidgetKind.STREAK) && Repository.hasUser && Repository.refreshState.value is RefreshState.Failed ->
                 WidgetRenderer.Placeholder.FAILED
             data != null -> WidgetRenderer.Placeholder.NONE
             Repository.hasUser -> WidgetRenderer.Placeholder.LOADING
@@ -292,8 +310,11 @@ object WidgetUpdater {
                 it.username.isBlank() -> "$reviewLabel. Tap to connect a GitHub profile."
                 else -> "$reviewLabel. Checking for public review requests."
             }
-        } ?: data?.let { FocusWidgetPainter.accessibilityText(design, it) }
-            ?: "GitHub contributions widget. Tap to set up."
+        } ?: data?.let { FocusWidgetPainter.accessibilityText(design, it) } ?: when (placeholder) {
+            WidgetRenderer.Placeholder.FAILED -> "${design.layout.label}. Couldn't load GitHub activity."
+            WidgetRenderer.Placeholder.LOADING -> "${design.layout.label}. Loading GitHub activity."
+            else -> "${design.layout.label}. Tap to set up."
+        }
         val replayEnabled = kind == WidgetKind.CONTRIBUTIONS && data != null
         val touchExploration = replayEnabled && context.getSystemService(AccessibilityManager::class.java).isTouchExplorationEnabled
         val contentDescription = when {
@@ -340,11 +361,11 @@ object WidgetUpdater {
         }
         views.removeAllViews(R.id.widget_connections)
         if (design.layout == WidgetLayout.PROFILE && data != null) {
-            val pad = if (size.width < 180 || size.height < 100) 12f else 16f
+            val pad = WidgetRenderer.contentPaddingDp(size.width, size.height)
             val dock = FocusWidgetPainter.profileDock(size.width - 2 * pad, size.height - 2 * pad, design, data)
             views.setViewVisibility(R.id.widget_connections, if (dock.isEmpty()) View.GONE else View.VISIBLE)
             val px = (pad * context.resources.displayMetrics.density).toInt()
-            val bottomPad = pad - FocusWidgetPainter.PROFILE_FOOTER_OFFSET
+            val bottomPad = (pad - FocusWidgetPainter.PROFILE_FOOTER_OFFSET).coerceAtLeast(0f)
             views.setViewPadding(R.id.widget_connections, px, 0, px,
                 (bottomPad * context.resources.displayMetrics.density).toInt())
             dock.forEach { item ->
@@ -362,10 +383,11 @@ object WidgetUpdater {
         return views
     }
 
-    private fun markDrawn(context: Context, ids: IntArray) {
+    private fun markDrawn(context: Context, id: Int) {
         val p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val set = p.getStringSet(KEY_DRAWN, emptySet())!!.toMutableSet()
-        if (set.addAll(ids.map { it.toString() })) p.edit().putStringSet(KEY_DRAWN, set).apply()
+        val set = p.getStringSet(KEY_DRAWN, emptySet()).orEmpty()
+        val key = id.toString()
+        if (key !in set) p.edit().putStringSet(KEY_DRAWN, set + key).apply()
     }
 
     /** True if this widget has been drawn before, i.e. the user is re-configuring it. */
@@ -374,10 +396,11 @@ object WidgetUpdater {
             .getStringSet(KEY_DRAWN, emptySet())!!.contains(id.toString())
 
     fun forget(context: Context, ids: IntArray) {
-        synchronized(renderLock) { ids.forEach { activeReplays.remove(it) } }
-        val p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val set = p.getStringSet(KEY_DRAWN, emptySet())!!.toMutableSet()
-        set.removeAll(ids.map { it.toString() }.toSet())
-        p.edit().putStringSet(KEY_DRAWN, set).apply()
+        synchronized(renderLock) {
+            ids.forEach { activeReplays.remove(it) }
+            val p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val set = p.getStringSet(KEY_DRAWN, emptySet())!!.toMutableSet()
+            if (set.removeAll(ids.map { it.toString() }.toSet())) p.edit().putStringSet(KEY_DRAWN, set).apply()
+        }
     }
 }

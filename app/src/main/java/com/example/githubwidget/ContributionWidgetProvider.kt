@@ -32,9 +32,10 @@ open class ContributionWidgetProvider : AppWidgetProvider() {
             ACTION_PINNED -> {
                 val id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
                 val mgr = AppWidgetManager.getInstance(context)
-                if (mgr.getAppWidgetInfo(id)?.provider == intent.component) {
-                    onUpdate(context, mgr, intArrayOf(id))
-                }
+                val provider = intent.component ?: return
+                val ids = if (mgr.getAppWidgetInfo(id)?.provider == provider) intArrayOf(id)
+                    else mgr.getAppWidgetIds(provider)
+                if (ids.isNotEmpty()) onUpdate(context, mgr, ids)
             }
             ACTION_CONTRIBUTION_TAP -> onContributionTap(context, intent)
             ACTION_REPLAY -> {
@@ -79,13 +80,7 @@ open class ContributionWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) {
         paint(context, ids)
-        Repository.init(context)
-        if (Repository.hasUser) {
-            RefreshWorker.schedule(context, Repository.refreshHours.value)
-            if (this is ReviewInboxWidgetProvider || this is StreakWidgetProvider || Repository.isStale()) {
-                RefreshWorker.runOnce(context)
-            }
-        }
+        scheduleRefresh(context, this is ReviewInboxWidgetProvider || this is StreakWidgetProvider)
     }
 
     /** Redraw at the new size when the user resizes the widget. */
@@ -110,6 +105,13 @@ open class ContributionWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
+        internal fun scheduleRefresh(context: Context, force: Boolean) {
+            Repository.init(context)
+            if (!Repository.hasUser) return
+            RefreshWorker.schedule(context, Repository.refreshHours.value)
+            if (force || Repository.isStale()) RefreshWorker.runOnce(context)
+        }
+
         internal const val ACTION_PINNED = "com.example.githubwidget.action.PINNED"
         internal const val ACTION_CONTRIBUTION_TAP = "com.example.githubwidget.action.CONTRIBUTION_TAP"
         private const val ACTION_REPLAY = "com.example.githubwidget.action.REPLAY_CONTRIBUTIONS"

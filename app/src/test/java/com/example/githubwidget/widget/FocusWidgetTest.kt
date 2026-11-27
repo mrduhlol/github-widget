@@ -205,6 +205,10 @@ class FocusWidgetTest {
         assertEquals("All connections", portrait.last().label)
         assertTrue(146f / portrait.size >= 48f)
         assertTrue(FocusWidgetPainter.profileDock(86f, 36f, design, data()).isEmpty())
+        assertEquals(
+            listOf(FocusWidgetPainter.DockItem("All connections", null)),
+            FocusWidgetPainter.profileDock(86f, 226f, design, data()),
+        )
         val hidden = design.copy(profileHiddenLinks = wide.mapNotNull { it.url }.toSet())
         assertTrue(FocusWidgetPainter.profileDock(308f, 138f, hidden, data()).isEmpty())
         val text = FocusWidgetPainter.accessibilityText(design.copy(profileShowHandle = false,
