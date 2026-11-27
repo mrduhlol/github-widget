@@ -1,8 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
-  <rect width="108" height="108" rx="24" fill="#0E1330"/>
-  <path fill="#0E4429" d="M16,16h15v15h-15zM36,16h15v15h-15zM16,36h15v15h-15zM56,76h15v15h-15zM76,76h15v15h-15z"/>
-  <path fill="#006D32" d="M56,16h15v15h-15zM36,36h15v15h-15zM16,56h15v15h-15zM36,76h15v15h-15zM76,56h15v15h-15z"/>
-  <path fill="#26A641" d="M76,36h15v15h-15zM56,56h15v15h-15zM16,76h15v15h-15z"/>
-  <path fill="#39D353" d="M76,16h15v15h-15zM36,56h15v15h-15z"/>
-  <path fill="#9EFFB0" d="M56,36h15v15h-15z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 18 72 72">
+  <defs>
+    <clipPath id="launcher-mask">
+      <circle cx="54" cy="54" r="36"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#launcher-mask)">
+    <rect width="108" height="108" fill="#0E1330"/>
+    <path fill="#0E4429" d="M16,16h15v15h-15zM36,16h15v15h-15zM16,36h15v15h-15zM56,76h15v15h-15zM76,76h15v15h-15z"/>
+    <path fill="#006D32" d="M56,16h15v15h-15zM36,36h15v15h-15zM16,56h15v15h-15zM36,76h15v15h-15zM76,56h15v15h-15z"/>
+    <path fill="#26A641" d="M76,36h15v15h-15zM56,56h15v15h-15zM16,76h15v15h-15z"/>
+    <path fill="#39D353" d="M76,16h15v15h-15zM36,56h15v15h-15z"/>
+    <path fill="#9EFFB0" d="M56,36h15v15h-15z"/>
+  </g>
 </svg>
