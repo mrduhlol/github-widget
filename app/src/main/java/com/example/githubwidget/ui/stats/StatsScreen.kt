@@ -176,7 +176,7 @@ private fun StatsContent(
     ) {
         item("header") {
             ScreenHeader(
-                "Telemetry",
+                "Your activity",
                 subtitle = if (refresh is RefreshState.Loading) "Updating…" else updatedText(data.fetchedAt, now),
                 action = { RefreshAction(refresh is RefreshState.Loading) },
             )
@@ -273,47 +273,63 @@ private fun ErrorBanner(message: String) {
 private fun HeroCard(data: UserData, avatar: android.graphics.Bitmap?, stats: Stats, numbersFamily: FontFamily) {
     val login = data.profile?.login ?: data.contributions.username
     val name = data.profile?.displayName ?: login
-    SectionCard(ticks = true, contentPadding = 18.dp) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Avatar(avatar, name, 44.dp)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = AppTheme.colors.textPrimary,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+    val primary = MaterialTheme.colorScheme.primary
+    Surface(
+        shape = MaterialTheme.shapes.extraLarge,
+        color = AppTheme.colors.card,
+        border = BorderStroke(1.dp, AppTheme.colors.hairline),
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(primary.copy(alpha = if (AppTheme.colors.isDark) 0.14f else 0.08f), Color.Transparent),
+                    ),
                 )
-                Text(
-                    if (name.equals(login, ignoreCase = true)) "github.com/$login" else "@$login",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = AppTheme.colors.textSecondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                .padding(20.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Avatar(avatar, name, 52.dp)
+                Spacer(Modifier.width(14.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        name,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = AppTheme.colors.textPrimary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        if (name.equals(login, ignoreCase = true)) "github.com/$login" else "@$login",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = AppTheme.colors.textSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
-        }
-        Spacer(Modifier.height(22.dp))
-        Text(
-            numbers.format(stats.total),
-            style = MaterialTheme.typography.displaySmall.copy(
-                fontSize = 48.sp,
-                lineHeight = 52.sp,
-                letterSpacing = (-1.2).sp,
-                fontFamily = numbersFamily,
-            ),
-            fontWeight = FontWeight.Bold,
-            color = AppTheme.colors.textPrimary,
-        )
-        Text(
-            if (stats.total == 1) "CONTRIBUTION IN THE LAST YEAR" else "CONTRIBUTIONS IN THE LAST YEAR",
-            style = MaterialTheme.typography.labelSmall,
-            color = AppTheme.colors.textSecondary,
-        )
-        if (stats.thisMonth > 0) {
-            Spacer(Modifier.height(14.dp))
-            Pill("${count(stats.thisMonth, "contribution", "contributions")} this month")
+            Spacer(Modifier.height(28.dp))
+            Text(
+                numbers.format(stats.total),
+                style = MaterialTheme.typography.displaySmall.copy(
+                    fontSize = 52.sp,
+                    lineHeight = 56.sp,
+                    letterSpacing = (-1.2).sp,
+                    fontFamily = numbersFamily,
+                ),
+                fontWeight = FontWeight.Bold,
+                color = AppTheme.colors.textPrimary,
+            )
+            Text(
+                if (stats.total == 1) "contribution in the last year" else "contributions in the last year",
+                style = MaterialTheme.typography.bodyLarge,
+                color = AppTheme.colors.textSecondary,
+            )
+            if (stats.thisMonth > 0) {
+                Spacer(Modifier.height(16.dp))
+                Pill("${count(stats.thisMonth, "contribution", "contributions")} this month")
+            }
         }
     }
 }
@@ -322,18 +338,18 @@ private fun HeroCard(data: UserData, avatar: android.graphics.Bitmap?, stats: St
 private fun Pill(text: String, color: Color = MaterialTheme.colorScheme.primary, icon: ImageVector? = null) {
     Row(
         Modifier
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
+            .clip(CircleShape)
             .background(color.copy(alpha = 0.14f))
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
-            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(4.dp))
         }
         Text(
-            text.uppercase(),
-            style = MaterialTheme.typography.labelSmall,
+            text,
+            style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
             color = if (color == MaterialTheme.colorScheme.primary) MaterialTheme.colorScheme.onPrimaryContainer else color,
         )
