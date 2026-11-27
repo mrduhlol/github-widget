@@ -94,6 +94,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.13")
     testImplementation("androidx.test:core:1.6.1")
+    testImplementation("androidx.work:work-testing:2.9.1")
 
     // No Retrofit/image libraries on purpose: HttpURLConnection + Canvas keep
     // the APK small and everything works offline from the local cache.

@@ -4,11 +4,14 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
 import androidx.test.core.app.ApplicationProvider
+import androidx.work.Configuration
 import androidx.work.ExistingWorkPolicy
+import androidx.work.testing.WorkManagerTestInitHelper
 import com.example.githubwidget.widget.RefreshWorker
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -18,9 +21,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 import java.io.File
+import java.util.concurrent.Executor
 
 @RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [34])
 class RepositoryAccountTest {
 
@@ -29,9 +35,20 @@ class RepositoryAccountTest {
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
+        WorkManagerTestInitHelper.initializeTestWorkManager(
+            context,
+            Configuration.Builder()
+                .setExecutor(Executor { /* prevent background worker execution during unit tests */ })
+                .build(),
+        )
         context.getSharedPreferences("github_widget_prefs", Context.MODE_PRIVATE).edit().clear().commit()
         context.getSharedPreferences("review_inbox", Context.MODE_PRIVATE).edit().clear().commit()
         context.filesDir.listFiles()?.forEach { it.deleteRecursively() }
+        Repository.resetForTest()
+    }
+
+    @After
+    fun tearDown() {
         Repository.resetForTest()
     }
 
