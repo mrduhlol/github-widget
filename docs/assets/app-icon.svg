@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="18 18 72 72">
   <defs>
     <clipPath id="launcher-mask">
-      <circle cx="54" cy="54" r="36"/>
+      <path d="M54 18C77 17 90 29 90 51C91 73 79 89 56 90C32 91 18 78 18 57C17 34 30 19 54 18Z"/>
     </clipPath>
   </defs>
   <g clip-path="url(#launcher-mask)">

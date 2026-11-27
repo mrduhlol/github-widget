@@ -14,6 +14,15 @@ Your GitHub contributions, on your Android home screen. Set up with your usernam
 
 Choose a widget style, colors, background, and the stats you want to see. Resize it to fit your home screen, explore your activity in the app, or share your year as an image. Your last synced graph stays available offline.
 
+## New in v3.8
+
+- Add customizable Up Next and Review Queue widgets for public pull requests.
+- Profile cards fit longer names and align link tap targets with their icons.
+- Browse the widget catalog with clearer category dividers and updated previews.
+- Newly pinned widgets can recover when the launcher omits the widget ID. If rendering fails, tap the widget to reopen the app.
+- Fresh installs start without restored account data, settings, or cached activity.
+- Jump to a date in the contribution heatmap.
+
 ## New in v3.7.1
 
 - Removed manual reload controls from home-screen widgets. Widgets refresh automatically.
