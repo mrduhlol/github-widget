@@ -30,7 +30,7 @@ class WidgetConfigActivity : Activity() {
         val kind = WidgetKind.entries.firstOrNull { it.component(this) == provider }
         val reconfigure = WidgetUpdater.wasDrawn(this, id)
         setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id))
-        WidgetUpdater.update(this, intArrayOf(id))
+        Repository.updateWidgetAsync(this, id)
         ContributionWidgetProvider.scheduleRefresh(this, kind == WidgetKind.STREAK || kind?.layout?.isReviewWidget == true)
         if (!Repository.hasUser || reconfigure) {
             val layout = kind?.resolvedLayout(Repository.design.value.layout, Repository.design.value.contributionLayout)

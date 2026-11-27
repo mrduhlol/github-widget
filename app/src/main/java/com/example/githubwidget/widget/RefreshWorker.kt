@@ -21,18 +21,33 @@ class RefreshWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         Repository.init(applicationContext)
         if (!Repository.hasUser) return Result.success()
         val inboxIds = WidgetUpdater.reviewInboxIds(applicationContext)
-        if (inboxIds.isNotEmpty()) {
+        val inboxOk = if (inboxIds.isNotEmpty()) {
             ReviewInbox.refresh(applicationContext, Repository.username.value)
-            WidgetUpdater.update(applicationContext, inboxIds)
+        } else {
+            true
         }
-        Repository.refresh()
-        // Failures keep the cached graph on screen; the next run tries again.
-        return Result.success()
+        val outcome = Repository.refreshWithOutcome(updateWidgets = false)
+        when {
+            outcome == Repository.RefreshOutcome.UPDATED || Repository.data.value == null -> {
+                WidgetUpdater.updateAll(applicationContext)
+            }
+            else -> {
+                val toUpdate = (WidgetUpdater.streakIds(applicationContext).toSet() + inboxIds.toSet()).toIntArray()
+                WidgetUpdater.update(applicationContext, toUpdate)
+            }
+        }
+        val transientFailure = outcome == Repository.RefreshOutcome.TRANSIENT_FAILURE || !inboxOk
+        return if (transientFailure && runAttemptCount < MAX_RETRY_ATTEMPTS) {
+            Result.retry()
+        } else {
+            Result.success()
+        }
     }
 
     companion object {
         private const val PERIODIC = "refresh_periodic"
         private const val ONCE = "refresh_once"
+        internal const val MAX_RETRY_ATTEMPTS = 3
 
         private val online = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 
@@ -47,13 +62,22 @@ class RefreshWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             )
         }
 
+        internal fun runOncePolicy(replace: Boolean): ExistingWorkPolicy =
+            if (replace) ExistingWorkPolicy.APPEND_OR_REPLACE else ExistingWorkPolicy.KEEP
+
         /** Refresh as soon as the network allows (e.g. a widget was just added). */
-        fun runOnce(context: Context) {
+        fun runOnce(context: Context, replace: Boolean = false) {
             WorkManager.getInstance(context).enqueueUniqueWork(
                 ONCE,
-                ExistingWorkPolicy.KEEP,
+                runOncePolicy(replace),
                 OneTimeWorkRequestBuilder<RefreshWorker>().setConstraints(online).build(),
             )
+        }
+
+        fun cancel(context: Context) {
+            val wm = WorkManager.getInstance(context)
+            wm.cancelUniqueWork(PERIODIC)
+            wm.cancelUniqueWork(ONCE)
         }
     }
 }

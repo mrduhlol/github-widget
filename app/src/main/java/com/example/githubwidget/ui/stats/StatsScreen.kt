@@ -37,14 +37,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -134,8 +138,28 @@ private fun StatsContent(
     refresh: RefreshState,
     numberFont: NumberFont,
 ) {
-    val stats = remember(data.contributions) { Stats.from(data.contributions) }
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                now = System.currentTimeMillis()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(30_000)
+            now = System.currentTimeMillis()
+        }
+    }
+    val utcToday = remember(now) {
+        java.time.Instant.ofEpochMilli(now).atOffset(java.time.ZoneOffset.UTC).toLocalDate()
+    }
+    val stats = remember(data.contributions, utcToday) { Stats.from(data.contributions, today = utcToday) }
     val numbersFamily = remember(numberFont) { numberFontFamily(context, numberFont) }
     val dark = AppTheme.colors.isDark
     val empty = AppTheme.colors.raised
@@ -143,12 +167,6 @@ private fun StatsContent(
         val set = Palettes.colors(context, design.copy(opacity = 100), dark)
         // The app's card color differs from the widget's, so use our own "empty" square.
         listOf(empty) + set.levels.drop(1).map { Color(it) }
-    }
-    val now by produceState(System.currentTimeMillis()) {
-        while (true) {
-            delay(30_000)
-            value = System.currentTimeMillis()
-        }
     }
 
     LazyColumn(
@@ -158,7 +176,7 @@ private fun StatsContent(
     ) {
         item("header") {
             ScreenHeader(
-                "Your activity",
+                "Telemetry",
                 subtitle = if (refresh is RefreshState.Loading) "Updating…" else updatedText(data.fetchedAt, now),
                 action = { RefreshAction(refresh is RefreshState.Loading) },
             )
@@ -255,63 +273,47 @@ private fun ErrorBanner(message: String) {
 private fun HeroCard(data: UserData, avatar: android.graphics.Bitmap?, stats: Stats, numbersFamily: FontFamily) {
     val login = data.profile?.login ?: data.contributions.username
     val name = data.profile?.displayName ?: login
-    val primary = MaterialTheme.colorScheme.primary
-    Surface(
-        shape = MaterialTheme.shapes.extraLarge,
-        color = AppTheme.colors.card,
-        border = BorderStroke(1.dp, AppTheme.colors.hairline),
-    ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        listOf(primary.copy(alpha = if (AppTheme.colors.isDark) 0.14f else 0.08f), Color.Transparent),
-                    ),
+    SectionCard(ticks = true, contentPadding = 18.dp) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Avatar(avatar, name, 44.dp)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = AppTheme.colors.textPrimary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                .padding(20.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Avatar(avatar, name, 52.dp)
-                Spacer(Modifier.width(14.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        name,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = AppTheme.colors.textPrimary,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        if (name.equals(login, ignoreCase = true)) "github.com/$login" else "@$login",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = AppTheme.colors.textSecondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+                Text(
+                    if (name.equals(login, ignoreCase = true)) "github.com/$login" else "@$login",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = AppTheme.colors.textSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
-            Spacer(Modifier.height(28.dp))
-            Text(
-                numbers.format(stats.total),
-                style = MaterialTheme.typography.displaySmall.copy(
-                    fontSize = 52.sp,
-                    lineHeight = 56.sp,
-                    letterSpacing = (-1.2).sp,
-                    fontFamily = numbersFamily,
-                ),
-                fontWeight = FontWeight.Bold,
-                color = AppTheme.colors.textPrimary,
-            )
-            Text(
-                if (stats.total == 1) "contribution in the last year" else "contributions in the last year",
-                style = MaterialTheme.typography.bodyLarge,
-                color = AppTheme.colors.textSecondary,
-            )
-            if (stats.thisMonth > 0) {
-                Spacer(Modifier.height(16.dp))
-                Pill("${count(stats.thisMonth, "contribution", "contributions")} this month")
-            }
+        }
+        Spacer(Modifier.height(22.dp))
+        Text(
+            numbers.format(stats.total),
+            style = MaterialTheme.typography.displaySmall.copy(
+                fontSize = 48.sp,
+                lineHeight = 52.sp,
+                letterSpacing = (-1.2).sp,
+                fontFamily = numbersFamily,
+            ),
+            fontWeight = FontWeight.Bold,
+            color = AppTheme.colors.textPrimary,
+        )
+        Text(
+            if (stats.total == 1) "CONTRIBUTION IN THE LAST YEAR" else "CONTRIBUTIONS IN THE LAST YEAR",
+            style = MaterialTheme.typography.labelSmall,
+            color = AppTheme.colors.textSecondary,
+        )
+        if (stats.thisMonth > 0) {
+            Spacer(Modifier.height(14.dp))
+            Pill("${count(stats.thisMonth, "contribution", "contributions")} this month")
         }
     }
 }
@@ -320,18 +322,18 @@ private fun HeroCard(data: UserData, avatar: android.graphics.Bitmap?, stats: St
 private fun Pill(text: String, color: Color = MaterialTheme.colorScheme.primary, icon: ImageVector? = null) {
     Row(
         Modifier
-            .clip(CircleShape)
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
             .background(color.copy(alpha = 0.14f))
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
-            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
             Spacer(Modifier.width(4.dp))
         }
         Text(
-            text,
-            style = MaterialTheme.typography.labelMedium,
+            text.uppercase(),
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
             color = if (color == MaterialTheme.colorScheme.primary) MaterialTheme.colorScheme.onPrimaryContainer else color,
         )

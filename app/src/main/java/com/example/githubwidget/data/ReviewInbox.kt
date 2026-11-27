@@ -56,35 +56,53 @@ data class ReviewInboxState(val username: String, val results: ReviewResults? = 
 internal object ReviewInbox {
     private const val MIN_REFRESH_MS = 60_000L
     private val lock = Mutex()
+    private val stateLock = Any()
     private val current = MutableStateFlow<ReviewInboxState?>(null)
     val state = current.asStateFlow()
 
     private fun prefs(context: Context) = context.getSharedPreferences("review_inbox", Context.MODE_PRIVATE)
 
     fun cached(context: Context, username: String): ReviewInboxState {
-        current.value?.takeIf { it.username == username }?.let { return it }
+        synchronized(stateLock) {
+            current.value?.takeIf { it.username.equals(username, ignoreCase = true) }?.let { return it }
+        }
         val results = runCatching {
             val preferences = prefs(context)
-            if (preferences.getString("username", null) != username) return@runCatching null
+            if (!preferences.getString("username", null).equals(username, ignoreCase = true)) return@runCatching null
             val json = JSONObject(preferences.getString("results", null) ?: return@runCatching null)
             ReviewResults.fromJson(json, json.getLong("fetchedAt"))
         }.getOrNull()
         return ReviewInboxState(username, results)
     }
 
-    suspend fun refresh(context: Context, username: String) {
-        if (!GitHubApi.isValidUsername(username)) return
-        lock.withLock {
-            if (Repository.username.value != username) return@withLock
+    fun clear(context: Context) {
+        synchronized(stateLock) {
+            current.value = null
+            prefs(context).edit().clear().apply()
+        }
+    }
+
+    suspend fun refresh(
+        context: Context,
+        username: String,
+        fetchRequests: (String) -> ReviewResults = GitHubApi::fetchReviewRequests,
+    ): Boolean {
+        if (!GitHubApi.isValidUsername(username)) return true
+        val generation = Repository.sessionGeneration
+        return lock.withLock {
+            if (!Repository.isSessionActive(generation, username)) return@withLock true
             val previous = cached(context, username)
             if (!previous.failed && previous.results?.let { System.currentTimeMillis() - it.fetchedAt < MIN_REFRESH_MS } == true) {
-                current.value = previous
-                return@withLock
+                synchronized(stateLock) {
+                    if (Repository.isSessionActive(generation, username)) current.value = previous
+                }
+                return@withLock true
             }
-            current.value = previous.copy(failed = false)
+            synchronized(stateLock) {
+                if (Repository.isSessionActive(generation, username)) current.value = previous.copy(failed = false)
+            }
             try {
-                val data = withContext(Dispatchers.IO) { GitHubApi.fetchReviewRequests(username) }
-                if (Repository.username.value != username) return@withLock
+                val data = withContext(Dispatchers.IO) { fetchRequests(username) }
                 val items = JSONArray()
                 data.requests.forEach {
                     items.put(JSONObject()
@@ -93,12 +111,21 @@ internal object ReviewInbox {
                         .put("created_at", it.openedAt?.toString()))
                 }
                 val json = JSONObject().put("items", items).put("total_count", data.total).put("fetchedAt", data.fetchedAt)
-                prefs(context).edit().putString("username", username).putString("results", json.toString()).apply()
-                current.value = ReviewInboxState(username, data)
+                synchronized(stateLock) {
+                    if (!Repository.isSessionActive(generation, username)) return@withLock true
+                    prefs(context).edit().putString("username", username).putString("results", json.toString()).apply()
+                    current.value = ReviewInboxState(username, data)
+                }
+                true
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
-                if (Repository.username.value == username) current.value = previous.copy(failed = true)
+                synchronized(stateLock) {
+                    if (Repository.isSessionActive(generation, username)) {
+                        current.value = previous.copy(failed = true)
+                    }
+                }
+                false
             }
         }
     }

@@ -3,7 +3,6 @@ package com.example.githubwidget.widget
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
-import android.view.animation.PathInterpolator
 import com.example.githubwidget.data.Day
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -18,14 +17,6 @@ object GraphPainter {
 
     /** Gap between cells as a fraction of the cell size. */
     const val GAP = 0.22f
-    private const val COLUMN_SWEEP_MS = 320L
-    private const val ROW_STAGGER_MS = 6L
-    private const val POP_PEAK_MS = 126L
-    private const val POP_DURATION_MS = 230L
-    private const val POP_START_SCALE = 0.68f
-    private const val POP_PEAK_SCALE = 1.15f
-    internal const val REPLAY_DURATION_MS = COLUMN_SWEEP_MS + 6 * ROW_STAGGER_MS + POP_DURATION_MS
-    private val popEaseOut by lazy { PathInterpolator(0.23f, 1f, 0.32f, 1f) }
 
     data class Spec(
         val levels: IntArray,
@@ -37,7 +28,6 @@ object GraphPainter {
         val maxCellPx: Float,
         val monthLabelPaint: Paint? = null,
         val monthLabelHeightPx: Float = 0f,
-        val replayElapsedMs: Long? = null,
     )
 
     /** First day of the week containing [date]. */
@@ -90,7 +80,6 @@ object GraphPainter {
         for (col in 0 until weeks) {
             val colStart = firstWeek.plusWeeks(col.toLong())
             val x = left + col * (cell + gap)
-            val columnDelay = col * COLUMN_SWEEP_MS / (weeks - 1).coerceAtLeast(1)
 
             spec.monthLabelPaint?.let { p ->
                 // Like GitHub: label the first week that starts in a new month.
@@ -114,28 +103,8 @@ object GraphPainter {
                 val level = (byDate[date]?.level ?: 0).coerceIn(0, 4)
                 val y = gridTop + row * (cell + gap)
                 rect.set(x, y, x + cell, y + cell)
-                val age = spec.replayElapsedMs?.minus(columnDelay + row * ROW_STAGGER_MS)
-                if (level == 0 || age == null || age >= POP_DURATION_MS) {
-                    fill.color = spec.levels[level]
-                    canvas.drawRoundRect(rect, radius, radius, fill)
-                } else {
-                    fill.color = spec.levels[0]
-                    canvas.drawRoundRect(rect, radius, radius, fill)
-                    if (age > 0) {
-                        val entrance = popEaseOut.getInterpolation((age.toFloat() / POP_PEAK_MS).coerceAtMost(1f))
-                        val scale = if (age <= POP_PEAK_MS) {
-                            POP_START_SCALE + (POP_PEAK_SCALE - POP_START_SCALE) * entrance
-                        } else {
-                            val settle = popEaseOut.getInterpolation((age - POP_PEAK_MS).toFloat() / (POP_DURATION_MS - POP_PEAK_MS))
-                            1f + (POP_PEAK_SCALE - 1f) * (1f - settle)
-                        }
-                        val inset = cell * (1f - scale) / 2
-                        rect.inset(inset, inset)
-                        fill.color = spec.levels[level]
-                        fill.alpha = (fill.alpha * entrance).toInt()
-                        canvas.drawRoundRect(rect, radius * scale, radius * scale, fill)
-                    }
-                }
+                fill.color = spec.levels[level]
+                canvas.drawRoundRect(rect, radius, radius, fill)
             }
         }
         return RectF(left, top, left + gridW, top + totalH)

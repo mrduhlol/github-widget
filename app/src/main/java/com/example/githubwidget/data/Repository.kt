@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import com.example.githubwidget.design.NumberFont
 import com.example.githubwidget.design.WidgetDesign
 import com.example.githubwidget.widget.RefreshWorker
+import com.example.githubwidget.widget.StreakRolloverWorker
 import com.example.githubwidget.widget.WidgetUpdater
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -47,22 +48,67 @@ data class Lookup(val data: UserData, val avatar: Bitmap?)
 @SuppressLint("StaticFieldLeak") // Holds only the Application context, never an Activity.
 object Repository {
 
+    internal enum class RefreshOutcome {
+        UPDATED,
+        SKIPPED,
+        TRANSIENT_FAILURE,
+        PERMANENT_FAILURE,
+    }
+
     /** Old installs stored the username here — keep reading it so updates stay signed in. */
     private const val PREFS = "github_widget_prefs"
     private const val KEY_USERNAME = "username"
+    private const val KEY_AVATAR_USERNAME = "avatar_username"
+    private const val KEY_SNAPSHOT_ID = "snapshot_id"
     private const val KEY_DESIGN = "design_v3"
     private const val KEY_REFRESH_HOURS = "refresh_hours"
     private const val KEY_NUMBER_FONT = "number_font"
     private const val CACHE_FILE = "contributions_v3.json"
     private const val AVATAR_FILE = "avatar.png"
+    private const val SNAPSHOT_PREFIX = "snapshot_"
 
     val REFRESH_CHOICES = listOf(1, 3, 6, 12)
     private const val DEFAULT_REFRESH_HOURS = 3
 
+    internal data class AccountSnapshot(
+        val username: String,
+        val data: UserData?,
+        val avatar: Bitmap?,
+        val refreshState: RefreshState,
+    ) {
+        val hasUser: Boolean get() = username.isNotBlank()
+    }
+
     private lateinit var app: Context
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val fetchLock = Mutex()
+    private val storageLock = Mutex()
+    private val accountLock = Any()
+    private val widgetJobLock = Any()
     private var widgetJob: Job? = null
+    private var _sessionGeneration: Long = 0L
+    private var _snapshotRevision: Long = 0L
+    private var _nextSnapshotId: Long = 0L
+    internal var onSignInPersistHook: (suspend () -> Unit)? = null
+    internal var onBeforeSnapshotWriteHook: ((cacheFile: File, avatarFile: File) -> Unit)? = null
+    internal var onAfterCacheWriteHook: ((avatarFile: File) -> Unit)? = null
+    internal var onRetryRequestedHook: ((replace: Boolean) -> Unit)? = null
+    internal var lastSignInPersistJob: Job? = null
+
+    internal val sessionGeneration: Long
+        get() = synchronized(accountLock) { _sessionGeneration }
+
+    internal fun isSessionActive(generation: Long, username: String): Boolean = synchronized(accountLock) {
+        _sessionGeneration == generation && _username.value.equals(username, ignoreCase = true)
+    }
+
+    internal fun isRevisionCurrent(revision: Long): Boolean = synchronized(accountLock) {
+        _snapshotRevision == revision
+    }
+
+    internal fun snapshot(): AccountSnapshot = synchronized(accountLock) {
+        AccountSnapshot(_username.value, _data.value, _avatar.value, _refreshState.value)
+    }
 
     private val _username = MutableStateFlow("")
     val username: StateFlow<String> = _username.asStateFlow()
@@ -88,26 +134,77 @@ object Repository {
     @Volatile
     private var initialized = false
 
-    /** Safe to call many times (Application, widget provider, worker). Loads synchronously from disk. */
+    /** Safe to call many times (Application, widget provider, worker). */
     @Synchronized
     fun init(context: Context) {
         if (initialized) return
         app = context.applicationContext
         val prefs = prefs()
-        _username.value = prefs.getString(KEY_USERNAME, "").orEmpty()
+        val storedUser = prefs.getString(KEY_USERNAME, "").orEmpty()
+        val snapshotId = prefs.getString(KEY_SNAPSHOT_ID, null)
+        val cachedData = readCache(snapshotId)?.takeIf { it.contributions.username.equals(storedUser, ignoreCase = true) }
+        val avatarOwner = prefs.getString(KEY_AVATAR_USERNAME, null)
+        val avatarFile = if (snapshotId != null) {
+            File(app.filesDir, "${SNAPSHOT_PREFIX}${snapshotId}.png")
+        } else {
+            File(app.filesDir, AVATAR_FILE)
+        }
+        val cachedAvatar = if (storedUser.isNotBlank() && avatarOwner.equals(storedUser, ignoreCase = true)) {
+            runCatching { BitmapFactory.decodeFile(avatarFile.path) }.getOrNull()
+        } else {
+            null
+        }
+        synchronized(accountLock) {
+            _sessionGeneration++
+            _snapshotRevision++
+            _username.value = storedUser
+            _data.value = cachedData
+            _avatar.value = cachedAvatar
+            _refreshState.value = RefreshState.Idle
+        }
         _design.value = WidgetDesign.fromJson(prefs.getString(KEY_DESIGN, null))
         _refreshHours.value = prefs.getInt(KEY_REFRESH_HOURS, DEFAULT_REFRESH_HOURS)
         _numberFont.value = NumberFont.fromName(prefs.getString(KEY_NUMBER_FONT, null))
-        _data.value = readCache()?.takeIf { it.contributions.username.equals(_username.value, true) }
-        _avatar.value = runCatching { BitmapFactory.decodeFile(File(app.filesDir, AVATAR_FILE).path) }.getOrNull()
         initialized = true
+    }
+
+    @Synchronized
+    internal fun resetForTest() {
+        initialized = false
+        onSignInPersistHook = null
+        onBeforeSnapshotWriteHook = null
+        onAfterCacheWriteHook = null
+        onRetryRequestedHook = null
+        lastSignInPersistJob?.cancel()
+        lastSignInPersistJob = null
+        synchronized(widgetJobLock) {
+            widgetJob?.cancel()
+            widgetJob = null
+        }
+        synchronized(accountLock) {
+            _sessionGeneration++
+            _snapshotRevision++
+            _username.value = ""
+            _data.value = null
+            _avatar.value = null
+            _refreshState.value = RefreshState.Idle
+        }
+        _design.value = WidgetDesign()
+        _refreshHours.value = DEFAULT_REFRESH_HOURS
+        _numberFont.value = NumberFont.SYSTEM
     }
 
     val hasUser: Boolean get() = _username.value.isNotBlank()
 
     // ---------------------------------------------------------------- account
 
-    /** Fetches an account without saving it, so the user can confirm it's them. */
+    /**
+     * Fetches an account without saving it, so the user can confirm it's them.
+     *
+     * Runs the GitHub profile lookup and the third-party contribution lookup in
+     * parallel so a temporary outage in either service doesn't block setup when
+     * the other confirms the account exists.
+     */
     internal suspend fun lookup(
         rawName: String,
         fetchContributions: (String) -> Contributions = GitHubApi::fetchContributions,
@@ -122,17 +219,45 @@ object Repository {
         }
         try {
             val lookup = coroutineScope {
-                val contributions = async { fetchContributions(name) }
-                val profile = try {
-                    fetchProfile(name)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (_: Exception) {
-                    null // Profile metadata is optional, including when GitHub rate-limits it.
+                val contributionsDeferred = async {
+                    try {
+                        Result.success(fetchContributions(name))
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Result.failure(e)
+                    }
                 }
-                val c = contributions.await()
+                val profileDeferred = async {
+                    try {
+                        fetchProfile(name)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        null // Profile metadata is optional, including when GitHub rate-limits it.
+                    }
+                }
+                val contributionsResult = contributionsDeferred.await()
+                val profile = profileDeferred.await()
+                val contributions = contributionsResult.getOrElse { error ->
+                    // If GitHub itself confirmed the profile exists, allow setup to complete
+                    // with an empty graph and mark fetchedAt = 0 so background refresh retries.
+                    if (profile != null) {
+                        Contributions(profile.login, 0, emptyList())
+                    } else {
+                        throw error
+                    }
+                }
                 val avatar = profile?.let { fetchAvatar(it.avatarUrl) }
-                Lookup(UserData(c.copy(username = profile?.login ?: c.username), profile, System.currentTimeMillis()), avatar)
+                val fetchedAt = if (contributionsResult.isSuccess) System.currentTimeMillis() else 0L
+                Lookup(
+                    UserData(
+                        contributions.copy(username = profile?.login ?: contributions.username),
+                        profile,
+                        fetchedAt,
+                    ),
+                    avatar,
+                )
             }
             Result.success(lookup)
         } catch (e: CancellationException) {
@@ -142,42 +267,100 @@ object Repository {
         }
     }
 
+    internal fun snapshotRevision(): Long = synchronized(accountLock) { _snapshotRevision }
+
+    internal suspend fun persistSnapshot(revision: Long, login: String, data: UserData, avatar: Bitmap?): Boolean {
+        return storageLock.withLock {
+            if (!isRevisionCurrent(revision)) return@withLock false
+            writeSnapshot(login, data, avatar) { isRevisionCurrent(revision) }
+        }
+    }
+
     /** Saves a confirmed account and updates every widget right away. */
     fun signIn(lookup: Lookup) {
         val login = lookup.data.contributions.username
-        prefs().edit().putString(KEY_USERNAME, login).apply()
-        _username.value = login
-        _data.value = lookup.data
-        _avatar.value = lookup.avatar
-        _refreshState.value = RefreshState.Idle
-        scope.launch {
-            writeCache(lookup.data)
-            writeAvatar(lookup.avatar)
-            WidgetUpdater.updateAll(app)
+        val (previous, generation, revision) = synchronized(accountLock) {
+            val prev = _username.value
+            _sessionGeneration++
+            _snapshotRevision++
+            _username.value = login
+            _data.value = lookup.data
+            _avatar.value = lookup.avatar
+            _refreshState.value = RefreshState.Idle
+            Triple(prev, _sessionGeneration, _snapshotRevision)
+        }
+        if (!previous.equals(login, ignoreCase = true)) {
+            ReviewInbox.clear(app)
+        }
+        lastSignInPersistJob = scope.launch {
+            onSignInPersistHook?.invoke()
+            val saved = persistSnapshot(revision, login, lookup.data, lookup.avatar)
+            if (!saved && isRevisionCurrent(revision)) {
+                synchronized(accountLock) {
+                    if (isRevisionCurrent(revision)) {
+                        _refreshState.value = RefreshState.Failed("Couldn't save offline data. Will retry automatically.")
+                    }
+                }
+                enqueueRetry(replace = true)
+            }
+            if (isSessionActive(generation, login)) {
+                WidgetUpdater.updateAll(app)
+            }
         }
         RefreshWorker.schedule(app, _refreshHours.value)
-        if (WidgetUpdater.reviewInboxIds(app).isNotEmpty()) RefreshWorker.runOnce(app)
+        if (lookup.data.fetchedAt == 0L || WidgetUpdater.reviewInboxIds(app).isNotEmpty()) {
+            enqueueRetry(replace = true)
+        }
+    }
+
+    private fun enqueueRetry(replace: Boolean) {
+        onRetryRequestedHook?.invoke(replace)
+        runCatching { RefreshWorker.runOnce(app, replace = replace) }
     }
 
     /** Forgets the account and its cached data. The design is kept. */
     fun signOut() {
-        prefs().edit().remove(KEY_USERNAME).apply()
-        _username.value = ""
-        _data.value = null
-        _avatar.value = null
+        synchronized(widgetJobLock) {
+            widgetJob?.cancel()
+            widgetJob = null
+        }
+        val (generation, revision, prefsCleared) = synchronized(accountLock) {
+            _sessionGeneration++
+            _snapshotRevision++
+            val cleared = prefs().edit()
+                .remove(KEY_USERNAME)
+                .remove(KEY_AVATAR_USERNAME)
+                .remove(KEY_SNAPSHOT_ID)
+                .commit()
+            _username.value = ""
+            _data.value = null
+            _avatar.value = null
+            _refreshState.value = RefreshState.Idle
+            Triple(_sessionGeneration, _snapshotRevision, cleared)
+        }
+        RefreshWorker.cancel(app)
+        StreakRolloverWorker.cancel(app)
+        ReviewInbox.clear(app)
         scope.launch {
-            File(app.filesDir, CACHE_FILE).delete()
-            File(app.filesDir, AVATAR_FILE).delete()
-            WidgetUpdater.updateAll(app)
+            if (prefsCleared) {
+                storageLock.withLock {
+                    if (!isRevisionCurrent(revision)) return@withLock
+                    cleanupSnapshotFiles(keepSnapshotId = null)
+                }
+            }
+            if (sessionGeneration == generation) {
+                WidgetUpdater.updateAll(app)
+            }
         }
     }
 
     // ---------------------------------------------------------------- refresh
 
-    /** True when the cached data is older than [maxAgeMinutes] (or missing). */
+    /** True when cached data is missing, older than [maxAgeMinutes], or missing a recoverable avatar. */
     fun isStale(maxAgeMinutes: Long = 30): Boolean {
-        val at = _data.value?.fetchedAt ?: return true
-        return System.currentTimeMillis() - at > maxAgeMinutes * 60_000
+        val current = _data.value ?: return true
+        if (current.profile != null && _avatar.value == null) return true
+        return System.currentTimeMillis() - current.fetchedAt > maxAgeMinutes * 60_000
     }
 
     /** Fire-and-forget refresh used by the UI (pull to refresh, app open). */
@@ -185,50 +368,118 @@ object Repository {
         scope.launch { refresh() }
     }
 
+    /** Renders a single widget off the main thread (used by WidgetConfigActivity). */
+    internal fun updateWidgetAsync(context: Context, id: Int) {
+        val appContext = context.applicationContext
+        scope.launch {
+            WidgetUpdater.update(appContext, intArrayOf(id))
+        }
+    }
+
     /**
      * Downloads fresh data and repaints the widgets. On failure the old data
      * stays on screen and [refreshState] carries a friendly message.
      */
-    suspend fun refresh(): Boolean = fetchLock.withLock {
-        val name = _username.value
-        if (name.isBlank()) return false
-        _refreshState.value = RefreshState.Loading
+    suspend fun refresh(): Boolean = refreshWithOutcome(updateWidgets = true) == RefreshOutcome.UPDATED
+
+    internal suspend fun refreshWithOutcome(
+        updateWidgets: Boolean = true,
+        fetchContributions: (String) -> Contributions = GitHubApi::fetchContributions,
+        fetchProfile: (String) -> Profile = GitHubApi::fetchProfile,
+        fetchAvatar: (String) -> Bitmap? = { GitHubApi.fetchAvatar(it) },
+    ): RefreshOutcome = fetchLock.withLock {
+        val (name, generation, old, missingAvatar) = synchronized(accountLock) {
+            val u = _username.value
+            val g = _sessionGeneration
+            if (u.isNotBlank()) _refreshState.value = RefreshState.Loading
+            RefreshSnapshot(u, g, _data.value?.takeIf { it.contributions.username.equals(u, ignoreCase = true) }, _avatar.value == null)
+        }
+        if (name.isBlank()) return RefreshOutcome.SKIPPED
         try {
-            val c = withContext(Dispatchers.IO) { GitHubApi.fetchContributions(name) }
+            val c = withContext(Dispatchers.IO) { fetchContributions(name) }
             // Re-fetch the profile at most daily; it rarely changes and is rate limited.
-            val old = _data.value
             val profileFresh = old?.profile != null && System.currentTimeMillis() - old.profile.fetchedAt < 24 * 3_600_000L
             val profile = if (profileFresh) old?.profile else withContext(Dispatchers.IO) {
-                runCatching { GitHubApi.fetchProfile(name) }.getOrNull()
+                try {
+                    fetchProfile(name)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    null
+                }
             } ?: old?.profile
-            if (!profileFresh && profile != null) {
-                withContext(Dispatchers.IO) { GitHubApi.fetchAvatar(profile.avatarUrl) }?.let {
-                    _avatar.value = it
-                    writeAvatar(it)
+            val needAvatar = missingAvatar || !profileFresh
+            val freshAvatar = if (needAvatar && profile != null) {
+                withContext(Dispatchers.IO) { fetchAvatar(profile.avatarUrl) }
+            } else {
+                null
+            }
+            val committed = storageLock.withLock {
+                val fresh = UserData(c, profile, System.currentTimeMillis())
+                val committedAvatar = synchronized(accountLock) {
+                    if (!isSessionActive(generation, name)) return@withLock false
+                    freshAvatar ?: _avatar.value
+                }
+                var sessionStale = false
+                val published = writeSnapshot(name, fresh, committedAvatar) {
+                    if (!isSessionActive(generation, name)) {
+                        sessionStale = true
+                        false
+                    } else {
+                        true
+                    }
+                }
+                if (sessionStale) return@withLock false
+                if (!published) {
+                    throw java.io.IOException("Failed to persist account snapshot")
+                }
+                synchronized(accountLock) {
+                    if (!isSessionActive(generation, name)) return@synchronized false
+                    _snapshotRevision++
+                    _data.value = fresh
+                    if (freshAvatar != null) _avatar.value = freshAvatar
+                    _refreshState.value = RefreshState.Idle
+                    true
                 }
             }
-            if (_username.value != name) return false // account changed meanwhile
-            val fresh = UserData(c, profile, System.currentTimeMillis())
-            _data.value = fresh
-            writeCache(fresh)
-            _refreshState.value = RefreshState.Idle
-            WidgetUpdater.updateAll(app)
-            true
+            if (!committed) return RefreshOutcome.SKIPPED
+            if (updateWidgets && isSessionActive(generation, name)) WidgetUpdater.updateAll(app)
+            RefreshOutcome.UPDATED
         } catch (e: CancellationException) {
+            synchronized(accountLock) {
+                if (isSessionActive(generation, name) && _refreshState.value is RefreshState.Loading) {
+                    _refreshState.value = RefreshState.Idle
+                }
+            }
             throw e
         } catch (e: Exception) {
-            if (_username.value != name) return false
-            _refreshState.value = RefreshState.Failed(
-                (e as? FetchError)?.message ?: FetchError.Offline.message
-            )
-            if (_data.value == null) WidgetUpdater.updateAll(app)
-            else WidgetUpdater.update(app, WidgetUpdater.streakIds(app))
-            false
+            val stillActive = synchronized(accountLock) {
+                if (!isSessionActive(generation, name)) return@synchronized false
+                _refreshState.value = RefreshState.Failed(
+                    (e as? FetchError)?.message ?: FetchError.Offline.message
+                )
+                true
+            }
+            if (!stillActive) return RefreshOutcome.SKIPPED
+            if (updateWidgets) {
+                if (_data.value == null) WidgetUpdater.updateAll(app)
+                else WidgetUpdater.update(app, WidgetUpdater.streakIds(app))
+            }
+            if (e is FetchError.NotFound) RefreshOutcome.PERMANENT_FAILURE else RefreshOutcome.TRANSIENT_FAILURE
         }
     }
 
+    private data class RefreshSnapshot(
+        val username: String,
+        val generation: Long,
+        val oldData: UserData?,
+        val missingAvatar: Boolean,
+    )
+
     fun clearError() {
-        if (_refreshState.value is RefreshState.Failed) _refreshState.value = RefreshState.Idle
+        synchronized(accountLock) {
+            if (_refreshState.value is RefreshState.Failed) _refreshState.value = RefreshState.Idle
+        }
     }
 
     // ---------------------------------------------------------------- design & settings
@@ -242,10 +493,12 @@ object Repository {
         _design.value = next
         prefs().edit().putString(KEY_DESIGN, next.toJson()).apply()
         // Coalesce rapid changes (sliders) into one widget repaint.
-        widgetJob?.cancel()
-        widgetJob = scope.launch {
-            delay(250)
-            WidgetUpdater.updateAll(app)
+        synchronized(widgetJobLock) {
+            widgetJob?.cancel()
+            widgetJob = scope.launch {
+                delay(250)
+                WidgetUpdater.updateAll(app)
+            }
         }
     }
 
@@ -268,7 +521,17 @@ object Repository {
 
     private fun prefs() = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    private fun writeCache(d: UserData) {
+    /**
+     * Writes both the contribution graph and avatar into new generation-scoped files, then
+     * rechecks [shouldCommit] inside [accountLock] and atomically commits username, snapshot ID,
+     * and avatar owner in one SharedPreferences transaction before cleaning up older files.
+     */
+    private fun writeSnapshot(
+        owner: String,
+        d: UserData,
+        bmp: Bitmap?,
+        shouldCommit: () -> Boolean,
+    ): Boolean {
         val days = JSONArray()
         d.contributions.days.forEach {
             days.put(JSONArray().put(it.date.toString()).put(it.count).put(it.level))
@@ -285,16 +548,69 @@ object Repository {
                     it.socialLinks.forEach { link -> put(JSONObject().put("label", link.label).put("url", link.url)) }
                 }))
         }
-        runCatching {
-            val tmp = File(app.filesDir, "$CACHE_FILE.tmp")
-            tmp.writeText(root.toString())
-            tmp.renameTo(File(app.filesDir, CACHE_FILE))
+        val snapshotId = synchronized(accountLock) {
+            _nextSnapshotId++
+            "${System.currentTimeMillis()}_${_nextSnapshotId}"
+        }
+        val cacheFile = File(app.filesDir, "${SNAPSHOT_PREFIX}${snapshotId}.json")
+        val avatarFile = File(app.filesDir, "${SNAPSHOT_PREFIX}${snapshotId}.png")
+        onBeforeSnapshotWriteHook?.invoke(cacheFile, avatarFile)
+
+        val wroteFiles = runCatching {
+            if (cacheFile.isDirectory) return@runCatching false
+            cacheFile.writeText(root.toString())
+            onAfterCacheWriteHook?.invoke(avatarFile)
+            if (bmp != null) {
+                if (avatarFile.isDirectory) return@runCatching false
+                val compressed = avatarFile.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                if (!compressed) return@runCatching false
+            }
+            true
+        }.getOrDefault(false)
+        if (!wroteFiles) {
+            if (!cacheFile.isDirectory) cacheFile.delete()
+            if (!avatarFile.isDirectory) avatarFile.delete()
+            return false
+        }
+
+        val committed = synchronized(accountLock) {
+            if (!shouldCommit()) return@synchronized false
+            prefs().edit().apply {
+                putString(KEY_USERNAME, owner)
+                putString(KEY_SNAPSHOT_ID, snapshotId)
+                if (bmp != null) putString(KEY_AVATAR_USERNAME, owner) else remove(KEY_AVATAR_USERNAME)
+            }.commit()
+        }
+        if (!committed) {
+            cacheFile.delete()
+            avatarFile.delete()
+            return false
+        }
+
+        cleanupSnapshotFiles(keepSnapshotId = snapshotId)
+        return true
+    }
+
+    private fun cleanupSnapshotFiles(keepSnapshotId: String?) {
+        val keepJson = keepSnapshotId?.let { "${SNAPSHOT_PREFIX}${it}.json" }
+        val keepPng = keepSnapshotId?.let { "${SNAPSHOT_PREFIX}${it}.png" }
+        app.filesDir.listFiles()?.forEach { file ->
+            val name = file.name
+            val isLegacy = name == CACHE_FILE || name == AVATAR_FILE || name == "$CACHE_FILE.tmp" || name == "$AVATAR_FILE.tmp"
+            val isOldSnapshot = name.startsWith(SNAPSHOT_PREFIX) && name != keepJson && name != keepPng
+            if ((isLegacy || isOldSnapshot) && !file.isDirectory) {
+                file.delete()
+            }
         }
     }
 
-    private fun readCache(): UserData? = runCatching {
-        val file = File(app.filesDir, CACHE_FILE)
-        if (!file.exists()) return readLegacyCache()
+    private fun readCache(snapshotId: String?): UserData? = runCatching {
+        val file = if (snapshotId != null) {
+            File(app.filesDir, "${SNAPSHOT_PREFIX}${snapshotId}.json")
+        } else {
+            File(app.filesDir, CACHE_FILE)
+        }
+        if (!file.exists()) return if (snapshotId == null) readLegacyCache() else null
         val root = JSONObject(file.readText())
         val arr = root.getJSONArray("days")
         val days = List(arr.length()) { i ->
@@ -338,13 +654,4 @@ object Repository {
             0L,
         )
     }.getOrNull()
-
-    private fun writeAvatar(bmp: Bitmap?) {
-        val f = File(app.filesDir, AVATAR_FILE)
-        if (bmp == null) {
-            f.delete()
-            return
-        }
-        runCatching { f.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) } }
-    }
 }

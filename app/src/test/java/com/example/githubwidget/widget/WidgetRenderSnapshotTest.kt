@@ -1,11 +1,7 @@
 package com.example.githubwidget.widget
 
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.RectF
 import androidx.test.core.app.ApplicationProvider
-import com.example.githubwidget.data.Day
 import com.example.githubwidget.data.SampleData
 import com.example.githubwidget.data.Stats
 import com.example.githubwidget.design.Background
@@ -22,7 +18,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
-import java.time.LocalDate
 
 /**
  * Renders the widget in its main variants. Images are written to
@@ -89,37 +84,6 @@ class WidgetRenderSnapshotTest {
             assertEquals("Render must retain the host's proportions", width / height,
                 bmp.width.toFloat() / bmp.height, width / height * 0.01f)
         }
-    }
-
-    @Test
-    fun replayStaggersCellPopsAndKeepsFutureDaysEmpty() {
-        val first = LocalDate.of(2026, 11, 8)
-        val days = listOf(Day(first, 1, 1), Day(first.plusDays(7), 2, 2), Day(first.plusDays(9), 3, 3))
-        val levels = intArrayOf(Color.GRAY, Color.GREEN, Color.BLUE, Color.RED, Color.MAGENTA)
-        fun colorsAt(elapsedMs: Long?): List<Int> {
-            val size = 260
-            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-            val grid = GraphPainter.draw(
-                Canvas(bitmap), RectF(0f, 0f, size.toFloat(), size.toFloat()), days,
-                GraphPainter.Spec(levels, 0f, false, 2, 100f, replayElapsedMs = elapsedMs),
-            )
-            val cell = GraphPainter.cellForHeight(size.toFloat())
-            val step = cell * (1f + GraphPainter.GAP)
-            fun pixel(column: Int, row: Int, xFraction: Float = 0.5f) = bitmap.getPixel(
-                (grid.left + cell * xFraction + step * column).toInt(),
-                (grid.top + cell / 2 + step * row).toInt(),
-            )
-            return listOf(pixel(0, 0), pixel(0, 0, 1.04f), pixel(1, 0), pixel(1, 2), pixel(1, 3))
-        }
-        assertEquals(listOf(Color.GRAY, Color.TRANSPARENT, Color.GRAY, Color.GRAY, Color.TRANSPARENT), colorsAt(0))
-        assertEquals(listOf(Color.GREEN, Color.GREEN, Color.GRAY, Color.GRAY, Color.TRANSPARENT), colorsAt(126))
-        val nextColumnStarts = colorsAt(330)
-        assertEquals(Color.TRANSPARENT, nextColumnStarts[1])
-        assertTrue(nextColumnStarts[2] != Color.GRAY)
-        assertEquals(Color.GRAY, nextColumnStarts[3])
-        val settled = listOf(Color.GREEN, Color.TRANSPARENT, Color.BLUE, Color.RED, Color.TRANSPARENT)
-        assertEquals(settled, colorsAt(GraphPainter.REPLAY_DURATION_MS))
-        assertEquals(settled, colorsAt(null))
     }
 
     @Test
