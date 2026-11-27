@@ -1,10 +1,10 @@
-<p align="center">
-  <img src="docs/assets/app-icon.svg" width="96" height="96" alt="GH-widgets app icon" />
-</p>
-
 # GH-widgets
 
 Your GitHub contributions, on your Android home screen. Set up with your username—no sign-in or token needed.
+
+<p align="center">
+  <img src="docs/assets/app-icon.svg" width="96" height="96" alt="GH-widgets app icon" />
+</p>
 
 <p align="center">
   <a href="https://github.com/mrduhlol/github-widget/releases/latest/download/gh-widgets.apk">
