@@ -25,3 +25,16 @@ node_modules/
 !.dev.vars.example
 .env*
 !.env.example
+
+# Signing keystores (never commit release keys)
+keystore/
+*.p12
+*.jks
+*.keystore
+
+# Rendered promo videos and capture artifacts
+videos/*/renders/
+videos/*/out/
+videos/*/capture/
+videos/*/.media/
+videos/*/assets/

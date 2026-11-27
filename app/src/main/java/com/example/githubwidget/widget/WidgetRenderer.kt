@@ -58,7 +58,6 @@ object WidgetRenderer {
         font: NumberFont = NumberFont.SYSTEM,
         maxPixels: Int = MAX_PIXELS.toInt(),
         inbox: ReviewInboxState? = null,
-        replayElapsedMs: Long? = null,
         weeklyGoalPreviewDate: LocalDate? = null,
     ): Bitmap {
         val density = context.resources.displayMetrics.density
@@ -93,7 +92,7 @@ object WidgetRenderer {
             textPrimary = if (isDark) 0xFFF2F4F6.toInt() else 0xFF19212A.toInt(),
             textSecondary = if (isDark) 0xFFABB4BE.toInt() else 0xFF53616E.toInt(),
         )
-        Painter(Canvas(bmp), scale, widthDp, heightDp, design, colors, context, font, replayElapsedMs)
+        Painter(Canvas(bmp), scale, widthDp, heightDp, design, colors, context, font)
             .draw(data, avatar, placeholder, inbox, weeklyGoalPreviewDate)
         return bmp
     }
@@ -107,7 +106,6 @@ object WidgetRenderer {
         val colors: ColorSet,
         val context: Context,
         val font: NumberFont,
-        val replayElapsedMs: Long?,
     ) {
         val numbers: NumberFormat = NumberFormat.getIntegerInstance()
         val seeThrough = design.opacity < 45
@@ -173,14 +171,14 @@ object WidgetRenderer {
             }
 
             drawPullRequestMark(markX, headerY - dp(4f), accent)
-            line("PR INBOX", area.left + dp(22f), headerY, area.width() - dp(22f), mono)
+            line("PR INBOX · PUBLIC", area.left + dp(22f), headerY, area.width() - dp(22f), mono)
 
             val title = newest?.title ?: when {
                 inbox == null || inbox.username.isBlank() -> "Connect a GitHub profile"
                 inbox.failed -> "Inbox unavailable"
-                results == null -> "Checking for requests…"
-                results.total > 0 -> "Review requests found"
-                else -> "All caught up"
+                results == null -> "Checking public PRs…"
+                results.total > 0 -> "Public review requests found"
+                else -> "No public review requests"
             }
             val titlePaint = text(if (compact || wDp < 180f) 16f else 24f, colors.textPrimary, bold = true)
             val titleY = area.top + dp(if (compact) 32f else 42f)
@@ -309,7 +307,6 @@ object WidgetRenderer {
                     maxCellPx = dp(maxCellDp),
                     monthLabelPaint = labelPaint,
                     monthLabelHeightPx = if (months) dp(15f) else 0f,
-                    replayElapsedMs = replayElapsedMs,
                 ),
             )
         }

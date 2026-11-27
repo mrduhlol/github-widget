@@ -12,29 +12,42 @@ android {
         applicationId = "com.example.githubwidget"
         minSdk = 26
         targetSdk = 34
-        versionCode = 29
-        versionName = "3.8"
+        versionCode = 30
+        versionName = "3.9"
     }
 
-    // Repo keystore (PKCS12): every release APK gets the same signature,
-    // so updates install over the old version instead of conflicting.
-    // Anyone with repo access can sign as this app — accepted tradeoff
-    // for a sideloaded app; back up keystore/release.p12 regardless.
+    // Release signing credentials are supplied via environment variables or local
+    // Gradle properties (never committed to git). CI injects them from Secrets.
+    val releaseStoreFile = providers.environmentVariable("RELEASE_STORE_FILE").orNull
+        ?: providers.gradleProperty("RELEASE_STORE_FILE").orNull
+    val releaseStorePassword = providers.environmentVariable("RELEASE_STORE_PASSWORD").orNull
+        ?: providers.gradleProperty("RELEASE_STORE_PASSWORD").orNull
+    val releaseKeyAlias = providers.environmentVariable("RELEASE_KEY_ALIAS").orNull
+        ?: providers.gradleProperty("RELEASE_KEY_ALIAS").orNull
+    val releaseKeyPassword = providers.environmentVariable("RELEASE_KEY_PASSWORD").orNull
+        ?: providers.gradleProperty("RELEASE_KEY_PASSWORD").orNull
+    val hasReleaseSigning = !releaseStoreFile.isNullOrBlank() &&
+        !releaseStorePassword.isNullOrBlank() &&
+        !releaseKeyAlias.isNullOrBlank() &&
+        !releaseKeyPassword.isNullOrBlank()
+
     signingConfigs {
-        create("release") {
-            storeFile = rootProject.file("keystore/release.p12")
-            storeType = "PKCS12"
-            storePassword = "gh-widgets-release"
-            keyAlias = "ghwidgets"
-            keyPassword = "gh-widgets-release"
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseStoreFile!!)
+                storeType = "PKCS12"
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
         }
     }
 
     buildTypes {
         release {
-            // Persistent repo keystore so every release carries the same
-            // signature and installs cleanly over the previous version.
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -81,6 +94,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.13")
     testImplementation("androidx.test:core:1.6.1")
+    testImplementation("androidx.work:work-testing:2.9.1")
 
     // No Retrofit/image libraries on purpose: HttpURLConnection + Canvas keep
     // the APK small and everything works offline from the local cache.

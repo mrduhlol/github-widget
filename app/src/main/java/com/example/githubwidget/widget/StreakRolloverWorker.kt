@@ -24,6 +24,8 @@ class StreakRolloverWorker(context: Context, parameters: WorkerParameters) : Cor
     }
 
     companion object {
+        private const val TAG = "streak_rollover"
+
         internal fun nextBoundary(now: Instant): Instant =
             now.atOffset(ZoneOffset.UTC).toLocalDate().plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
 
@@ -32,9 +34,14 @@ class StreakRolloverWorker(context: Context, parameters: WorkerParameters) : Cor
             val next = nextBoundary(now)
             val request = OneTimeWorkRequestBuilder<StreakRolloverWorker>()
                 .setInitialDelay(Duration.between(now, next).toMillis(), TimeUnit.MILLISECONDS)
+                .addTag(TAG)
                 .build()
-            WorkManager.getInstance(context).enqueueUniqueWork("streak_rollover_${next.epochSecond}",
+            WorkManager.getInstance(context).enqueueUniqueWork("${TAG}_${next.epochSecond}",
                 ExistingWorkPolicy.KEEP, request)
+        }
+
+        internal fun cancel(context: Context) {
+            WorkManager.getInstance(context).cancelAllWorkByTag(TAG)
         }
     }
 }

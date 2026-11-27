@@ -75,9 +75,9 @@ internal object ReviewCardPainter {
                 val status = when {
                     inbox == null || inbox.username.isBlank() -> "Connect a GitHub profile"
                     inbox.failed && inbox.results == null -> "Couldn’t check GitHub"
-                    inbox.results == null -> "Checking GitHub…"
-                    inbox.results.total == 0 -> "All caught up"
-                    else -> "Open GitHub to see requests"
+                    inbox.results == null -> "Checking public PRs…"
+                    inbox.results.total == 0 -> "No public review requests"
+                    else -> "Open GitHub to see public requests"
                 }
                 line(status, pad, maxOf(height * .64f, pad + 30f), interior, 17f)
             } else if (next) {

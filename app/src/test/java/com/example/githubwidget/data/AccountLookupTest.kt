@@ -39,6 +39,21 @@ class AccountLookupTest {
         assertNull(lookup.avatar)
     }
 
+    @Test fun contributionOutageStillAllowsSetupWhenProfileSucceeds() = runBlocking {
+        val profile = Profile("octocat", "The Octocat", "https://avatars.githubusercontent.com/u/583231")
+        val result = Repository.lookup(
+            "@octocat",
+            fetchContributions = { throw FetchError.Server(503) },
+            fetchProfile = { profile },
+            fetchAvatar = { null },
+        )
+        val lookup = result.getOrThrow()
+        assertEquals("octocat", lookup.data.contributions.username)
+        assertEquals(0, lookup.data.contributions.days.size)
+        assertEquals(profile, lookup.data.profile)
+        assertEquals(0L, lookup.data.fetchedAt)
+    }
+
     @Test fun cancelledLookupPropagatesCancellation() {
         assertThrows(CancellationException::class.java) {
             runBlocking {
